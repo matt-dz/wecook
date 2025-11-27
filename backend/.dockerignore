@@ -1,0 +1,7 @@
+Dockerfile
+.github/
+.env
+.env.**
+.golangci.yaml
+.pg_format
+.dockerignore
