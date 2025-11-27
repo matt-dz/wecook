@@ -12,7 +12,7 @@ BIN_DIR:=bin
 all: build
 
 .PHONY: build
-build:
+build: fmt lint swagger
 	@echo "🔨  Building $(SERVER_BIN)…"
 	go build -o $(BIN_DIR)/$(SERVER_BIN) $(SERVER_DIR)/main.go
 	@echo "✓  Built $(BIN_DIR)/$(SERVER_BIN)"
@@ -52,7 +52,7 @@ swagger-fmt:
 .PHONY: sql-fmt
 sql-fmt:
 	@echo "🎨 Formatting SQL"
-	pg_format -i query.sql schema.sql
+	pg_format -i internal/sql/query.sql internal/sql/schema.sql
 
 .PHONY: sqlc
 sqlc:

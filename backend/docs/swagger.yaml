@@ -1,9 +1,17 @@
 info:
   contact: {}
-  description: API Server for the Clamp application.
-  title: Clamp API
+  description: API Server for the WeCook application.
+  title: WeCook API
   version: "1.0"
-paths: {}
+paths:
+  /ping:
+    get:
+      responses:
+        "200":
+          description: OK
+      summary: Ping endpoint.
+      tags:
+      - Ping
 securityDefinitions:
   BearerAuth:
     in: header

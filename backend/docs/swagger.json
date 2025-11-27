@@ -1,12 +1,26 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "API Server for the Clamp application.",
-        "title": "Clamp API",
+        "description": "API Server for the WeCook application.",
+        "title": "WeCook API",
         "contact": {},
         "version": "1.0"
     },
-    "paths": {},
+    "paths": {
+        "/ping": {
+            "get": {
+                "tags": [
+                    "Ping"
+                ],
+                "summary": "Ping endpoint.",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        }
+    },
     "securityDefinitions": {
         "BearerAuth": {
             "type": "apiKey",

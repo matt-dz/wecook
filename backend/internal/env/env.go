@@ -4,6 +4,7 @@ package env
 import (
 	"context"
 	"log/slog"
+	"os"
 
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/log"
@@ -14,8 +15,12 @@ type envKeyType struct{}
 var envKey envKeyType
 
 type Env struct {
-	Log      *slog.Logger
+	Logger   *slog.Logger
 	Database *database.Database
+}
+
+func (e *Env) Get(key string) string {
+	return os.Getenv(key)
 }
 
 func New(logger *slog.Logger, database *database.Database) *Env {
@@ -24,14 +29,14 @@ func New(logger *slog.Logger, database *database.Database) *Env {
 	}
 
 	return &Env{
-		Log:      logger,
+		Logger:   logger,
 		Database: database,
 	}
 }
 
 func Null() *Env {
 	return &Env{
-		Log:      log.NullLogger(),
+		Logger:   log.NullLogger(),
 		Database: nil,
 	}
 }

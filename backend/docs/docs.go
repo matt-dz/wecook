@@ -14,7 +14,21 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {},
+    "paths": {
+        "/ping": {
+            "get": {
+                "tags": [
+                    "Ping"
+                ],
+                "summary": "Ping endpoint.",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        }
+    },
     "securityDefinitions": {
         "BearerAuth": {
             "type": "apiKey",
@@ -30,8 +44,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Clamp API",
-	Description:      "API Server for the Clamp application.",
+	Title:            "WeCook API",
+	Description:      "API Server for the WeCook application.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
