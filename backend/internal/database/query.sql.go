@@ -9,11 +9,18 @@ import (
 	"context"
 )
 
-const helloWorld = `-- name: HelloWorld :exec
-SELECT 'hello world'
+const checkUsersTableExists = `-- name: CheckUsersTableExists :one
+SELECT EXISTS (
+	SELECT 1
+	FROM information_schema.tables
+	WHERE table_schema = 'public'
+		AND table_name = 'users'
+)
 `
 
-func (q *Queries) HelloWorld(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, helloWorld)
-	return err
+func (q *Queries) CheckUsersTableExists(ctx context.Context) (bool, error) {
+	row := q.db.QueryRow(ctx, checkUsersTableExists)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }

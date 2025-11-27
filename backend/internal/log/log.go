@@ -68,11 +68,11 @@ func New(options *slog.HandlerOptions) *slog.Logger {
 	})
 }
 
-func NullLog() *ContextHandler {
-	return &ContextHandler{
+func NullLogger() *slog.Logger {
+	return slog.New(&ContextHandler{
 		Handler: slog.NewJSONHandler(
 			nullWriter{},
 			&slog.HandlerOptions{},
 		),
-	}
+	})
 }

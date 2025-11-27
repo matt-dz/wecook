@@ -3,3 +3,89 @@
 //   sqlc v1.28.0
 
 package database
+
+import (
+	"database/sql/driver"
+	"fmt"
+
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
+type Role string
+
+const (
+	RoleSuperuser Role = "superuser"
+	RoleAdmin     Role = "admin"
+	RoleUser      Role = "user"
+)
+
+func (e *Role) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Role(s)
+	case string:
+		*e = Role(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Role: %T", src)
+	}
+	return nil
+}
+
+type NullRole struct {
+	Role  Role
+	Valid bool // Valid is true if Role is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRole) Scan(value interface{}) error {
+	if value == nil {
+		ns.Role, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.Role.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRole) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.Role), nil
+}
+
+type Recipe struct {
+	ID              int64
+	UserID          pgtype.Int8
+	ImageUrl        pgtype.Text
+	Title           string
+	Description     pgtype.Text
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	Published       bool
+	CookTimeMinutes pgtype.Int4
+}
+
+type RecipeIngredient struct {
+	RecipeID int64
+	Quantity int32
+	Unit     pgtype.Text
+	Name     string
+}
+
+type RecipeStep struct {
+	RecipeID    int64
+	StepNumber  int32
+	Instruction string
+	ImageUrl    pgtype.Text
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type User struct {
+	ID        int64
+	Email     string
+	FirstName string
+	LastName  pgtype.Text
+	Role      Role
+}
