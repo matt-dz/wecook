@@ -50,10 +50,10 @@ func EncodeHash(password string, p ArgonParams) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return EncodeHashWithSalt(password, p, salt)
+	return EncodeHashWithSalt(password, p, salt), nil
 }
 
-func EncodeHashWithSalt(password string, p ArgonParams, salt []byte) (string, error) {
+func EncodeHashWithSalt(password string, p ArgonParams, salt []byte) string {
 	b64Hash := base64.RawStdEncoding.EncodeToString(HashWithSalt(password, p, salt))
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
 	encodedHash := fmt.Sprintf(
@@ -61,7 +61,7 @@ func EncodeHashWithSalt(password string, p ArgonParams, salt []byte) (string, er
 		argon2.Version, p.Memory, p.Iterations,
 		p.Parallelism, b64Salt, b64Hash)
 
-	return encodedHash, nil
+	return encodedHash
 }
 
 func HashWithSalt(password string, p ArgonParams, salt []byte) []byte {
