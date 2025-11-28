@@ -10,6 +10,8 @@ import (
 	"github.com/matt-dz/wecook/internal/api"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/env"
+	"github.com/matt-dz/wecook/internal/garage"
+	"github.com/matt-dz/wecook/internal/http"
 	"github.com/matt-dz/wecook/internal/log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -56,16 +58,25 @@ func initDB(ctx context.Context, logger *slog.Logger) (*database.Database, error
 }
 
 func main() {
-	logger := log.New(nil)
+	env := env.New(log.New(nil), nil, http.New(), nil)
 
-	db, err := initDB(context.TODO(), logger)
+	db, err := initDB(context.TODO(), env.Logger)
 	if err != nil {
-		logger.Error("Failed to initialize database", slog.Any("error", err))
+		env.Logger.Error("Failed to initialize database", slog.Any("error", err))
+		os.Exit(1)
 	}
+	env.Database = db
 
-	env := env.New(logger, db)
+	// Set host
+	client, err := garage.NewClient(env)
+	if err != nil {
+		env.Logger.Error("Failed to initialize garage", slog.Any("error", err))
+		os.Exit(1)
+	}
+	env.S3 = client
+
 	if err := api.Start(env); err != nil {
-		logger.Error("API Failed", slog.Any("error", err))
+		env.Logger.Error("API Failed", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
