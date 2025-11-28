@@ -79,3 +79,19 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, 
 	err := row.Scan(&id)
 	return id, err
 }
+
+const getAdminCount = `-- name: GetAdminCount :one
+SELECT
+  count(*)
+FROM
+  users
+WHERE
+  ROLE = 'admin'
+`
+
+func (q *Queries) GetAdminCount(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getAdminCount)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}

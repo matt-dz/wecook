@@ -15,6 +15,7 @@ const (
 	InsufficientPermissions = "insufficient_permissions"
 	WeakPassword            = "weak_password"
 	EmailConflict           = "email_conflict"
+	AdminAlreadySetup       = "admin_already_setup"
 )
 
 var errorCodeToStatusCode = map[ErrorCode]int{
@@ -28,4 +29,5 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	InsufficientPermissions: http.StatusForbidden,
 	WeakPassword:            http.StatusUnprocessableEntity,
 	EmailConflict:           http.StatusConflict,
+	AdminAlreadySetup:       http.StatusConflict,
 }

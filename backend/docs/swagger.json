@@ -103,6 +103,49 @@
                     }
                 }
             }
+        },
+        "/api/setup/admin": {
+            "post": {
+                "description": "This endpoint should only be hit once on system startup.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Setup the first admin.",
+                "parameters": [
+                    {
+                        "description": "Create Admin Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_routes_admin.CreateAdminRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_routes_admin.CreateAdminResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Status Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessible Entity",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

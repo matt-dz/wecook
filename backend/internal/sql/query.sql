@@ -20,3 +20,11 @@ INSERT INTO users (email, first_name, last_name, password_hash, role)
   VALUES (trim(lower(@email::text)), $1, $2, $3, 'admin')
 RETURNING
   id;
+
+-- name: GetAdminCount :one
+SELECT
+  count(*)
+FROM
+  users
+WHERE
+  ROLE = 'admin';
