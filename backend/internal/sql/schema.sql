@@ -10,6 +10,7 @@ CREATE TABLE users (
   first_name text NOT NULL,
   last_name text,
   ROLE ROLE NOT NULL DEFAULT 'user'
+	password_hash text NOT NULL,
 );
 
 CREATE TABLE recipes (
