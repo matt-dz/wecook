@@ -8,3 +8,9 @@ SELECT
     WHERE
       table_schema = 'public'
       AND table_name = 'users');
+
+-- name: CreateUser :one
+INSERT INTO users (email, first_name, last_name, password_hash)
+  VALUES (trim(lower(@email::text)), $1, $2, $3)
+RETURNING
+  id;

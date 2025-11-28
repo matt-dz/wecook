@@ -10,12 +10,15 @@ import (
 )
 
 const checkUsersTableExists = `-- name: CheckUsersTableExists :one
-SELECT EXISTS (
-	SELECT 1
-	FROM information_schema.tables
-	WHERE table_schema = 'public'
-		AND table_name = 'users'
-)
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      information_schema.tables
+    WHERE
+      table_schema = 'public'
+      AND table_name = 'users')
 `
 
 func (q *Queries) CheckUsersTableExists(ctx context.Context) (bool, error) {
@@ -23,4 +26,30 @@ func (q *Queries) CheckUsersTableExists(ctx context.Context) (bool, error) {
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
+}
+
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (email, first_name, last_name, password_hash)
+VALUES (trim(lower($4::text)), $1, $2, $3)
+RETURNING
+  id
+`
+
+type CreateUserParams struct {
+	FirstName    string
+	LastName     string
+	PasswordHash string
+	Email        string
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createUser,
+		arg.FirstName,
+		arg.LastName,
+		arg.PasswordHash,
+		arg.Email,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }

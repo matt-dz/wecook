@@ -14,9 +14,8 @@ import (
 type Role string
 
 const (
-	RoleSuperuser Role = "superuser"
-	RoleAdmin     Role = "admin"
-	RoleUser      Role = "user"
+	RoleAdmin Role = "admin"
+	RoleUser  Role = "user"
 )
 
 func (e *Role) Scan(src interface{}) error {
@@ -67,10 +66,12 @@ type Recipe struct {
 }
 
 type RecipeIngredient struct {
-	RecipeID int64
-	Quantity int32
-	Unit     pgtype.Text
-	Name     string
+	RecipeID  int64
+	Quantity  int32
+	Unit      pgtype.Text
+	Name      string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
 }
 
 type RecipeStep struct {
@@ -83,9 +84,12 @@ type RecipeStep struct {
 }
 
 type User struct {
-	ID        int64
-	Email     string
-	FirstName string
-	LastName  pgtype.Text
-	Role      Role
+	ID           int64
+	Email        string
+	FirstName    string
+	LastName     string
+	Role         Role
+	PasswordHash string
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
 }

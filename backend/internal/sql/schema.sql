@@ -7,10 +7,16 @@ CREATE TABLE users (
   id bigserial PRIMARY KEY,
   email text NOT NULL,
   first_name text NOT NULL,
-  last_name text,
+  last_name text NOT NULL,
   ROLE ROLE NOT NULL DEFAULT 'user',
-	password_hash text NOT NULL,
+  password_hash text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE UNIQUE INDEX users_unique_email ON users (trim(lower(email)))
+WHERE
+  email IS NOT NULL;
 
 CREATE TABLE recipes (
   id bigserial PRIMARY KEY,
@@ -28,7 +34,9 @@ CREATE TABLE recipe_ingredients (
   recipe_id bigint NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
   quantity int NOT NULL,
   unit text,
-  name text NOT NULL
+  name text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE recipe_steps (
@@ -106,3 +114,33 @@ CREATE TRIGGER recipe_steps_after_delete_trg
   AFTER DELETE ON recipe_steps
   FOR EACH ROW
   EXECUTE FUNCTION recipe_steps_after_delete ();
+
+CREATE FUNCTION update_table_updated_at ()
+  RETURNS TRIGGER
+  LANGUAGE plpgsql
+  AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER users_set_updated_at
+  BEFORE UPDATE ON users
+  FOR EACH ROW
+  EXECUTE PROCEDURE update_table_updated_at ();
+
+CREATE TRIGGER recipes_set_updated_at
+  BEFORE UPDATE ON recipes
+  FOR EACH ROW
+  EXECUTE PROCEDURE update_table_updated_at ();
+
+CREATE TRIGGER recipe_steps_set_updated_at
+  BEFORE UPDATE ON recipe_steps
+  FOR EACH ROW
+  EXECUTE PROCEDURE update_table_updated_at ();
+
+CREATE TRIGGER recipe_ingredients_set_updated_at
+  BEFORE UPDATE ON recipe_ingredients
+  FOR EACH ROW
+  EXECUTE PROCEDURE update_table_updated_at ();

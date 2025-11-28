@@ -2,7 +2,6 @@
 package middleware
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -11,6 +10,7 @@ import (
 	"github.com/go-chi/httplog/v3"
 	"github.com/golang-jwt/jwt/v5"
 	apiError "github.com/matt-dz/wecook/internal/api/error"
+	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/env"
 	wcJwt "github.com/matt-dz/wecook/internal/jwt"
@@ -50,7 +50,7 @@ func AddRequestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestID := ulid.Now()
 		r = r.WithContext(log.AppendCtx(r.Context(), slog.Uint64("log_id", requestID)))
-		r = r.WithContext(injectRequestID(r.Context(), requestID))
+		r = r.WithContext(requestid.InjectRequestID(r.Context(), requestID))
 		next.ServeHTTP(w, r)
 	})
 }
@@ -79,7 +79,7 @@ func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			env := env.EnvFromCtx(r.Context())
-			requestID := fmt.Sprintf("%d", extractRequestID(r.Context()))
+			requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(r.Context()))
 
 			accessToken, err := r.Cookie(token.AccessTokenName(env))
 			if err != nil {
@@ -107,7 +107,7 @@ func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
 				_ = apiError.EncodeError(w, apiError.ExpiredToken, "access token expired", requestID)
 			} else if err != nil {
 				env.Logger.ErrorContext(r.Context(), "invalid access token", slog.Any("error", err))
-				apiError.EncodeError(w, apiError.InvalidToken, "invalid access token", requestID)
+				_ = apiError.EncodeError(w, apiError.InvalidToken, "invalid access token", requestID)
 				return
 			}
 
@@ -118,22 +118,11 @@ func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
 			roleClaim := token.Claims.(jwt.MapClaims)["role"].(string)
 			userRole := role.ToRole(roleClaim)
 			if userRole < requiredRole {
-				apiError.EncodeError(w, apiError.InsufficientPermissions, "insufficient permissions", requestID)
+				_ = apiError.EncodeError(w, apiError.InsufficientPermissions, "insufficient permissions", requestID)
 				return
 			}
 
 			next.ServeHTTP(w, r)
 		})
 	}
-}
-
-func injectRequestID(ctx context.Context, requestID uint64) context.Context {
-	return context.WithValue(ctx, requestIDKey, requestID)
-}
-
-func extractRequestID(ctx context.Context) uint64 {
-	if v, ok := ctx.Value(requestIDKey).(uint64); ok {
-		return v
-	}
-	return 0
 }

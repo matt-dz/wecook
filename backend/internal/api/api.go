@@ -8,8 +8,10 @@ import (
 
 	_ "github.com/matt-dz/wecook/docs"
 	"github.com/matt-dz/wecook/internal/api/middleware"
-	"github.com/matt-dz/wecook/internal/api/ping"
+	"github.com/matt-dz/wecook/internal/api/routes/ping"
+	"github.com/matt-dz/wecook/internal/api/routes/users"
 	"github.com/matt-dz/wecook/internal/env"
+	"github.com/matt-dz/wecook/internal/role"
 
 	"github.com/go-chi/chi/v5"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
@@ -48,6 +50,12 @@ func addDocs(r *chi.Mux, serverAddr string) {
 func addRoutes(router *chi.Mux) {
 	router.Route("/api", func(r chi.Router) {
 		r.Get("/ping", ping.HandlePing)
+
+		r.Route("/admin", func(r chi.Router) {
+			r.Use(middleware.AuthorizeRequest(role.RoleAdmin))
+
+			r.Post("/user", users.HandleCreateUser)
+		})
 	})
 }
 

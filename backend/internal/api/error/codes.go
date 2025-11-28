@@ -13,6 +13,8 @@ const (
 	MissingCredentials      = "missing_credentials"
 	InvalidCredentials      = "invalid_credentials"
 	InsufficientPermissions = "insufficient_permissions"
+	WeakPassword            = "weak_password"
+	EmailConflict           = "email_conflict"
 )
 
 var errorCodeToStatusCode = map[ErrorCode]int{
@@ -24,4 +26,6 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	MissingCredentials:      http.StatusUnauthorized,
 	InvalidCredentials:      http.StatusUnauthorized,
 	InsufficientPermissions: http.StatusForbidden,
+	WeakPassword:            http.StatusUnprocessableEntity,
+	EmailConflict:           http.StatusConflict,
 }
