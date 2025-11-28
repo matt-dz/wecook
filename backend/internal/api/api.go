@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/matt-dz/wecook/docs"
 	"github.com/matt-dz/wecook/internal/api/middleware"
+	"github.com/matt-dz/wecook/internal/api/routes/admin"
 	"github.com/matt-dz/wecook/internal/api/routes/ping"
 	"github.com/matt-dz/wecook/internal/api/routes/users"
 	"github.com/matt-dz/wecook/internal/env"
@@ -55,6 +56,7 @@ func addRoutes(router *chi.Mux) {
 			r.Use(middleware.AuthorizeRequest(role.RoleAdmin))
 
 			r.Post("/user", users.HandleCreateUser)
+			r.Post("/", admin.HandleCreateAdmin)
 		})
 	})
 }

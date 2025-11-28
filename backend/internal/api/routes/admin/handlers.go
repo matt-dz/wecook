@@ -1,5 +1,5 @@
-// Package users contains handlers for the user resource.
-package users
+// Package admin contains handlers for the admin endpoints
+package admin
 
 import (
 	"encoding/json"
@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgx/v5/pgconn"
 	apiError "github.com/matt-dz/wecook/internal/api/error"
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/argon2id"
@@ -17,28 +15,31 @@ import (
 	"github.com/matt-dz/wecook/internal/env"
 	mJson "github.com/matt-dz/wecook/internal/json"
 	"github.com/matt-dz/wecook/internal/password"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
-// HandleCreateUser godoc
+// HandleCreateAdmin godoc
 //
-//	@Summary	Create a user.
-//	@Tags		User
+//	@Summary	Create an admin.
+//	@Tags		Admin
 //
 //	@Accept		json
-//	@Param		request	body	CreateUserRequest	true	"Create User Request"
+//	@Param		request	body	CreateAdminRequest	true	"Create Admin Request"
 //	@Params		cookie header string true "access=..."
 //
-//	@Success	200	{object}	CreateUserResponse
+//	@Success	200	{object}	CreateAdminResponse
 //	@Failure	409	{object}	apiError.Error	"Status Conflict"
 //	@Failure	422	{object}	apiError.Error	"Unprocessible Entity"
-//	@Router		/api/admin/user [POST]
-func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
+//	@Router		/api/admin [POST]
+func HandleCreateAdmin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	env := env.EnvFromCtx(ctx)
 	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
 
 	// Decode JSON
-	var request CreateUserRequest
+	var request CreateAdminRequest
 	env.Logger.DebugContext(ctx, "Reading request body")
 	defer func() { _ = r.Body.Close() }()
 	decoder := json.NewDecoder(r.Body)
@@ -72,28 +73,28 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create user
+	// Create admin
 	var pgErr *pgconn.PgError
-	env.Logger.DebugContext(ctx, "Creating user")
-	userID, err := env.Database.CreateUser(ctx, database.CreateUserParams{
+	env.Logger.DebugContext(ctx, "Creating admin")
+	userID, err := env.Database.CreateAdmin(ctx, database.CreateAdminParams{
 		Email:        request.Email,
 		PasswordHash: hash,
 		FirstName:    request.FirstName,
 		LastName:     request.LastName,
 	})
 	if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ColumnName == "email" {
-		env.Logger.ErrorContext(ctx, "User with email already exists", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "Admin with email already exists", slog.Any("error", err))
 		_ = apiError.EncodeError(w, apiError.EmailConflict, "email already in use", requestID)
 		return
 	} else if err != nil {
-		env.Logger.ErrorContext(ctx, "Failed to create user", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "Failed to create admin", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)
 		return
 	}
 
 	// Write response
 	env.Logger.DebugContext(ctx, "Writing response")
-	resp, err := json.Marshal(CreateUserResponse{UserID: userID})
+	resp, err := json.Marshal(CreateAdminResponse{UserID: userID})
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "Failed to marshal response", slog.Any("error", err))
 		return

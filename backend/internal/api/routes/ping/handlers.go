@@ -9,5 +9,5 @@ import "net/http"
 //	@Tags		Ping
 //
 //	@Success	200
-//	@Router		/ping [GET]
+//	@Router		/api/ping [GET]
 func HandlePing(w http.ResponseWriter, r *http.Request) {}

@@ -28,9 +28,35 @@ func (q *Queries) CheckUsersTableExists(ctx context.Context) (bool, error) {
 	return exists, err
 }
 
+const createAdmin = `-- name: CreateAdmin :one
+INSERT INTO users (email, first_name, last_name, password_hash, role)
+  VALUES (trim(lower($4::text)), $1, $2, $3, 'admin')
+RETURNING
+  id
+`
+
+type CreateAdminParams struct {
+	FirstName    string
+	LastName     string
+	PasswordHash string
+	Email        string
+}
+
+func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createAdmin,
+		arg.FirstName,
+		arg.LastName,
+		arg.PasswordHash,
+		arg.Email,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (email, first_name, last_name, password_hash)
-VALUES (trim(lower($4::text)), $1, $2, $3)
+INSERT INTO users (email, first_name, last_name, password_hash, role)
+  VALUES (trim(lower($4::text)), $1, $2, $3, 'user')
 RETURNING
   id
 `

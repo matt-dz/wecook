@@ -10,7 +10,13 @@ SELECT
       AND table_name = 'users');
 
 -- name: CreateUser :one
-INSERT INTO users (email, first_name, last_name, password_hash)
-  VALUES (trim(lower(@email::text)), $1, $2, $3)
+INSERT INTO users (email, first_name, last_name, password_hash, role)
+  VALUES (trim(lower(@email::text)), $1, $2, $3, 'user')
+RETURNING
+  id;
+
+-- name: CreateAdmin :one
+INSERT INTO users (email, first_name, last_name, password_hash, role)
+  VALUES (trim(lower(@email::text)), $1, $2, $3, 'admin')
 RETURNING
   id;

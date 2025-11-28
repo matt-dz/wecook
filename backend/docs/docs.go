@@ -15,20 +15,49 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/ping": {
-            "get": {
-                "tags": [
-                    "Ping"
+        "/api/admin": {
+            "post": {
+                "consumes": [
+                    "application/json"
                 ],
-                "summary": "Ping endpoint.",
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Create an admin.",
+                "parameters": [
+                    {
+                        "description": "Create Admin Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_routes_admin.CreateAdminRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_routes_admin.CreateAdminResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Status Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessible Entity",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
                     }
                 }
             }
         },
-        "/user": {
+        "/api/admin/user": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -69,6 +98,19 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/ping": {
+            "get": {
+                "tags": [
+                    "Ping"
+                ],
+                "summary": "Ping endpoint.",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -86,6 +128,37 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_api_routes_admin.CreateAdminRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "first_name",
+                "last_name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_routes_admin.CreateAdminResponse": {
+            "type": "object",
+            "properties": {
+                "user_id": {
                     "type": "integer"
                 }
             }

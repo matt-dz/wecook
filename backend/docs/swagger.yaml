@@ -11,6 +11,27 @@ definitions:
       status:
         type: integer
     type: object
+  internal_api_routes_admin.CreateAdminRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  internal_api_routes_admin.CreateAdminResponse:
+    properties:
+      user_id:
+        type: integer
+    type: object
   internal_api_routes_users.CreateUserRequest:
     properties:
       email:
@@ -38,15 +59,34 @@ info:
   title: WeCook API
   version: "1.0"
 paths:
-  /ping:
-    get:
+  /api/admin:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create Admin Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_routes_admin.CreateAdminRequest'
       responses:
         "200":
           description: OK
-      summary: Ping endpoint.
+          schema:
+            $ref: '#/definitions/internal_api_routes_admin.CreateAdminResponse'
+        "409":
+          description: Status Conflict
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "422":
+          description: Unprocessible Entity
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      summary: Create an admin.
       tags:
-      - Ping
-  /user:
+      - Admin
+  /api/admin/user:
     post:
       consumes:
       - application/json
@@ -73,6 +113,14 @@ paths:
       summary: Create a user.
       tags:
       - User
+  /api/ping:
+    get:
+      responses:
+        "200":
+          description: OK
+      summary: Ping endpoint.
+      tags:
+      - Ping
 securityDefinitions:
   BearerAuth:
     in: header
