@@ -3,12 +3,19 @@ package middleware
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/httplog/v3"
+	"github.com/golang-jwt/jwt/v5"
+	apiError "github.com/matt-dz/wecook/internal/api/error"
+	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/env"
+	wcJwt "github.com/matt-dz/wecook/internal/jwt"
 	"github.com/matt-dz/wecook/internal/log"
+	"github.com/matt-dz/wecook/internal/role"
 
 	"github.com/oklog/ulid/v2"
 )
@@ -68,6 +75,65 @@ func AddCors(next http.Handler) http.Handler {
 	})
 }
 
+func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			env := env.EnvFromCtx(r.Context())
+			requestID := fmt.Sprintf("%d", extractRequestID(r.Context()))
+
+			accessToken, err := r.Cookie(token.AccessTokenName(env))
+			if err != nil {
+				env.Logger.ErrorContext(r.Context(), "unable to get access token", slog.Any("error", err))
+				_ = apiError.EncodeError(w, apiError.InvalidToken, "invalid access token", requestID)
+				return
+			}
+
+			secret := env.Get("APP_SECRET")
+			if secret == "" {
+				env.Logger.ErrorContext(r.Context(), "environment variable APP_SECRET not set")
+				_ = apiError.EncodeInternalError(w, requestID)
+				return
+			}
+			secretVersion := env.Get("APP_SECRET_VERSION")
+			if secretVersion == "" {
+				env.Logger.ErrorContext(r.Context(), "environment variable APP_SECRET_VERSION not set")
+				_ = apiError.EncodeInternalError(w, requestID)
+				return
+			}
+
+			token, err := wcJwt.ValidateJWT(accessToken.Value, secretVersion, []byte(secret))
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				env.Logger.ErrorContext(r.Context(), "access token expired", slog.Any("err", err))
+				_ = apiError.EncodeError(w, apiError.ExpiredToken, "access token expired", requestID)
+			} else if err != nil {
+				env.Logger.ErrorContext(r.Context(), "invalid access token", slog.Any("error", err))
+				apiError.EncodeError(w, apiError.InvalidToken, "invalid access token", requestID)
+				return
+			}
+
+			sub, _ := token.Claims.GetSubject()
+			r = r.WithContext(log.AppendCtx(r.Context(), slog.String("user-id", sub)))
+			env.Logger.DebugContext(r.Context(), "validating user role")
+
+			roleClaim := token.Claims.(jwt.MapClaims)["role"].(string)
+			userRole := role.ToRole(roleClaim)
+			if userRole < requiredRole {
+				apiError.EncodeError(w, apiError.InsufficientPermissions, "insufficient permissions", requestID)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func injectRequestID(ctx context.Context, requestID uint64) context.Context {
 	return context.WithValue(ctx, requestIDKey, requestID)
+}
+
+func extractRequestID(ctx context.Context) uint64 {
+	if v, ok := ctx.Value(requestIDKey).(uint64); ok {
+		return v
+	}
+	return 0
 }

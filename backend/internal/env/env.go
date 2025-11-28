@@ -49,11 +49,7 @@ func Null() *Env {
 }
 
 func EnvFromCtx(ctx context.Context) *Env {
-	envValue := ctx.Value(envKey)
-	if envValue == nil {
-		return Null()
-	}
-	if env, ok := envValue.(*Env); ok {
+	if env, ok := ctx.Value(envKey).(*Env); ok {
 		return env
 	}
 
