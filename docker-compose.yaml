@@ -1,12 +1,32 @@
 services:
   database:
-    image: postgres:16
+    image: postgres:18
     container_name: wecook_database
     env_file: .env.database
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 10s
+      retries: 5
+    volumes:
+      - db-data:/var/lib/postgresql
+  garage:
+    image: dxflrs/garage:v2.1.0
+    container_name: wecook_garage
+    hostname: wecook_garage
+    ports:
+      - 3900:3900
+      - 3901:3901
+      - 3902:3902
+      - 3903:3903
+    volumes:
+      - ./garage.toml:/etc/garage.toml # https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/
+      - s3-meta:/var/lib/garage/meta
+      - s3-data:/var/lib/garage/data
+    healthcheck:
+      test: ["CMD", "/garage", "status"] # TODO: check if this fails if not healthy
+      interval: 10s
+      timeout: 5s
       retries: 5
   backend:
     build: backend/
@@ -19,10 +39,12 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      garage:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/ping || exit 1"]
-      interval: 30s
-      timeout: 30s
+      interval: 10s
+      timeout: 5s
       retries: 5
   frontend:
     build: frontend/
@@ -30,3 +52,8 @@ services:
     restart: unless-stopped
     ports:
       - 3000:3000
+
+volumes:
+  db-data:
+  s3-meta:
+  s3-data:
