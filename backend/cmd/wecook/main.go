@@ -59,6 +59,7 @@ func initDB(ctx context.Context, logger *slog.Logger) (*database.Database, error
 
 func main() {
 	env := env.New(log.New(nil), nil, http.New(), nil)
+	env.HTTP.Logger = env.Logger
 
 	db, err := initDB(context.TODO(), env.Logger)
 	if err != nil {
@@ -68,12 +69,31 @@ func main() {
 	env.Database = db
 
 	// Set host
-	client, err := garage.NewClient(env)
+	garageAdminHost := env.Get("GARAGE_ADMIN_HOST")
+	if garageAdminHost == "" {
+		env.Logger.Error("environment variable GARAGE_ADMIN_HOST should be set")
+		os.Exit(1)
+	}
+	garageAdminToken := env.Get("GARAGE_ADMIN_TOKEN")
+	if garageAdminToken == "" {
+		env.Logger.Error("environment variable GARAGE_ADMIN_TOKEN should be set")
+	}
+	client, err := garage.NewClient(garageAdminHost, garageAdminToken, env.HTTP)
 	if err != nil {
-		env.Logger.Error("Failed to initialize garage", slog.Any("error", err))
+		env.Logger.Error("Failed to create garage client", slog.Any("error", err))
 		os.Exit(1)
 	}
 	env.S3 = client
+
+	err = garage.InitializeGarage(
+		env.HTTP,
+		context.Background(),
+		garageAdminHost,
+		garageAdminToken)
+	if err != nil {
+		env.Logger.Error("Failed to initialize garage instance", slog.Any("error", err))
+		os.Exit(1)
+	}
 
 	if err := api.Start(env); err != nil {
 		env.Logger.Error("API Failed", slog.Any("error", err))

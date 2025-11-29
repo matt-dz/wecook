@@ -7,10 +7,9 @@ import (
 	"os"
 
 	"github.com/matt-dz/wecook/internal/database"
+	mGarage "github.com/matt-dz/wecook/internal/garage"
 	"github.com/matt-dz/wecook/internal/http"
 	"github.com/matt-dz/wecook/internal/log"
-
-	"git.deuxfleurs.fr/garage-sdk/garage-admin-sdk-golang"
 )
 
 type envKeyType struct{}
@@ -21,14 +20,14 @@ type Env struct {
 	Logger   *slog.Logger
 	Database *database.Database
 	HTTP     *http.HTTP
-	S3       *garage.APIClient
+	S3       *mGarage.APIClient
 }
 
 func (e *Env) Get(key string) string {
 	return os.Getenv(key)
 }
 
-func New(logger *slog.Logger, database *database.Database, http *http.HTTP, S3 *garage.APIClient) *Env {
+func New(logger *slog.Logger, database *database.Database, http *http.HTTP, S3 *mGarage.APIClient) *Env {
 	if logger == nil {
 		logger = log.NullLogger()
 	}
@@ -37,6 +36,7 @@ func New(logger *slog.Logger, database *database.Database, http *http.HTTP, S3 *
 		Logger:   logger,
 		Database: database,
 		HTTP:     http,
+		S3:       S3,
 	}
 }
 
@@ -45,6 +45,7 @@ func Null() *Env {
 		Logger:   log.NullLogger(),
 		Database: nil,
 		HTTP:     nil,
+		S3:       nil,
 	}
 }
 

@@ -20,7 +20,7 @@ services:
       - 3902:3902
       - 3903:3903
     volumes:
-      - ./garage.toml:/etc/garage.toml # https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/
+      - ./garage.toml:/etc/garage.toml:ro # https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/
       - s3-meta:/var/lib/garage/meta
       - s3-data:/var/lib/garage/data
     healthcheck:
