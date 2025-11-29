@@ -48,6 +48,14 @@ FROM
 WHERE
   id = $1;
 
+-- name: GetUserRole :one
+SELECT
+  ROLE
+FROM
+  users
+WHERE
+  id = $1;
+
 -- name: UpdateUserRefreshTokenHash :exec
 UPDATE
   users

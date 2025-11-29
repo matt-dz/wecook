@@ -52,6 +52,7 @@ func addRoutes(router *chi.Mux) {
 	router.Route("/api", func(r chi.Router) {
 		r.Get("/ping", ping.HandlePing)
 		r.Post("/login", users.HandleUserLogin)
+		r.Post("/session", users.HandleRefreshSession)
 
 		r.Post("/setup/admin", admin.HandleAdminSetup)
 		r.Route("/admin", func(r chi.Router) {

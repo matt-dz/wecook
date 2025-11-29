@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/jwt"
@@ -18,6 +20,8 @@ const (
 	accessTokenLifetime  = 60 * 30           // 30 minutes
 	refreshTokenLifetime = 60 * 60 * 24 * 14 // 14 days
 )
+
+var ErrMalformedRefreshToken = errors.New("malformed refresh token")
 
 func AccessTokenName(env *env.Env) string {
 	if env.Get("ENV") == "production" {
@@ -41,15 +45,15 @@ func CreateToken(numbytes uint) (string, error) {
 	return base64.StdEncoding.EncodeToString(token), nil
 }
 
-func CreateRefreshToken(userid string) (string, error) {
+func NewRefreshToken(userid int64) (string, error) {
 	randSegment, err := CreateToken(accessTokenBytes)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s.%s", userid, randSegment), nil
+	return fmt.Sprintf("%d.%s", userid, randSegment), nil
 }
 
-func CreateAccessToken(params jwt.JWTParams, env *env.Env) (string, error) {
+func NewAccessToken(params jwt.JWTParams, env *env.Env) (string, error) {
 	secret := env.Get("APP_SECRET")
 	if secret == "" {
 		return "", errors.New("environment variable APP_SECRET not defined")
@@ -95,4 +99,16 @@ func NewRefreshTokenCookie(token string, env *env.Env) *http.Cookie {
 	}
 
 	return cookie
+}
+
+func ExtractUserIDFromRefreshToken(token string) (int64, error) {
+	userIDStr, _, found := strings.Cut(token, ".")
+	if !found {
+		return 0, ErrMalformedRefreshToken
+	}
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		return 0, errors.Join(ErrMalformedRefreshToken, err)
+	}
+	return userID, nil
 }

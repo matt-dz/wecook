@@ -99,6 +99,39 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "User login.",
+                "parameters": [
+                    {
+                        "description": "User Login Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_routes_users.UserLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/api/ping": {
             "get": {
                 "tags": [
@@ -108,6 +141,34 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/session": {
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Refresh user session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cookie header: refresh_token=...",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
                     }
                 }
             }
@@ -234,6 +295,21 @@ const docTemplate = `{
             "properties": {
                 "user_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_api_routes_users.UserLoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
                 }
             }
         }

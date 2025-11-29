@@ -144,6 +144,22 @@ func (q *Queries) GetUserRefreshTokenHash(ctx context.Context, id int64) (GetUse
 	return i, err
 }
 
+const getUserRole = `-- name: GetUserRole :one
+SELECT
+  ROLE
+FROM
+  users
+WHERE
+  id = $1
+`
+
+func (q *Queries) GetUserRole(ctx context.Context, id int64) (Role, error) {
+	row := q.db.QueryRow(ctx, getUserRole, id)
+	var role Role
+	err := row.Scan(&role)
+	return role, err
+}
+
 const updateUserRefreshTokenHash = `-- name: UpdateUserRefreshTokenHash :exec
 UPDATE
   users

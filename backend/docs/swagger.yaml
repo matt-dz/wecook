@@ -53,6 +53,16 @@ definitions:
       user_id:
         type: integer
     type: object
+  internal_api_routes_users.UserLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
 info:
   contact: {}
   description: API Server for the WeCook application.
@@ -113,6 +123,27 @@ paths:
       summary: Create a user.
       tags:
       - User
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User Login Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_routes_users.UserLoginRequest'
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      summary: User login.
+      tags:
+      - User
   /api/ping:
     get:
       responses:
@@ -121,6 +152,24 @@ paths:
       summary: Ping endpoint.
       tags:
       - Ping
+  /api/session:
+    post:
+      parameters:
+      - description: 'Cookie header: refresh_token=...'
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      summary: Refresh user session
+      tags:
+      - User
   /api/setup/admin:
     post:
       consumes:
