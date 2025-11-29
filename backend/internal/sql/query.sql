@@ -28,3 +28,30 @@ FROM
   users
 WHERE
   ROLE = 'admin';
+
+-- name: GetUser :one
+SELECT
+  id,
+  password_hash,
+  ROLE
+FROM
+  users
+WHERE
+  email = trim(lower($1));
+
+-- name: GetUserRefreshTokenHash :one
+SELECT
+  refresh_token_hash,
+  refresh_token_expires_at
+FROM
+  users
+WHERE
+  id = $1;
+
+-- name: UpdateUserRefreshTokenHash :exec
+UPDATE
+  users
+SET
+  refresh_token_hash = $1
+WHERE
+  id = $2;

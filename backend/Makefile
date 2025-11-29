@@ -55,7 +55,7 @@ sql-fmt:
 	pg_format -i internal/sql/query.sql internal/sql/schema.sql
 
 .PHONY: sqlc
-sqlc:
+sqlc: sql-fmt
 	@echo "🗄️  Generating SQLC code..."
 	sqlc generate
 

@@ -84,12 +84,14 @@ type RecipeStep struct {
 }
 
 type User struct {
-	ID           int64
-	Email        string
-	FirstName    string
-	LastName     string
-	Role         Role
-	PasswordHash string
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	ID                    int64
+	Email                 string
+	FirstName             string
+	LastName              string
+	Role                  Role
+	PasswordHash          string
+	RefreshTokenHash      pgtype.Text
+	RefreshTokenExpiresAt pgtype.Timestamptz
+	CreatedAt             pgtype.Timestamptz
+	UpdatedAt             pgtype.Timestamptz
 }

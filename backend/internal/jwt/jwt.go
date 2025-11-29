@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/matt-dz/wecook/internal/role"
 )
 
 type JWTParams struct {
-	Role   string
+	Role   role.Role
 	UserID string
 }
 

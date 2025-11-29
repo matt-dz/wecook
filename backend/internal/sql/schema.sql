@@ -10,8 +10,12 @@ CREATE TABLE users (
   last_name text NOT NULL,
   ROLE ROLE NOT NULL DEFAULT 'user',
   password_hash text NOT NULL,
+  refresh_token_hash text,
+  refresh_token_expires_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CHECK ((refresh_token_hash IS NULL AND refresh_token_expires_at IS NULL) OR (refresh_token_hash IS NOT NULL AND
+    refresh_token_expires_at IS NOT NULL))
 );
 
 CREATE UNIQUE INDEX users_unique_email ON users (trim(lower(email)))
@@ -144,3 +148,20 @@ CREATE TRIGGER recipe_ingredients_set_updated_at
   BEFORE UPDATE ON recipe_ingredients
   FOR EACH ROW
   EXECUTE PROCEDURE update_table_updated_at ();
+
+CREATE OR REPLACE FUNCTION set_refresh_token_expiry ()
+  RETURNS TRIGGER
+  AS $$
+BEGIN
+  IF NEW.refresh_token_hash IS NOT NULL AND (OLD.refresh_token_hash IS DISTINCT FROM NEW.refresh_token_hash) THEN
+    NEW.refresh_token_expires_at := now() + interval '14 days';
+  END IF;
+  RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_set_refresh_token_expiry
+  BEFORE UPDATE OF refresh_token_hash ON users
+  FOR EACH ROW
+  EXECUTE FUNCTION set_refresh_token_expiry ();

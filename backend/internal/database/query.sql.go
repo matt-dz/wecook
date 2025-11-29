@@ -7,6 +7,8 @@ package database
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const checkUsersTableExists = `-- name: CheckUsersTableExists :one
@@ -94,4 +96,69 @@ func (q *Queries) GetAdminCount(ctx context.Context) (int64, error) {
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const getUser = `-- name: GetUser :one
+SELECT
+  id,
+  password_hash,
+  ROLE
+FROM
+  users
+WHERE
+  email = trim(lower($1))
+`
+
+type GetUserRow struct {
+	ID           int64
+	PasswordHash string
+	Role         Role
+}
+
+func (q *Queries) GetUser(ctx context.Context, lower string) (GetUserRow, error) {
+	row := q.db.QueryRow(ctx, getUser, lower)
+	var i GetUserRow
+	err := row.Scan(&i.ID, &i.PasswordHash, &i.Role)
+	return i, err
+}
+
+const getUserRefreshTokenHash = `-- name: GetUserRefreshTokenHash :one
+SELECT
+  refresh_token_hash,
+  refresh_token_expires_at
+FROM
+  users
+WHERE
+  id = $1
+`
+
+type GetUserRefreshTokenHashRow struct {
+	RefreshTokenHash      pgtype.Text
+	RefreshTokenExpiresAt pgtype.Timestamptz
+}
+
+func (q *Queries) GetUserRefreshTokenHash(ctx context.Context, id int64) (GetUserRefreshTokenHashRow, error) {
+	row := q.db.QueryRow(ctx, getUserRefreshTokenHash, id)
+	var i GetUserRefreshTokenHashRow
+	err := row.Scan(&i.RefreshTokenHash, &i.RefreshTokenExpiresAt)
+	return i, err
+}
+
+const updateUserRefreshTokenHash = `-- name: UpdateUserRefreshTokenHash :exec
+UPDATE
+  users
+SET
+  refresh_token_hash = $1
+WHERE
+  id = $2
+`
+
+type UpdateUserRefreshTokenHashParams struct {
+	RefreshTokenHash pgtype.Text
+	ID               int64
+}
+
+func (q *Queries) UpdateUserRefreshTokenHash(ctx context.Context, arg UpdateUserRefreshTokenHashParams) error {
+	_, err := q.db.Exec(ctx, updateUserRefreshTokenHash, arg.RefreshTokenHash, arg.ID)
+	return err
 }
