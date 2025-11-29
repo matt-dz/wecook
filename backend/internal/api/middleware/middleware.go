@@ -96,12 +96,10 @@ func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
 			}
 			secretVersion := env.Get("APP_SECRET_VERSION")
 			if secretVersion == "" {
-				env.Logger.ErrorContext(r.Context(), "environment variable APP_SECRET_VERSION not set")
-				_ = apiError.EncodeInternalError(w, requestID)
-				return
+				secretVersion = wcJwt.DefaultKID
 			}
 
-			token, err := wcJwt.ValidateJWT(accessToken.Value, secretVersion, []byte(secret))
+			accessJwt, err := wcJwt.ValidateJWT(accessToken.Value, secretVersion, []byte(secret))
 			if errors.Is(err, jwt.ErrTokenExpired) {
 				env.Logger.ErrorContext(r.Context(), "access token expired", slog.Any("err", err))
 				_ = apiError.EncodeError(w, apiError.ExpiredToken, "access token expired", requestID)
@@ -111,16 +109,17 @@ func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
 				return
 			}
 
-			sub, _ := token.Claims.GetSubject()
+			sub, _ := accessJwt.Claims.GetSubject()
 			r = r.WithContext(log.AppendCtx(r.Context(), slog.String("user-id", sub)))
 			env.Logger.DebugContext(r.Context(), "validating user role")
 
-			roleClaim := token.Claims.(jwt.MapClaims)["role"].(string)
+			roleClaim := accessJwt.Claims.(jwt.MapClaims)["role"].(string)
 			userRole := role.ToRole(roleClaim)
 			if userRole < requiredRole {
 				_ = apiError.EncodeError(w, apiError.InsufficientPermissions, "insufficient permissions", requestID)
 				return
 			}
+			r = r.WithContext(token.AccessTokenWithCtx(r.Context(), accessJwt))
 
 			next.ServeHTTP(w, r)
 		})

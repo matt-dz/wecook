@@ -63,3 +63,9 @@ SET
   refresh_token_hash = $1
 WHERE
   id = $2;
+
+-- name: CreateRecipe :one
+INSERT INTO recipes (user_id, title)
+  VALUES ($1, $2)
+RETURNING
+  id;

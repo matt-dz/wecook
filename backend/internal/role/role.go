@@ -15,6 +15,17 @@ const (
 	RoleUnknown Role = math.MinInt
 )
 
+func (r Role) String() string {
+	switch r {
+	case RoleAdmin:
+		return "admin"
+	case RoleUser:
+		return "user"
+	default:
+		return "unknown"
+	}
+}
+
 func DBToRole(role database.Role) Role {
 	switch role {
 	case database.RoleAdmin:

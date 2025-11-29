@@ -56,6 +56,25 @@ func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (int64
 	return id, err
 }
 
+const createRecipe = `-- name: CreateRecipe :one
+INSERT INTO recipes (user_id, title)
+  VALUES ($1, $2)
+RETURNING
+  id
+`
+
+type CreateRecipeParams struct {
+	UserID pgtype.Int8
+	Title  string
+}
+
+func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createRecipe, arg.UserID, arg.Title)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (email, first_name, last_name, password_hash, role)
   VALUES (trim(lower($4::text)), $1, $2, $3, 'user')

@@ -145,6 +145,15 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/recipe": {
+            "post": {
+                "tags": [
+                    "Recipe"
+                ],
+                "summary": "Create a recipe.",
+                "responses": {}
+            }
+        },
         "/api/session": {
             "post": {
                 "tags": [

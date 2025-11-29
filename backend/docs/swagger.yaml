@@ -152,6 +152,12 @@ paths:
       summary: Ping endpoint.
       tags:
       - Ping
+  /api/recipe:
+    post:
+      responses: {}
+      summary: Create a recipe.
+      tags:
+      - Recipe
   /api/session:
     post:
       parameters:

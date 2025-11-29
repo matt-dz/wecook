@@ -2,6 +2,7 @@
 package token
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
@@ -11,9 +12,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/matt-dz/wecook/internal/env"
-	"github.com/matt-dz/wecook/internal/jwt"
+	mJwt "github.com/matt-dz/wecook/internal/jwt"
 )
+
+type accessTokenKeyType struct{}
+
+var accessTokenKey accessTokenKeyType
 
 const (
 	accessTokenBytes     = 32
@@ -53,12 +59,12 @@ func NewRefreshToken(userid int64) (string, error) {
 	return fmt.Sprintf("%d.%s", userid, randSegment), nil
 }
 
-func NewAccessToken(params jwt.JWTParams, env *env.Env) (string, error) {
+func NewAccessToken(params mJwt.JWTParams, env *env.Env) (string, error) {
 	secret := env.Get("APP_SECRET")
 	if secret == "" {
 		return "", errors.New("environment variable APP_SECRET not defined")
 	}
-	token, err := jwt.GenerateJWT(params, []byte(secret), "1")
+	token, err := mJwt.GenerateJWT(params, []byte(secret), "1")
 	if err != nil {
 		return "", fmt.Errorf("generating access token: %w", err)
 	}
@@ -111,4 +117,16 @@ func ExtractUserIDFromRefreshToken(token string) (int64, error) {
 		return 0, errors.Join(ErrMalformedRefreshToken, err)
 	}
 	return userID, nil
+}
+
+func AccessTokenWithCtx(ctx context.Context, accessToken *jwt.Token) context.Context {
+	return context.WithValue(ctx, accessTokenKey, accessToken)
+}
+
+func AccessTokenFromCtx(ctx context.Context) (*jwt.Token, error) {
+	token, ok := ctx.Value(accessTokenKey).(*jwt.Token)
+	if !ok {
+		return nil, errors.New("invalid access token type")
+	}
+	return token, nil
 }
