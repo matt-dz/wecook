@@ -382,6 +382,49 @@ paths:
       summary: Update a recipe's cover image
       tags:
       - Recipes
+  /api/recipes/{recipeID}/ingredients/{ingredientID}:
+    delete:
+      description: |-
+        Deletes an ingredient from a recipe owned by the authenticated user.
+        This operation is idempotent — deleting a non-existent ingredient returns 404.
+      parameters:
+      - description: ID of the recipe
+        in: path
+        name: recipeID
+        required: true
+        type: string
+      - description: ID of the ingredient to delete
+        in: path
+        name: ingredientID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Ingredient deleted successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid recipe ID or ingredient ID
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "404":
+          description: Recipe not found, not owned by user, or ingredient not found
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      summary: Delete a recipe ingredient
+      tags:
+      - Recipes
+      - Ingredients
   /api/recipes/ingredients:
     post:
       consumes:

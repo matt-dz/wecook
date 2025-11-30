@@ -6,12 +6,24 @@ import (
 )
 
 type (
-	recipeID string
-	quantity string
+	recipeID     string
+	ingredientID string
+	quantity     string
 )
 
 func (r recipeID) Validate() error {
 	v, err := strconv.ParseInt(string(r), 10, 64)
+	if err != nil {
+		return errors.New("expected an integer")
+	}
+	if v < 0 {
+		return errors.New("recipe id should be non-negative")
+	}
+	return nil
+}
+
+func (i ingredientID) Validate() error {
+	v, err := strconv.ParseInt(string(i), 10, 64)
 	if err != nil {
 		return errors.New("expected an integer")
 	}

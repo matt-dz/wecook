@@ -182,6 +182,16 @@ func (q *Queries) DeleteRecipe(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteRecipeIngredient = `-- name: DeleteRecipeIngredient :exec
+DELETE FROM recipe_ingredients
+WHERE id = $1
+`
+
+func (q *Queries) DeleteRecipeIngredient(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteRecipeIngredient, id)
+	return err
+}
+
 const getAdminCount = `-- name: GetAdminCount :one
 SELECT
   count(*)
@@ -250,6 +260,40 @@ func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAnd
 		&i.ID,
 	)
 	return i, err
+}
+
+const getRecipeIngredientExistance = `-- name: GetRecipeIngredientExistance :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      recipe_ingredients
+    WHERE
+      id = $1)
+`
+
+func (q *Queries) GetRecipeIngredientExistance(ctx context.Context, id int64) (bool, error) {
+	row := q.db.QueryRow(ctx, getRecipeIngredientExistance, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const getRecipeIngredientImageURL = `-- name: GetRecipeIngredientImageURL :one
+SELECT
+  image_url
+FROM
+  recipe_ingredients
+WHERE
+  id = $1
+`
+
+func (q *Queries) GetRecipeIngredientImageURL(ctx context.Context, id int64) (pgtype.Text, error) {
+	row := q.db.QueryRow(ctx, getRecipeIngredientImageURL, id)
+	var image_url pgtype.Text
+	err := row.Scan(&image_url)
+	return image_url, err
 }
 
 const getRecipeIngredients = `-- name: GetRecipeIngredients :many
@@ -364,7 +408,7 @@ FROM
   recipes r
   JOIN users u ON r.user_id = u.id
 WHERE
-  r.id = $1
+  u.id = $1
 ORDER BY
   r.updated_at DESC
 `

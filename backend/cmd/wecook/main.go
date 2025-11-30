@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/mail"
 	"os"
+	"path/filepath"
 
 	"github.com/matt-dz/wecook/internal/api"
 	"github.com/matt-dz/wecook/internal/argon2id"
@@ -115,12 +116,17 @@ func main() {
 		env.Logger.Error("environment variable FILESERVER_VOLUME not defined")
 		os.Exit(1)
 	}
+	fileserverPath, err := filepath.Abs(fileserverVolume)
+	if err != nil {
+		env.Logger.Error("invalid FILESERVER_VOLUME value", slog.Any("error", err))
+		os.Exit(1)
+	}
 	nginxURL := env.Get("NGINX_URL")
 	if nginxURL == "" {
 		env.Logger.Error("environment variable NGINX_URL not defined")
 		os.Exit(1)
 	}
-	env.FileServer = fileserver.New(fileserverVolume, nginxURL)
+	env.FileServer = fileserver.New(fileserverPath, nginxURL)
 
 	db, err := initDB(context.TODO(), env.Logger)
 	if err != nil {

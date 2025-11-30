@@ -515,6 +515,67 @@
                 }
             }
         },
+        "/api/recipes/{recipeID}/ingredients/{ingredientID}": {
+            "delete": {
+                "description": "Deletes an ingredient from a recipe owned by the authenticated user.\nThis operation is idempotent — deleting a non-existent ingredient returns 404.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes",
+                    "Ingredients"
+                ],
+                "summary": "Delete a recipe ingredient",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the recipe",
+                        "name": "recipeID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID of the ingredient to delete",
+                        "name": "ingredientID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Ingredient deleted successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid recipe ID or ingredient ID",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Recipe not found, not owned by user, or ingredient not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/api/session": {
             "post": {
                 "tags": [

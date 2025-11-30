@@ -71,6 +71,7 @@ func addRoutes(router *chi.Mux) {
 			r.Get("/recipes/personal", recipes.GetPersonalRecipes)
 			r.Post("/recipes/{recipeID}/cover", recipes.UpdateRecipeCover)
 			r.Delete("/recipes/{recipeID}", recipes.DeleteRecipe)
+			r.Delete("/recipes/{recipeID}/ingredients/{ingredientID}", recipes.DeleteRecipeIngredient)
 		})
 		r.Get("/recipes/{recipeID}", recipes.GetRecipe)
 	})

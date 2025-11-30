@@ -534,7 +534,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 			Unit:     ingredient.Unit.String,
 		})
 		if ingredient.ImageUrl.String != "" {
-			res.Recipe.Ingredients[len(res.Recipe.Steps)-1].ImageURL = env.FileServer.FileURL(ingredient.ImageUrl.String)
+			res.Recipe.Ingredients[len(res.Recipe.Ingredients)-1].ImageURL = env.FileServer.FileURL(ingredient.ImageUrl.String)
 		}
 	}
 	env.Logger.DebugContext(ctx, "writing response")
@@ -682,6 +682,114 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 		env.Logger.ErrorContext(ctx, "failed to delete recipe", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)
 		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// DeleteRecipeIngredient godoc
+//
+//	@Summary		Delete a recipe ingredient
+//	@Description	Deletes an ingredient from a recipe owned by the authenticated user.
+//	@Description	This operation is idempotent — deleting a non-existent ingredient returns 404.
+//	@Tags			Recipes, Ingredients
+//	@Produce		json
+//
+//	@Param			recipeID		path		string			true	"ID of the recipe"
+//	@Param			ingredientID	path		string			true	"ID of the ingredient to delete"
+//
+//	@Success		204				{string}	string			"Ingredient deleted successfully"
+//	@Failure		400				{object}	apiError.Error	"Invalid recipe ID or ingredient ID"
+//	@Failure		401				{object}	apiError.Error	"Unauthorized"
+//	@Failure		404				{object}	apiError.Error	"Recipe not found, not owned by user, or ingredient not found"
+//	@Failure		500				{object}	apiError.Error	"Internal server error"
+//
+//	@Router			/api/recipes/{recipeID}/ingredients/{ingredientID} [delete]
+func DeleteRecipeIngredient(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Read request
+	env.Logger.DebugContext(ctx, "reading request")
+	recipeIDQ := recipeID(chi.URLParam(r, "recipeID"))
+	if err := recipeIDQ.Validate(); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate recipe id", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "invalid recipe id", requestID)
+		return
+	}
+	recipeID, _ := strconv.ParseInt(string(recipeIDQ), 10, 64)
+	ingredientIDQ := ingredientID(chi.URLParam(r, "ingredientID"))
+	if err := ingredientIDQ.Validate(); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate ingredient id", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "invalid ingredient id", requestID)
+		return
+	}
+	ingredientID, _ := strconv.ParseInt(string(ingredientIDQ), 10, 64)
+
+	// Check ownership
+	env.Logger.DebugContext(ctx, "checking user ownership")
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: recipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check recipe ownership", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if !ownsRecipe {
+		env.Logger.ErrorContext(ctx, "user does not own recipe")
+		_ = apiError.EncodeError(w, apiError.RecipeNotFound,
+			"recipe does not exist or user does not own it", requestID)
+		return
+	}
+	env.Logger.DebugContext(ctx, "checking ingredient existence")
+	exists, err := env.Database.GetRecipeIngredientExistance(ctx, ingredientID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get ingredient existence", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if !exists {
+		env.Logger.ErrorContext(ctx, "ingredient not found", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.IngredientNotFound, "ingredient not found", requestID)
+		return
+	}
+
+	// Get ingredient image url
+	env.Logger.DebugContext(ctx, "getting ingredient image url")
+	imageURL, err := env.Database.GetRecipeIngredientImageURL(ctx, ingredientID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get ingredient image url", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Delete ingredient
+	env.Logger.DebugContext(ctx, "deleting ingredient")
+	err = env.Database.DeleteRecipeIngredient(ctx, ingredientID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to delete ingredient", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if imageURL.String != "" {
+		err := env.FileServer.Delete(imageURL.String)
+		if err != nil {
+			env.Logger.WarnContext(ctx, "failed to delete image, manual cleanup required",
+				slog.Any("error", err),
+				slog.String("image-path", imageURL.String))
+		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)

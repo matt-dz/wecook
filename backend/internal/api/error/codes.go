@@ -18,6 +18,7 @@ const (
 	AdminAlreadySetup       = "admin_already_setup"
 	RecipeNotFound          = "recipe_not_found"
 	RecipeNotOwned          = "recipe_not_owned"
+	IngredientNotFound      = "ingredient_not_found"
 )
 
 var errorCodeToStatusCode = map[ErrorCode]int{
@@ -34,4 +35,5 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	AdminAlreadySetup:       http.StatusConflict,
 	RecipeNotFound:          http.StatusNotFound,
 	RecipeNotOwned:          http.StatusForbidden,
+	IngredientNotFound:      http.StatusNotFound,
 }

@@ -182,10 +182,32 @@ FROM
   recipes r
   JOIN users u ON r.user_id = u.id
 WHERE
-  r.id = $1
+  u.id = $1
 ORDER BY
   r.updated_at DESC;
 
 -- name: DeleteRecipe :exec
 DELETE FROM recipes
 WHERE id = $1;
+
+-- name: DeleteRecipeIngredient :exec
+DELETE FROM recipe_ingredients
+WHERE id = $1;
+
+-- name: GetRecipeIngredientImageURL :one
+SELECT
+  image_url
+FROM
+  recipe_ingredients
+WHERE
+  id = $1;
+
+-- name: GetRecipeIngredientExistance :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      recipe_ingredients
+    WHERE
+      id = $1);
