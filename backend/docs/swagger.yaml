@@ -425,6 +425,68 @@ paths:
       tags:
       - Recipes
       - Ingredients
+    patch:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Partially updates a recipe ingredient.
+        Supports updating the ingredient's name, unit, quantity, or image.
+        Fields are only updated if provided. Sending an empty body results in a no-op.
+      parameters:
+      - description: ID of the recipe
+        in: path
+        name: recipeID
+        required: true
+        type: integer
+      - description: ID of the ingredient to update
+        in: path
+        name: ingredientID
+        required: true
+        type: integer
+      - description: Updated quantity (float)
+        in: formData
+        name: quantity
+        type: string
+      - description: Updated unit (e.g. 'tsp', 'grams')
+        in: formData
+        name: unit
+        type: string
+      - description: Updated ingredient name
+        in: formData
+        name: name
+        type: string
+      - description: Updated ingredient image
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Ingredient updated successfully
+        "400":
+          description: Bad request (invalid form or invalid fields)
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "404":
+          description: Recipe not found, ingredient not found, or recipe not owned
+            by user
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      security:
+      - AccessToken: []
+      summary: Update a recipe ingredient
+      tags:
+      - Recipes
+      - Ingredients
   /api/recipes/{recipeID}/steps/{stepID}:
     delete:
       description: |-

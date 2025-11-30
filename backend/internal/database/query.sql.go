@@ -584,6 +584,37 @@ func (q *Queries) UpdateRecipeCoverImage(ctx context.Context, arg UpdateRecipeCo
 	return err
 }
 
+const updateRecipeIngredient = `-- name: UpdateRecipeIngredient :exec
+UPDATE
+  recipe_ingredients
+SET
+  quantity = coalesce($2, quantity),
+  unit = coalesce($3, unit),
+  name = coalesce($4, name),
+  image_url = coalesce($5, image_url)
+WHERE
+  id = $1
+`
+
+type UpdateRecipeIngredientParams struct {
+	ID       int64
+	Quantity pgtype.Float4
+	Unit     pgtype.Text
+	Name     pgtype.Text
+	ImageUrl pgtype.Text
+}
+
+func (q *Queries) UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) error {
+	_, err := q.db.Exec(ctx, updateRecipeIngredient,
+		arg.ID,
+		arg.Quantity,
+		arg.Unit,
+		arg.Name,
+		arg.ImageUrl,
+	)
+	return err
+}
+
 const updateRecipeIngredientImage = `-- name: UpdateRecipeIngredientImage :exec
 UPDATE
   recipe_ingredients

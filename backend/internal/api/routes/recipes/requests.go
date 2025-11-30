@@ -56,3 +56,14 @@ type UpdateRecipeStepRequest struct {
 	RecipeID wecookID `validate:"required,validateFn"`
 	StepID   wecookID `validate:"required,validateFn"`
 }
+
+type UpdateRecipeIngredientRequest struct {
+	RecipeID     wecookID `validate:"required,validateFn"`
+	IngredientID wecookID `validate:"required,validateFn"`
+}
+
+type UpdateRecipeIngredientForm struct {
+	Quantity string `validate:"omitempty,numeric"`
+	Unit     string `validate:"omitempty"`
+	Name     string `validate:"omitempty"`
+}

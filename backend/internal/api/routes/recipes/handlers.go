@@ -1044,3 +1044,164 @@ func UpdateRecipeStep(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// UpdateRecipeIngredient godoc
+//
+//	@Summary		Update a recipe ingredient
+//	@Description	Partially updates a recipe ingredient.
+//	@Description	Supports updating the ingredient's name, unit, quantity, or image.
+//	@Description	Fields are only updated if provided. Sending an empty body results in a no-op.
+//	@Tags			Recipes, Ingredients
+//	@Security		AccessToken
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			recipeID		path		int		true	"ID of the recipe"
+//	@Param			ingredientID	path		int		true	"ID of the ingredient to update"
+//	@Param			quantity		formData	string	false	"Updated quantity (float)"
+//	@Param			unit			formData	string	false	"Updated unit (e.g. 'tsp', 'grams')"
+//	@Param			name			formData	string	false	"Updated ingredient name"
+//	@Param			image			formData	file	false	"Updated ingredient image"
+//	@Success		204				"Ingredient updated successfully"
+//	@Failure		400				{object}	apiError.Error	"Bad request (invalid form or invalid fields)"
+//	@Failure		401				{object}	apiError.Error	"Unauthorized"
+//	@Failure		404				{object}	apiError.Error	"Recipe not found, ingredient not found, or recipe not owned by user"
+//	@Failure		500				{object}	apiError.Error	"Internal server error"
+//	@Router			/api/recipes/{recipeID}/ingredients/{ingredientID} [patch]
+func UpdateRecipeIngredient(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Read recipeID and stepID
+	env.Logger.DebugContext(ctx, "reading request")
+	request := UpdateRecipeIngredientRequest{
+		RecipeID:     wecookID(chi.URLParam(r, "recipeID")),
+		IngredientID: wecookID(chi.URLParam(r, "ingredientID")),
+	}
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	if err := validate.Struct(request); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate request", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "bad request", requestID)
+		return
+	}
+	recipeID, _ := request.RecipeID.Int()
+	ingredientID, _ := request.IngredientID.Int()
+
+	// Check ownership and existence
+	env.Logger.DebugContext(ctx, "checking user ownership")
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: recipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check recipe ownership", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if !ownsRecipe {
+		env.Logger.ErrorContext(ctx, "user does not own recipe")
+		_ = apiError.EncodeError(w, apiError.RecipeNotFound,
+			"recipe does not exist or user does not own it", requestID)
+		return
+	}
+	env.Logger.DebugContext(ctx, "checking ingredient existence")
+	exists, err := env.Database.GetRecipeIngredientExistence(ctx, ingredientID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check ingredient existence", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if !exists {
+		env.Logger.ErrorContext(ctx, "ingredient not found", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.IngredientNotFound, "ingredient not found", requestID)
+		return
+	}
+
+	// Parse form
+	env.Logger.DebugContext(ctx, "parsing form")
+	if r.ContentLength == 0 {
+		env.Logger.DebugContext(ctx, "form is empty")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to parse multipart form", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "invalid multipart form", requestID)
+		return
+	}
+	uploadedImage, err := recipe.ReadImage(r, "image")
+	if errors.Is(err, recipe.ErrNoImageUploaded) {
+		env.Logger.DebugContext(ctx, "no image uploaded")
+	} else if errors.Is(err, recipe.ErrUnsupportedMimeType) {
+		env.Logger.ErrorContext(ctx, "unsupported file type", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "invalid file type", requestID)
+		return
+	} else if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to read step image", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	form := UpdateRecipeIngredientForm{
+		Quantity: r.Form.Get("quantity"),
+		Unit:     r.Form.Get("unit"),
+		Name:     r.Form.Get("name"),
+	}
+	if err := validate.Struct(form); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate form", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "failed to validate form", requestID)
+		return
+	}
+
+	// Update ingredient
+	env.Logger.DebugContext(ctx, "updating ingredient")
+	params := database.UpdateRecipeIngredientParams{
+		ID: ingredientID,
+	}
+	if uploadedImage != nil {
+		location, _, err := env.FileServer.Write(fileserver.NewIngredientsImage(
+			request.RecipeID.String(), request.IngredientID.String(), uploadedImage.Suffix), uploadedImage.Data)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to write image", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+		params.ImageUrl.String = location
+		params.ImageUrl.Valid = true
+	}
+	if r.Form.Has("quantity") {
+		quantity, err := strconv.ParseFloat(form.Quantity, 32)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to parse float", slog.Any("error", err))
+			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid quantity", requestID)
+			return
+		}
+		params.Quantity.Float32 = float32(quantity)
+		params.Quantity.Valid = true
+	}
+	if r.Form.Has("unit") {
+		params.Unit.String = form.Unit
+		params.Unit.Valid = true
+	}
+	if r.Form.Has("name") {
+		params.Name.String = form.Name
+		params.Name.Valid = true
+	}
+	err = env.Database.UpdateRecipeIngredient(ctx, params)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to update recipe ingredient", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

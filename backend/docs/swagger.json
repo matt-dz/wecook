@@ -574,6 +574,94 @@
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "AccessToken": []
+                    }
+                ],
+                "description": "Partially updates a recipe ingredient.\nSupports updating the ingredient's name, unit, quantity, or image.\nFields are only updated if provided. Sending an empty body results in a no-op.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes",
+                    "Ingredients"
+                ],
+                "summary": "Update a recipe ingredient",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID of the recipe",
+                        "name": "recipeID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID of the ingredient to update",
+                        "name": "ingredientID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Updated quantity (float)",
+                        "name": "quantity",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Updated unit (e.g. 'tsp', 'grams')",
+                        "name": "unit",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Updated ingredient name",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Updated ingredient image",
+                        "name": "image",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Ingredient updated successfully"
+                    },
+                    "400": {
+                        "description": "Bad request (invalid form or invalid fields)",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Recipe not found, ingredient not found, or recipe not owned by user",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
             }
         },
         "/api/recipes/{recipeID}/steps/{stepID}": {

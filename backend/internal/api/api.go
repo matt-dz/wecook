@@ -74,6 +74,7 @@ func addRoutes(router *chi.Mux) {
 			r.Delete("/recipes/{recipeID}/ingredients/{ingredientID}", recipes.DeleteRecipeIngredient)
 			r.Delete("/recipes/{recipeID}/steps/{stepID}", recipes.DeleteRecipeStep)
 			r.Patch("/recipes/{recipeID}/steps/{stepID}", recipes.UpdateRecipeStep)
+			r.Patch("/recipes/{recipeID}/ingredients/{ingredientID}", recipes.UpdateRecipeIngredient)
 		})
 		r.Get("/recipes/{recipeID}", recipes.GetRecipe)
 	})

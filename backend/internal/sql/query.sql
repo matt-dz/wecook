@@ -241,3 +241,14 @@ SET
   instruction = $1
 WHERE
   id = $2;
+
+-- name: UpdateRecipeIngredient :exec
+UPDATE
+  recipe_ingredients
+SET
+  quantity = coalesce(sqlc.narg ('quantity'), quantity),
+  unit = coalesce(sqlc.narg ('unit'), unit),
+  name = coalesce(sqlc.narg ('name'), name),
+  image_url = coalesce(sqlc.narg ('image_url'), image_url)
+WHERE
+  id = $1;
