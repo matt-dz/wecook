@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	imageField      = "image"
 	magicNumberSeek = 512
 )
 
@@ -42,8 +41,8 @@ var (
 	ErrNoImageUploaded     = errors.New("image not uploaded")
 )
 
-func ReadImage(r *http.Request) (*UploadedFile, error) {
-	f, _, err := r.FormFile(imageField)
+func ReadImage(r *http.Request, field string) (*UploadedFile, error) {
+	f, _, err := r.FormFile(field)
 	if errors.Is(err, http.ErrMissingFile) {
 		return nil, errors.Join(ErrNoImageUploaded, err)
 	} else if err != nil {

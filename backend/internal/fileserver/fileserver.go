@@ -14,7 +14,8 @@ const (
 
 const (
 	IngredientsDir = "ingredients"
-	StepsDir       = "steps"
+	stepsDir       = "steps"
+	coverDir       = "covers"
 )
 
 type FileServer struct {
@@ -60,4 +61,16 @@ func (f *FileServer) Exists(path string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func NewStepsImage(recipeID, stepID, suffix string) string {
+	return filepath.Join(stepsDir, recipeID, fmt.Sprintf("%s%s", stepID, suffix))
+}
+
+func NewCoverImage(recipeID, suffix string) string {
+	return filepath.Join(coverDir, fmt.Sprintf("%s%s", recipeID, suffix))
+}
+
+func NewIngredientsImage(recipeID, ingredientsID, suffix string) string {
+	return filepath.Join(stepsDir, recipeID, fmt.Sprintf("%s%s", ingredientsID, suffix))
 }

@@ -116,3 +116,11 @@ SELECT
     WHERE
       id = $1
       AND user_id = $2);
+
+-- name: UpdateRecipeCoverImage :exec
+UPDATE
+  recipes
+SET
+  image_url = $1
+WHERE
+  id = $2;
