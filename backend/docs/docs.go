@@ -583,6 +583,18 @@ const docTemplate = `{
                 "image_url": {
                     "type": "string"
                 },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api_routes_recipes.RecipeResponseRecipeIngredient"
+                    }
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api_routes_recipes.RecipeResponseRecipeStep"
+                    }
+                },
                 "title": {
                     "type": "string"
                 },
@@ -591,6 +603,55 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_api_routes_recipes.RecipeResponseRecipeIngredient": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "recipe_id": {
+                    "type": "integer"
+                },
+                "unit": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_routes_recipes.RecipeResponseRecipeStep": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "instruction": {
+                    "type": "string"
+                },
+                "recipe_id": {
+                    "type": "integer"
+                },
+                "step_number": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },

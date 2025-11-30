@@ -49,12 +49,52 @@ definitions:
         type: string
       image_url:
         type: string
+      ingredients:
+        items:
+          $ref: '#/definitions/internal_api_routes_recipes.RecipeResponseRecipeIngredient'
+        type: array
+      steps:
+        items:
+          $ref: '#/definitions/internal_api_routes_recipes.RecipeResponseRecipeStep'
+        type: array
       title:
         type: string
       updated_at:
         type: string
       user_id:
         type: integer
+    type: object
+  internal_api_routes_recipes.RecipeResponseRecipeIngredient:
+    properties:
+      id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      quantity:
+        type: number
+      recipe_id:
+        type: integer
+      unit:
+        type: string
+    type: object
+  internal_api_routes_recipes.RecipeResponseRecipeStep:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      instruction:
+        type: string
+      recipe_id:
+        type: integer
+      step_number:
+        type: integer
+      updated_at:
+        type: string
     type: object
   internal_api_routes_recipes.RecipeResponseUser:
     properties:
