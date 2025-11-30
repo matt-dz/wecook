@@ -66,7 +66,12 @@ func main() {
 		env.Logger.Error("environment variable FILESERVER_VOLUME not defined")
 		os.Exit(1)
 	}
-	env.FileServer = fileserver.New(fileserverVolume)
+	nginxURL := env.Get("NGINX_URL")
+	if nginxURL == "" {
+		env.Logger.Error("environment variable NGINX_URL not defined")
+		os.Exit(1)
+	}
+	env.FileServer = fileserver.New(fileserverVolume, nginxURL)
 
 	db, err := initDB(context.TODO(), env.Logger)
 	if err != nil {

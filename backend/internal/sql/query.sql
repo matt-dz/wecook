@@ -143,3 +143,23 @@ FROM
   JOIN users u ON r.user_id = u.id
 WHERE
   r.id = $1;
+
+-- name: GetRecipeSteps :many
+SELECT
+  *
+FROM
+  recipe_steps
+WHERE
+  recipe_id = $1
+ORDER BY
+  step_number ASC;
+
+-- name: GetRecipeIngredients :many
+SELECT
+  *
+FROM
+  recipe_ingredients
+WHERE
+  recipe_id = $1
+ORDER BY
+  created_at ASC;

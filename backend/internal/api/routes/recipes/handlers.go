@@ -477,25 +477,67 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 		_ = apiError.EncodeInternalError(w, requestID)
 		return
 	}
+	steps, err := env.Database.GetRecipeSteps(ctx, recipeID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe steps", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	ingredients, err := env.Database.GetRecipeIngredients(ctx, recipeID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe ingredients", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
 
 	// Write response
-	env.Logger.DebugContext(ctx, "writing response")
-	bytes, err := json.Marshal(GetRecipeResponse{
+	res := GetRecipeResponse{
 		Recipe: RecipeResponseRecipe{
 			CookeTimeMinutes: uint(row.CookTimeMinutes.Int32),
 			UserID:           row.UserID.Int64,
 			CreatedAt:        row.CreatedAt.Time,
 			UpdatedAt:        row.UpdatedAt.Time,
-			ImageURL:         row.ImageUrl.String,
 			Title:            row.Title,
 			Description:      row.Description.String,
+			Steps:            make([]RecipeResponseRecipeStep, 0),
+			Ingredients:      make([]RecipeResponseRecipeIngredient, 0),
 		},
 		User: RecipeResponseUser{
 			FirstName: row.FirstName,
 			LastName:  row.LastName,
 			ID:        row.UserID.Int64,
 		},
-	})
+	}
+	if row.ImageUrl.String != "" {
+		res.Recipe.ImageURL = env.FileServer.FileURL(row.ImageUrl.String)
+	}
+	for _, step := range steps {
+		res.Recipe.Steps = append(res.Recipe.Steps, RecipeResponseRecipeStep{
+			ID:          step.ID,
+			RecipeID:    step.RecipeID,
+			StepNumber:  step.StepNumber,
+			Instruction: step.Instruction,
+			CreatedAt:   step.CreatedAt.Time,
+			UpdatedAt:   step.UpdatedAt.Time,
+		})
+		if step.ImageUrl.String != "" {
+			res.Recipe.Steps[len(res.Recipe.Steps)-1].ImageURL = env.FileServer.FileURL(step.ImageUrl.String)
+		}
+	}
+	for _, ingredient := range ingredients {
+		res.Recipe.Ingredients = append(res.Recipe.Ingredients, RecipeResponseRecipeIngredient{
+			ID:       ingredient.ID,
+			RecipeID: ingredient.RecipeID,
+			Quantity: ingredient.Quantity,
+			Name:     ingredient.Name,
+			Unit:     ingredient.Unit.String,
+		})
+		if ingredient.ImageUrl.String != "" {
+			res.Recipe.Ingredients[len(res.Recipe.Steps)-1].ImageURL = env.FileServer.FileURL(ingredient.ImageUrl.String)
+		}
+	}
+	env.Logger.DebugContext(ctx, "writing response")
+	bytes, err := json.Marshal(res)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to marshal response", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)

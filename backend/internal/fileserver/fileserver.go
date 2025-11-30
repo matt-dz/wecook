@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -19,12 +20,14 @@ const (
 )
 
 type FileServer struct {
-	baseDir string
+	baseDir   string
+	serverURL string
 }
 
-func New(baseDir string) *FileServer {
+func New(baseDir, serverURL string) *FileServer {
 	return &FileServer{
-		baseDir: baseDir,
+		baseDir:   baseDir,
+		serverURL: serverURL,
 	}
 }
 
@@ -61,6 +64,20 @@ func (f *FileServer) Exists(path string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func (f *FileServer) FileURL(path string) string {
+	if f == nil {
+		return ""
+	}
+	var scheme string
+	if strings.HasPrefix(f.serverURL, "http://") {
+		scheme = "http://"
+	} else if strings.HasPrefix(f.serverURL, "https://") {
+		scheme = "https://"
+	}
+	host, _ := strings.CutPrefix(f.serverURL, scheme)
+	return scheme + filepath.Join(host, path)
 }
 
 func NewStepsImage(recipeID, stepID, suffix string) string {

@@ -241,6 +241,46 @@ func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAnd
 	return i, err
 }
 
+const getRecipeIngredients = `-- name: GetRecipeIngredients :many
+SELECT
+  id, recipe_id, quantity, unit, name, image_url, created_at, updated_at
+FROM
+  recipe_ingredients
+WHERE
+  recipe_id = $1
+ORDER BY
+  created_at ASC
+`
+
+func (q *Queries) GetRecipeIngredients(ctx context.Context, recipeID int64) ([]RecipeIngredient, error) {
+	rows, err := q.db.Query(ctx, getRecipeIngredients, recipeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RecipeIngredient
+	for rows.Next() {
+		var i RecipeIngredient
+		if err := rows.Scan(
+			&i.ID,
+			&i.RecipeID,
+			&i.Quantity,
+			&i.Unit,
+			&i.Name,
+			&i.ImageUrl,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRecipeOwner = `-- name: GetRecipeOwner :one
 SELECT
   user_id
@@ -255,6 +295,45 @@ func (q *Queries) GetRecipeOwner(ctx context.Context, id int64) (pgtype.Int8, er
 	var user_id pgtype.Int8
 	err := row.Scan(&user_id)
 	return user_id, err
+}
+
+const getRecipeSteps = `-- name: GetRecipeSteps :many
+SELECT
+  id, recipe_id, step_number, instruction, image_url, created_at, updated_at
+FROM
+  recipe_steps
+WHERE
+  recipe_id = $1
+ORDER BY
+  step_number ASC
+`
+
+func (q *Queries) GetRecipeSteps(ctx context.Context, recipeID int64) ([]RecipeStep, error) {
+	rows, err := q.db.Query(ctx, getRecipeSteps, recipeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RecipeStep
+	for rows.Next() {
+		var i RecipeStep
+		if err := rows.Scan(
+			&i.ID,
+			&i.RecipeID,
+			&i.StepNumber,
+			&i.Instruction,
+			&i.ImageUrl,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUser = `-- name: GetUser :one
