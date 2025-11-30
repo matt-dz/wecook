@@ -5,14 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/mail"
 	"os"
 
 	"github.com/matt-dz/wecook/internal/api"
+	"github.com/matt-dz/wecook/internal/argon2id"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/fileserver"
 	"github.com/matt-dz/wecook/internal/http"
 	"github.com/matt-dz/wecook/internal/log"
+	"github.com/matt-dz/wecook/internal/password"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -57,6 +60,52 @@ func initDB(ctx context.Context, logger *slog.Logger) (*database.Database, error
 	return db, nil
 }
 
+func setupAdmin(env *env.Env, ctx context.Context) error {
+	// Get email and password
+	adminEmail, adminPassword := env.Get("ADMIN_EMAIL"), env.Get("ADMIN_PASSWORD")
+	if adminEmail == "" || adminPassword == "" {
+		env.Logger.Info("ADMIN_EMAIL and ADMIN_PASSWORD not setup, skipping admin setup")
+		return nil
+	}
+
+	// Validate email and password
+	if _, err := mail.ParseAddress(adminEmail); err != nil {
+		return fmt.Errorf("parsing admin email: %w", err)
+	}
+	if err := password.ValidatePassword(adminPassword); err != nil {
+		return fmt.Errorf("validating admin password: %w", err)
+	}
+
+	// Check admin count
+	count, err := env.Database.GetAdminCount(ctx)
+	if err != nil {
+		return fmt.Errorf("getting admin count: %w", err)
+	}
+	if count > 0 {
+		env.Logger.Info("admin already setup, skipping setup")
+		return nil
+	}
+
+	hashedPassword, err := argon2id.EncodeHash(adminPassword, argon2id.DefaultParams)
+	if err != nil {
+		return fmt.Errorf("hashing password: %w", err)
+	}
+
+	// Create admin
+	_, err = env.Database.CreateAdmin(ctx, database.CreateAdminParams{
+		FirstName:    "admin",
+		LastName:     "admin",
+		PasswordHash: hashedPassword,
+		Email:        adminEmail,
+	})
+	if err != nil {
+		return fmt.Errorf("creating admin: %w", err)
+	}
+	env.Logger.Info("successfully setup admin!")
+
+	return nil
+}
+
 func main() {
 	env := env.New(log.New(nil), nil, http.New(), nil)
 	env.HTTP.Logger = env.Logger
@@ -79,6 +128,10 @@ func main() {
 		os.Exit(1)
 	}
 	env.Database = db
+	if err := setupAdmin(env, context.Background()); err != nil {
+		env.Logger.Warn("failed to setup admin", slog.Any("error", err))
+		os.Exit(1)
+	}
 
 	if err := api.Start(env); err != nil {
 		env.Logger.Error("API Failed", slog.Any("error", err))
