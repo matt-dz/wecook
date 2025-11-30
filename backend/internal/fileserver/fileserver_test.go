@@ -15,7 +15,7 @@ func newTestFileServer(t *testing.T) (*FileServer, string) {
 	base := t.TempDir()
 
 	// Make sure allowed top-level dirs are predictable for tests
-	topLevelDirectories = []string{"covers", "steps"}
+	topLevelDirectories = []string{"covers", "steps", "ingredients"}
 
 	// Minimal construction: assumes FileServer has a baseDir field
 	return &FileServer{baseDir: base}, base
@@ -382,5 +382,82 @@ func TestFileServerDelete_NilReceiverNoop(t *testing.T) {
 	// Should not panic and should return nil
 	if err := fs.Delete("covers/recipe1/step1.png"); err != nil {
 		t.Fatalf("expected nil error on nil receiver, got %v", err)
+	}
+}
+
+func TestFileServer_Write_Basic(t *testing.T) {
+	fs, base := newTestFileServer(t)
+
+	path := filepath.Join("covers", "recipe1", "cover.png")
+	data := []byte("hello, world")
+
+	location, n, err := fs.Write(path, data)
+	if err != nil {
+		t.Fatalf("Write() returned unexpected error: %v", err)
+	}
+
+	if n != len(data) {
+		t.Fatalf("Write() wrote %d bytes, want %d", n, len(data))
+	}
+
+	// location should be urlBaseDir + path
+	expectedLocation := filepath.Join(urlBaseDir, path)
+	if location != expectedLocation {
+		t.Fatalf("Write() location = %q, want %q", location, expectedLocation)
+	}
+
+	// File should exist on disk at baseDir + path
+	fullPath := filepath.Join(base, path)
+	content, err := os.ReadFile(fullPath)
+	if err != nil {
+		t.Fatalf("failed to read written file: %v", err)
+	}
+	if string(content) != string(data) {
+		t.Fatalf("file contents = %q, want %q", string(content), string(data))
+	}
+
+	// Intermediate directories should exist
+	dir := filepath.Dir(fullPath)
+	if _, err := os.Stat(dir); err != nil {
+		t.Fatalf("expected directory %q to exist, got error: %v", dir, err)
+	}
+}
+
+func TestFileServer_Write_NilReceiver(t *testing.T) {
+	var fs *FileServer
+
+	location, n, err := fs.Write("whatever/path.png", []byte("data"))
+	if err != nil {
+		t.Fatalf("expected nil error for nil receiver, got %v", err)
+	}
+	if location != "" {
+		t.Fatalf("expected empty location for nil receiver, got %q", location)
+	}
+	if n != 0 {
+		t.Fatalf("expected 0 bytes written for nil receiver, got %d", n)
+	}
+}
+
+func TestFileServer_Write_CreatesNestedDirectories(t *testing.T) {
+	fs, base := newTestFileServer(t)
+
+	path := filepath.Join("steps", "123", "1.png")
+	data := []byte("step image")
+
+	_, _, err := fs.Write(path, data)
+	if err != nil {
+		t.Fatalf("Write() returned unexpected error: %v", err)
+	}
+
+	fullPath := filepath.Join(base, path)
+	// Check file exists
+	if _, err := os.Stat(fullPath); err != nil {
+		t.Fatalf("expected file %q to exist, got error: %v", fullPath, err)
+	}
+
+	// Check nested dirs exist
+	nestedDir := filepath.Dir(fullPath)
+	if _, err := os.Stat(nestedDir); err != nil {
+		t.Fatalf("expected directory %q to exist, got error: %v", nestedDir, err)
 	}
 }
