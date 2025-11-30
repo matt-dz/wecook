@@ -10,24 +10,15 @@ services:
       retries: 5
     volumes:
       - db-data:/var/lib/postgresql
-  garage:
-    image: dxflrs/garage:v2.1.0
-    container_name: wecook_garage
-    hostname: wecook_garage
+  fileserver:
+    image: nginx:alpine
+    container_name: wecook_fileserver
+    restart: unless-stopped
     ports:
-      - 3900:3900
-      - 3901:3901
-      - 3902:3902
-      - 3903:3903
+      - "8081:80"
     volumes:
-      - ./garage.toml:/etc/garage.toml:ro # https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/
-      - s3-meta:/var/lib/garage/meta
-      - s3-data:/var/lib/garage/data
-    healthcheck:
-      test: ["CMD", "/garage", "status"] # TODO: check if this fails if not healthy
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - files-data:/data/files:ro
+      - ./fileserver.conf:/etc/nginx/conf.d/default.conf:ro
   backend:
     build: backend/
     container_name: wecook_backend
@@ -39,13 +30,15 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      garage:
-        condition: service_healthy
+      fileserver:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/ping || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - files-data:/data/files
   frontend:
     build: frontend/
     container_name: wecook_frontend
@@ -54,6 +47,7 @@ services:
       - 3000:3000
 
 volumes:
+  files-data:
   db-data:
   s3-meta:
   s3-data:

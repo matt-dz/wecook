@@ -69,3 +69,25 @@ INSERT INTO recipes (user_id, title)
   VALUES ($1, $2)
 RETURNING
   id;
+
+-- name: GetRecipeOwner :one
+SELECT
+  user_id
+FROM
+  recipes
+WHERE
+  id = $1;
+
+-- name: CreateRecipeIngredient :one
+INSERT INTO recipe_ingredients (recipe_id, quantity, unit, name, image_url)
+  VALUES ($1, $2, $3, $4, $5)
+RETURNING
+  id;
+
+-- name: UpdateRecipeIngredientImage :exec
+UPDATE
+  recipe_ingredients
+SET
+  image_url = $1
+WHERE
+  id = $2;

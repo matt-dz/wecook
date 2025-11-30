@@ -270,6 +270,7 @@ func HandleRefreshSession(w http.ResponseWriter, r *http.Request) {
 	if errors.Is(err, pgx.ErrNoRows) {
 		env.Logger.ErrorContext(ctx, "no user with given id", slog.Int64("user-id", userID), slog.Any("error", err))
 		_ = apiError.EncodeError(w, apiError.InvalidCredentials, "invalid refresh token", requestID)
+		return
 	} else if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to get user refresh hash", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)

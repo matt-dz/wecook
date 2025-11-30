@@ -75,6 +75,34 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (int
 	return id, err
 }
 
+const createRecipeIngredient = `-- name: CreateRecipeIngredient :one
+INSERT INTO recipe_ingredients (recipe_id, quantity, unit, name, image_url)
+  VALUES ($1, $2, $3, $4, $5)
+RETURNING
+  id
+`
+
+type CreateRecipeIngredientParams struct {
+	RecipeID int64
+	Quantity float32
+	Unit     pgtype.Text
+	Name     string
+	ImageUrl pgtype.Text
+}
+
+func (q *Queries) CreateRecipeIngredient(ctx context.Context, arg CreateRecipeIngredientParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createRecipeIngredient,
+		arg.RecipeID,
+		arg.Quantity,
+		arg.Unit,
+		arg.Name,
+		arg.ImageUrl,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (email, first_name, last_name, password_hash, role)
   VALUES (trim(lower($4::text)), $1, $2, $3, 'user')
@@ -115,6 +143,22 @@ func (q *Queries) GetAdminCount(ctx context.Context) (int64, error) {
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const getRecipeOwner = `-- name: GetRecipeOwner :one
+SELECT
+  user_id
+FROM
+  recipes
+WHERE
+  id = $1
+`
+
+func (q *Queries) GetRecipeOwner(ctx context.Context, id int64) (pgtype.Int8, error) {
+	row := q.db.QueryRow(ctx, getRecipeOwner, id)
+	var user_id pgtype.Int8
+	err := row.Scan(&user_id)
+	return user_id, err
 }
 
 const getUser = `-- name: GetUser :one
@@ -177,6 +221,25 @@ func (q *Queries) GetUserRole(ctx context.Context, id int64) (Role, error) {
 	var role Role
 	err := row.Scan(&role)
 	return role, err
+}
+
+const updateRecipeIngredientImage = `-- name: UpdateRecipeIngredientImage :exec
+UPDATE
+  recipe_ingredients
+SET
+  image_url = $1
+WHERE
+  id = $2
+`
+
+type UpdateRecipeIngredientImageParams struct {
+	ImageUrl pgtype.Text
+	ID       int64
+}
+
+func (q *Queries) UpdateRecipeIngredientImage(ctx context.Context, arg UpdateRecipeIngredientImageParams) error {
+	_, err := q.db.Exec(ctx, updateRecipeIngredientImage, arg.ImageUrl, arg.ID)
+	return err
 }
 
 const updateUserRefreshTokenHash = `-- name: UpdateUserRefreshTokenHash :exec

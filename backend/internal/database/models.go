@@ -66,10 +66,12 @@ type Recipe struct {
 }
 
 type RecipeIngredient struct {
+	ID        int64
 	RecipeID  int64
-	Quantity  int32
+	Quantity  float32
 	Unit      pgtype.Text
 	Name      string
+	ImageUrl  pgtype.Text
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
 }

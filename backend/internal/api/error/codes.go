@@ -16,6 +16,7 @@ const (
 	WeakPassword            = "weak_password"
 	EmailConflict           = "email_conflict"
 	AdminAlreadySetup       = "admin_already_setup"
+	RecipeNotFound          = "recipe_not_found"
 )
 
 var errorCodeToStatusCode = map[ErrorCode]int{
@@ -30,4 +31,5 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	WeakPassword:            http.StatusUnprocessableEntity,
 	EmailConflict:           http.StatusConflict,
 	AdminAlreadySetup:       http.StatusConflict,
+	RecipeNotFound:          http.StatusNotFound,
 }

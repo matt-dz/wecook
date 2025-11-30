@@ -35,10 +35,12 @@ CREATE TABLE recipes (
 );
 
 CREATE TABLE recipe_ingredients (
+  id bigserial PRIMARY KEY,
   recipe_id bigint NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
-  quantity int NOT NULL,
+  quantity real NOT NULL,
   unit text,
   name text NOT NULL,
+  image_url text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );

@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/matt-dz/wecook/internal/database"
-	mGarage "github.com/matt-dz/wecook/internal/garage"
+	"github.com/matt-dz/wecook/internal/fileserver"
 	"github.com/matt-dz/wecook/internal/http"
 	"github.com/matt-dz/wecook/internal/log"
 )
@@ -17,35 +17,37 @@ type envKeyType struct{}
 var envKey envKeyType
 
 type Env struct {
-	Logger   *slog.Logger
-	Database *database.Database
-	HTTP     *http.HTTP
-	S3       *mGarage.APIClient
+	Logger     *slog.Logger
+	Database   *database.Database
+	HTTP       *http.HTTP
+	FileServer *fileserver.FileServer
 }
 
 func (e *Env) Get(key string) string {
 	return os.Getenv(key)
 }
 
-func New(logger *slog.Logger, database *database.Database, http *http.HTTP, S3 *mGarage.APIClient) *Env {
+func New(logger *slog.Logger, database *database.Database,
+	http *http.HTTP, fileserver *fileserver.FileServer,
+) *Env {
 	if logger == nil {
 		logger = log.NullLogger()
 	}
 
 	return &Env{
-		Logger:   logger,
-		Database: database,
-		HTTP:     http,
-		S3:       S3,
+		Logger:     logger,
+		Database:   database,
+		HTTP:       http,
+		FileServer: fileserver,
 	}
 }
 
 func Null() *Env {
 	return &Env{
-		Logger:   log.NullLogger(),
-		Database: nil,
-		HTTP:     nil,
-		S3:       nil,
+		Logger:     log.NullLogger(),
+		Database:   nil,
+		HTTP:       nil,
+		FileServer: nil,
 	}
 }
 

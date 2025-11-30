@@ -17,9 +17,15 @@ import (
 	mJwt "github.com/matt-dz/wecook/internal/jwt"
 )
 
-type accessTokenKeyType struct{}
+type (
+	accessTokenKeyType struct{}
+	userIDKeyType      struct{}
+)
 
-var accessTokenKey accessTokenKeyType
+var (
+	accessTokenKey accessTokenKeyType
+	userIDKey      userIDKeyType
+)
 
 const (
 	accessTokenBytes     = 32
@@ -129,4 +135,16 @@ func AccessTokenFromCtx(ctx context.Context) (*jwt.Token, error) {
 		return nil, errors.New("invalid access token type")
 	}
 	return token, nil
+}
+
+func UserIDWithCtx(ctx context.Context, userID int64) context.Context {
+	return context.WithValue(ctx, userIDKey, userID)
+}
+
+func UserIDFromCtx(ctx context.Context) (int64, error) {
+	userID, ok := ctx.Value(userIDKey).(int64)
+	if !ok {
+		return 0, errors.New("invalid user id type")
+	}
+	return userID, nil
 }

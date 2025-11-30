@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/httplog/v3"
 	"github.com/golang-jwt/jwt/v5"
@@ -103,14 +104,27 @@ func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
 			if errors.Is(err, jwt.ErrTokenExpired) {
 				env.Logger.ErrorContext(r.Context(), "access token expired", slog.Any("err", err))
 				_ = apiError.EncodeError(w, apiError.ExpiredToken, "access token expired", requestID)
+				return
 			} else if err != nil {
 				env.Logger.ErrorContext(r.Context(), "invalid access token", slog.Any("error", err))
 				_ = apiError.EncodeError(w, apiError.InvalidToken, "invalid access token", requestID)
 				return
 			}
 
-			sub, _ := accessJwt.Claims.GetSubject()
-			r = r.WithContext(log.AppendCtx(r.Context(), slog.String("user-id", sub)))
+			sub, err := accessJwt.Claims.GetSubject()
+			if err != nil {
+				env.Logger.ErrorContext(r.Context(), "failed to extract subject from jwt", slog.Any("error", err))
+				_ = apiError.EncodeInternalError(w, requestID)
+				return
+			}
+			userID, err := strconv.ParseInt(sub, 10, 64)
+			if err != nil {
+				env.Logger.ErrorContext(r.Context(), "failed to parse user id", slog.Any("error", err))
+				_ = apiError.EncodeInternalError(w, requestID)
+				return
+			}
+			r = r.WithContext(log.AppendCtx(r.Context(), slog.Int64("user-id", userID)))
+			r = r.WithContext(token.UserIDWithCtx(r.Context(), userID))
 			env.Logger.DebugContext(r.Context(), "validating user role")
 
 			roleClaim := accessJwt.Claims.(jwt.MapClaims)["role"].(string)

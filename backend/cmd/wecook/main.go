@@ -10,7 +10,7 @@ import (
 	"github.com/matt-dz/wecook/internal/api"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/env"
-	"github.com/matt-dz/wecook/internal/garage"
+	"github.com/matt-dz/wecook/internal/fileserver"
 	"github.com/matt-dz/wecook/internal/http"
 	"github.com/matt-dz/wecook/internal/log"
 
@@ -61,39 +61,19 @@ func main() {
 	env := env.New(log.New(nil), nil, http.New(), nil)
 	env.HTTP.Logger = env.Logger
 
+	fileserverVolume := env.Get("FILESERVER_VOLUME")
+	if fileserverVolume == "" {
+		env.Logger.Error("environment variable FILESERVER_VOLUME not defined")
+		os.Exit(1)
+	}
+	env.FileServer = fileserver.New(fileserverVolume)
+
 	db, err := initDB(context.TODO(), env.Logger)
 	if err != nil {
 		env.Logger.Error("Failed to initialize database", slog.Any("error", err))
 		os.Exit(1)
 	}
 	env.Database = db
-
-	// Set host
-	garageAdminHost := env.Get("GARAGE_ADMIN_HOST")
-	if garageAdminHost == "" {
-		env.Logger.Error("environment variable GARAGE_ADMIN_HOST should be set")
-		os.Exit(1)
-	}
-	garageAdminToken := env.Get("GARAGE_ADMIN_TOKEN")
-	if garageAdminToken == "" {
-		env.Logger.Error("environment variable GARAGE_ADMIN_TOKEN should be set")
-	}
-	client, err := garage.NewClient(garageAdminHost, garageAdminToken, env.HTTP)
-	if err != nil {
-		env.Logger.Error("Failed to create garage client", slog.Any("error", err))
-		os.Exit(1)
-	}
-	env.S3 = client
-
-	err = garage.InitializeGarage(
-		env.HTTP,
-		context.Background(),
-		garageAdminHost,
-		garageAdminToken)
-	if err != nil {
-		env.Logger.Error("Failed to initialize garage instance", slog.Any("error", err))
-		os.Exit(1)
-	}
 
 	if err := api.Start(env); err != nil {
 		env.Logger.Error("API Failed", slog.Any("error", err))
