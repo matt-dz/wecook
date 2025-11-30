@@ -172,6 +172,16 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, 
 	return id, err
 }
 
+const deleteRecipe = `-- name: DeleteRecipe :exec
+DELETE FROM recipes
+WHERE id = $1
+`
+
+func (q *Queries) DeleteRecipe(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteRecipe, id)
+	return err
+}
+
 const getAdminCount = `-- name: GetAdminCount :one
 SELECT
   count(*)

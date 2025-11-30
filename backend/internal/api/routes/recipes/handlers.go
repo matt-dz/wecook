@@ -615,3 +615,74 @@ func GetPersonalRecipes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	_, _ = w.Write(marshaled)
 }
+
+// DeleteRecipe godoc
+//
+//	@Summary		Delete a recipe
+//	@Description	Deletes a recipe owned by the authenticated user.
+//	@Description	This operation is idempotent — deleting an already deleted or non-owned recipe results in a 404.
+//	@Tags			Recipes
+//	@Produce		json
+//
+//	@Param			recipeID	path		string			true	"ID of the recipe to delete"
+//
+//	@Success		204			{string}	string			"Recipe deleted successfully"
+//	@Failure		400			{object}	apiError.Error	"Bad request (invalid recipe ID)"
+//	@Failure		401			{object}	apiError.Error	"Unauthorized"
+//	@Failure		404			{object}	apiError.Error	"Recipe not found or not owned by user"
+//	@Failure		500			{object}	apiError.Error	"Internal server error"
+//
+//	@Security		AccessTokenCookie
+//	@Router			/api/recipes/{recipeID} [delete]
+func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Read request
+	env.Logger.DebugContext(ctx, "reading request")
+	recipeIDQ := recipeID(chi.URLParam(r, "recipeID"))
+	if err := recipeIDQ.Validate(); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate recipe id", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "bad request", requestID)
+		return
+	}
+	recipeID, _ := strconv.ParseInt(string(recipeIDQ), 10, 64)
+
+	// Check ownership & existence
+	env.Logger.DebugContext(ctx, "checking user ownership")
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: recipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check recipe ownership", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if !ownsRecipe {
+		env.Logger.ErrorContext(ctx, "user does not own recipe")
+		_ = apiError.EncodeError(w, apiError.RecipeNotFound,
+			"recipe does not exist or user does not own it", requestID)
+		return
+	}
+
+	// Delete recipe
+	env.Logger.DebugContext(ctx, "deleting recipe")
+	if err := env.Database.DeleteRecipe(ctx, recipeID); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to delete recipe", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

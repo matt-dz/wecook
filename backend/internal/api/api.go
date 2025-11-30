@@ -63,12 +63,16 @@ func addRoutes(router *chi.Mux) {
 			r.Post("/", admin.HandleCreateAdmin)
 		})
 
-		r.With(middleware.AuthorizeRequest(role.RoleUser)).Post("/recipes", recipes.CreateRecipe)
-		r.With(middleware.AuthorizeRequest(role.RoleUser)).Post("/recipes/ingredients", recipes.CreateRecipeIngredient)
-		r.With(middleware.AuthorizeRequest(role.RoleUser)).Post("/recipes/steps", recipes.CreateRecipeStep)
-		r.With(middleware.AuthorizeRequest(role.RoleUser)).Post("/recipes/{recipeID}/cover", recipes.UpdateRecipeCover)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.AuthorizeRequest(role.RoleUser))
+			r.Post("/recipes", recipes.CreateRecipe)
+			r.Post("/recipes/ingredients", recipes.CreateRecipeIngredient)
+			r.Post("/recipes/steps", recipes.CreateRecipeStep)
+			r.Get("/recipes/personal", recipes.GetPersonalRecipes)
+			r.Post("/recipes/{recipeID}/cover", recipes.UpdateRecipeCover)
+			r.Delete("/recipes/{recipeID}", recipes.DeleteRecipe)
+		})
 		r.Get("/recipes/{recipeID}", recipes.GetRecipe)
-		r.With(middleware.AuthorizeRequest(role.RoleUser)).Get("/recipes/personal", recipes.GetPersonalRecipes)
 	})
 }
 

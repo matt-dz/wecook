@@ -185,3 +185,7 @@ WHERE
   r.id = $1
 ORDER BY
   r.updated_at DESC;
+
+-- name: DeleteRecipe :exec
+DELETE FROM recipes
+WHERE id = $1;
