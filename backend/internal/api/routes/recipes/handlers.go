@@ -549,16 +549,17 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetPersonalRecipes godoc
-// @Summary      Get recipes owned by the authenticated user
-// @Description  Returns all recipes created by the authenticated user, including recipe details and owner information.
-// @Tags         Recipes
-// @Produce      json
 //
-// @Success      200  {object}  GetPersonalRecipesResponse  "List of personal recipes"
-// @Failure      401  {object}  apiError.Error       "Unauthorized"
-// @Failure      500  {object}  apiError.Error       "Internal server error"
+//	@Summary		Get recipes owned by the authenticated user
+//	@Description	Returns all recipes created by the authenticated user, including recipe details and owner information.
+//	@Tags			Recipes
+//	@Produce		json
 //
-// @Router       /api/recipes/personal [get]
+//	@Success		200	{object}	GetPersonalRecipesResponse	"List of personal recipes"
+//	@Failure		401	{object}	apiError.Error				"Unauthorized"
+//	@Failure		500	{object}	apiError.Error				"Internal server error"
+//
+//	@Router			/api/recipes/personal [get]
 func GetPersonalRecipes(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	env := env.EnvFromCtx(ctx)
