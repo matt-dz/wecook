@@ -91,6 +91,88 @@
                 }
             }
         },
+        "/api/auth/session/refresh": {
+            "post": {
+                "description": "Uses a valid refresh token cookie to issue a new access and refresh token pair.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh session tokens",
+                "responses": {
+                    "200": {
+                        "description": "New access and refresh tokens set as HTTP cookies",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing or malformed refresh token cookie",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/session/verify": {
+            "get": {
+                "description": "Validates the user's access token cookie, checks expiration,\nand ensures the user has the required role.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify user session",
+                "responses": {
+                    "204": {
+                        "description": "Session is valid"
+                    },
+                    "400": {
+                        "description": "Invalid token or malformed cookie",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Expired or invalid access token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Insufficient permissions",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/api/login": {
             "post": {
                 "consumes": [
@@ -931,34 +1013,6 @@
                     },
                     "500": {
                         "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/session": {
-            "post": {
-                "tags": [
-                    "User"
-                ],
-                "summary": "Refresh user session",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Cookie header: refresh_token=...",
-                        "name": "Cookie",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
                         }

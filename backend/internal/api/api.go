@@ -9,6 +9,7 @@ import (
 	_ "github.com/matt-dz/wecook/docs"
 	"github.com/matt-dz/wecook/internal/api/middleware"
 	"github.com/matt-dz/wecook/internal/api/routes/admin"
+	"github.com/matt-dz/wecook/internal/api/routes/auth"
 	"github.com/matt-dz/wecook/internal/api/routes/ping"
 	"github.com/matt-dz/wecook/internal/api/routes/recipes"
 	"github.com/matt-dz/wecook/internal/api/routes/users"
@@ -53,7 +54,9 @@ func addRoutes(router *chi.Mux) {
 	router.Route("/api", func(r chi.Router) {
 		r.Get("/ping", ping.HandlePing)
 		r.Post("/login", users.HandleUserLogin)
-		r.Post("/session", users.HandleRefreshSession)
+		r.Post("/auth/session/refresh", auth.HandleRefreshSession)
+		r.With(middleware.AuthorizeRequest(role.RoleUser)).
+			Get("/auth/session/verify", auth.HandleVerifySession)
 
 		r.Post("/setup/admin", admin.HandleAdminSetup)
 		r.Route("/admin", func(r chi.Router) {
