@@ -17,6 +17,7 @@ const (
 	EmailConflict           = "email_conflict"
 	AdminAlreadySetup       = "admin_already_setup"
 	RecipeNotFound          = "recipe_not_found"
+	RecipeNotOwned          = "recipe_not_owned"
 )
 
 var errorCodeToStatusCode = map[ErrorCode]int{
@@ -32,4 +33,5 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	EmailConflict:           http.StatusConflict,
 	AdminAlreadySetup:       http.StatusConflict,
 	RecipeNotFound:          http.StatusNotFound,
+	RecipeNotOwned:          http.StatusForbidden,
 }

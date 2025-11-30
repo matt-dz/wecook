@@ -38,3 +38,8 @@ type CreateIngredientRequest struct {
 	Quantity quantity `validate:"required,numeric"`
 	Unit     string   `validate:"omitempty"`
 }
+
+type CreateRecipeStepRequest struct {
+	RecipeID    recipeID `validate:"required,numeric"`
+	Instruction string   `validate:"required"`
+}

@@ -11,6 +11,30 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkRecipeOwnership = `-- name: CheckRecipeOwnership :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      recipes
+    WHERE
+      id = $1
+      AND user_id = $2)
+`
+
+type CheckRecipeOwnershipParams struct {
+	ID     int64
+	UserID pgtype.Int8
+}
+
+func (q *Queries) CheckRecipeOwnership(ctx context.Context, arg CheckRecipeOwnershipParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkRecipeOwnership, arg.ID, arg.UserID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const checkUsersTableExists = `-- name: CheckUsersTableExists :one
 SELECT
   EXISTS (
@@ -98,6 +122,25 @@ func (q *Queries) CreateRecipeIngredient(ctx context.Context, arg CreateRecipeIn
 		arg.Name,
 		arg.ImageUrl,
 	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const createRecipeStep = `-- name: CreateRecipeStep :one
+INSERT INTO recipe_steps (recipe_id, instruction)
+  VALUES ($1, $2)
+RETURNING
+  id
+`
+
+type CreateRecipeStepParams struct {
+	RecipeID    int64
+	Instruction string
+}
+
+func (q *Queries) CreateRecipeStep(ctx context.Context, arg CreateRecipeStepParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createRecipeStep, arg.RecipeID, arg.Instruction)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -239,6 +282,25 @@ type UpdateRecipeIngredientImageParams struct {
 
 func (q *Queries) UpdateRecipeIngredientImage(ctx context.Context, arg UpdateRecipeIngredientImageParams) error {
 	_, err := q.db.Exec(ctx, updateRecipeIngredientImage, arg.ImageUrl, arg.ID)
+	return err
+}
+
+const updateRecipeStepImage = `-- name: UpdateRecipeStepImage :exec
+UPDATE
+  recipe_steps
+SET
+  image_url = $1
+WHERE
+  id = $2
+`
+
+type UpdateRecipeStepImageParams struct {
+	ImageUrl pgtype.Text
+	ID       int64
+}
+
+func (q *Queries) UpdateRecipeStepImage(ctx context.Context, arg UpdateRecipeStepImageParams) error {
+	_, err := q.db.Exec(ctx, updateRecipeStepImage, arg.ImageUrl, arg.ID)
 	return err
 }
 

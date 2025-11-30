@@ -91,3 +91,28 @@ SET
   image_url = $1
 WHERE
   id = $2;
+
+-- name: CreateRecipeStep :one
+INSERT INTO recipe_steps (recipe_id, instruction)
+  VALUES ($1, $2)
+RETURNING
+  id;
+
+-- name: UpdateRecipeStepImage :exec
+UPDATE
+  recipe_steps
+SET
+  image_url = $1
+WHERE
+  id = $2;
+
+-- name: CheckRecipeOwnership :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      recipes
+    WHERE
+      id = $1
+      AND user_id = $2);

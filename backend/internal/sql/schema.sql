@@ -46,6 +46,7 @@ CREATE TABLE recipe_ingredients (
 );
 
 CREATE TABLE recipe_steps (
+  id bigserial PRIMARY KEY,
   recipe_id bigint NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
   step_number int NOT NULL,
   instruction text NOT NULL,

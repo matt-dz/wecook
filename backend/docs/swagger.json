@@ -137,13 +137,179 @@
                 }
             }
         },
-        "/api/recipe": {
+        "/api/recipes": {
             "post": {
                 "tags": [
-                    "Recipe"
+                    "Recipes"
                 ],
                 "summary": "Create a recipe.",
                 "responses": {}
+            }
+        },
+        "/api/recipes/ingredients": {
+            "post": {
+                "security": [
+                    {
+                        "AccessTokenCookie": []
+                    }
+                ],
+                "description": "Creates a new ingredient for a recipe owned by the authenticated user.\nExpects multipart/form-data with basic fields and an optional image upload.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes",
+                    "Ingredients"
+                ],
+                "summary": "Create a recipe ingredient",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Recipe ID the ingredient belongs to",
+                        "name": "recipe-id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Ingredient name",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Ingredient quantity",
+                        "name": "quantity",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Ingredient unit (e.g. g, ml, tbsp)",
+                        "name": "unit",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Ingredient image (JPEG/PNG)",
+                        "name": "image",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Ingredient created"
+                    },
+                    "400": {
+                        "description": "Bad request / validation error / unsupported file type",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "User does not own recipe",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Recipe not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/recipes/steps": {
+            "post": {
+                "security": [
+                    {
+                        "AccessTokenCookie": []
+                    }
+                ],
+                "description": "Creates a new step for a recipe owned by the authenticated user.\nAccepts multipart/form-data with required fields and an optional image upload.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes",
+                    "Steps"
+                ],
+                "summary": "Create a recipe step",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the recipe the step belongs to",
+                        "name": "recipe-id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Step instruction text",
+                        "name": "instruction",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Optional step image (JPEG/PNG)",
+                        "name": "image",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Step created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request / validation error / invalid file type",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "User does not own recipe",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
             }
         },
         "/api/session": {

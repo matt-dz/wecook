@@ -14,6 +14,7 @@ const (
 
 const (
 	IngredientsDir = "ingredients"
+	StepsDir       = "steps"
 )
 
 type FileServer struct {

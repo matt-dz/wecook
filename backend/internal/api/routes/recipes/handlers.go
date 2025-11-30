@@ -20,7 +20,6 @@ import (
 	"github.com/matt-dz/wecook/internal/recipe"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -32,7 +31,7 @@ const (
 // CreateRecipe godoc
 //
 //	@Summary	Create a recipe.
-//	@Tags		Recipe
+//	@Tags		Recipes
 //	@Succes		200 {object} CreateRecipeResponse
 //	@Router		/api/recipes [POST]
 func CreateRecipe(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +80,7 @@ func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 //	@Summary		Create a recipe ingredient
 //	@Description	Creates a new ingredient for a recipe owned by the authenticated user.
 //	@Description	Expects multipart/form-data with basic fields and an optional image upload.
-//	@Tags			Recipe, Ingredient
+//	@Tags			Recipes, Ingredients
 //	@Accept			multipart/form-data
 //	@Produce		json
 //
@@ -131,7 +130,7 @@ func CreateRecipeIngredient(w http.ResponseWriter, r *http.Request) {
 		_ = apiError.EncodeError(w, apiError.BadRequest, "bad request", requestID)
 		return
 	}
-	uploadedImage, err := recipe.ReadIngredientImage(r)
+	uploadedImage, err := recipe.ReadImage(r)
 	if errors.Is(err, recipe.ErrNoImageUploaded) {
 		env.Logger.DebugContext(ctx, "no image uploaded")
 	} else if errors.Is(err, recipe.ErrUnsupportedMimeType) {
@@ -144,22 +143,24 @@ func CreateRecipeIngredient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get Recipe Owner
+	// Check recipe ownership
+	env.Logger.DebugContext(ctx, "checking recipe ownership")
 	recipeID, _ := strconv.ParseInt(string(request.RecipeID), 10, 64)
-	env.Logger.ErrorContext(ctx, "Getting recipe owner")
-	owner, err := env.Database.GetRecipeOwner(ctx, recipeID)
-	if errors.Is(err, pgx.ErrNoRows) {
-		env.Logger.ErrorContext(ctx, "recipe does not exists")
-		_ = apiError.EncodeError(w, apiError.RecipeNotFound, "recipe not found", requestID)
-	} else if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get recipe owner")
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: recipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check recipe ownership", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)
 		return
 	}
-
-	if owner.Int64 != userID {
-		env.Logger.ErrorContext(ctx, "user does not own recipe", slog.Any("owner-id", owner.Int64))
-		_ = apiError.EncodeError(w, apiError.InsufficientPermissions, "cannot add ingredient", requestID)
+	if !ownsRecipe {
+		env.Logger.ErrorContext(ctx, "user does not own recipe")
+		_ = apiError.EncodeError(w, apiError.RecipeNotOwned, "user does not own recipe", requestID)
 		return
 	}
 
@@ -183,27 +184,152 @@ func CreateRecipeIngredient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Upload recipe image
-	env.Logger.DebugContext(ctx, "uploading recipe image")
-	path := filepath.Join(fileserver.IngredientsDir,
-		strconv.FormatInt(recipeID, 10), fmt.Sprintf("%d%s", ingredientID, uploadedImage.Suffix))
-	env.Logger.DebugContext(ctx, "uploading recipe ingredient image")
-	imageURL, _, err := env.FileServer.Write(path, uploadedImage.Data)
+	if uploadedImage != nil {
+		env.Logger.DebugContext(ctx, "uploading image")
+		path := filepath.Join(fileserver.IngredientsDir,
+			strconv.FormatInt(recipeID, 10), fmt.Sprintf("%d%s", ingredientID, uploadedImage.Suffix))
+		imageURL, _, err := env.FileServer.Write(path, uploadedImage.Data)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to upload recipe ingredient image", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+		err = env.Database.UpdateRecipeIngredientImage(ctx, database.UpdateRecipeIngredientImageParams{
+			ImageUrl: pgtype.Text{
+				String: imageURL,
+				Valid:  true,
+			},
+			ID: ingredientID,
+		})
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to update recipe ingredient image", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+// CreateRecipeStep godoc
+//
+//	@Summary		Create a recipe step
+//	@Description	Creates a new step for a recipe owned by the authenticated user.
+//	@Description	Accepts multipart/form-data with required fields and an optional image upload.
+//	@Tags			Recipes, Steps
+//	@Accept			multipart/form-data
+//	@Produce		json
+//
+//	@Param			recipe-id	formData	string			true	"ID of the recipe the step belongs to"
+//	@Param			instruction	formData	string			true	"Step instruction text"
+//	@Param			image		formData	file			false	"Optional step image (JPEG/PNG)"
+//
+//	@Success		201			{string}	string			"Step created"
+//	@Failure		400			{object}	apiError.Error	"Bad request / validation error / invalid file type"
+//	@Failure		401			{object}	apiError.Error	"Unauthorized"
+//	@Failure		403			{object}	apiError.Error	"User does not own recipe"
+//	@Failure		500			{object}	apiError.Error	"Internal server error"
+//
+//	@Security		AccessTokenCookie
+//	@Router			/api/recipes/steps [post]
+func CreateRecipeStep(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to upload recipe ingredient image", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)
 		return
 	}
-	err = env.Database.UpdateRecipeIngredientImage(ctx, database.UpdateRecipeIngredientImageParams{
-		ImageUrl: pgtype.Text{
-			String: imageURL,
-			Valid:  true,
-		},
-		ID: ingredientID,
-	})
-	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to update recipe ingredient image", slog.Any("error", err))
+
+	// Read response
+	env.Logger.DebugContext(ctx, "Reading response")
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to parse multipart form", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "request too large", requestID)
+		return
+	}
+	request := CreateRecipeStepRequest{
+		RecipeID:    recipeID(strings.TrimSpace(r.Form.Get("recipe-id"))),
+		Instruction: strings.TrimSpace(r.Form.Get("instruction")),
+	}
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	if err := validate.Struct(request); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate request", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "bad request", requestID)
+		return
+	}
+	uploadedImage, err := recipe.ReadImage(r)
+	if errors.Is(err, recipe.ErrNoImageUploaded) {
+		env.Logger.DebugContext(ctx, "no image uploaded")
+	} else if errors.Is(err, recipe.ErrUnsupportedMimeType) {
+		env.Logger.ErrorContext(ctx, "unsupported file type", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "invalid file type", requestID)
+		return
+	} else if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to read ingredient image", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)
 		return
+	}
+
+	// Check recipe ownership
+	env.Logger.DebugContext(ctx, "checking recipe ownership")
+	recipeID, _ := strconv.ParseInt(string(request.RecipeID), 10, 64)
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: recipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check recipe ownership", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if !ownsRecipe {
+		env.Logger.ErrorContext(ctx, "user does not own recipe")
+		_ = apiError.EncodeError(w, apiError.RecipeNotOwned, "user does not own recipe", requestID)
+		return
+	}
+
+	// Create step
+	env.Logger.DebugContext(ctx, "creating step")
+	stepID, err := env.Database.CreateRecipeStep(ctx, database.CreateRecipeStepParams{
+		RecipeID:    recipeID,
+		Instruction: request.Instruction,
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to create step", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Upload image
+	if uploadedImage != nil {
+		env.Logger.DebugContext(ctx, "uploading image")
+		path := filepath.Join(fileserver.StepsDir,
+			strconv.FormatInt(recipeID, 10), fmt.Sprintf("%d%s", stepID, uploadedImage.Suffix))
+		imageURL, _, err := env.FileServer.Write(path, uploadedImage.Data)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to upload image", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+		err = env.Database.UpdateRecipeStepImage(ctx, database.UpdateRecipeStepImageParams{
+			ImageUrl: pgtype.Text{
+				String: imageURL,
+				Valid:  true,
+			},
+			ID: stepID,
+		})
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to update recipe ingredient image", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusCreated)

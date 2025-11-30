@@ -42,26 +42,26 @@ var (
 	ErrNoImageUploaded     = errors.New("image not uploaded")
 )
 
-func ReadIngredientImage(r *http.Request) (UploadedFile, error) {
+func ReadImage(r *http.Request) (*UploadedFile, error) {
 	f, _, err := r.FormFile(imageField)
 	if errors.Is(err, http.ErrMissingFile) {
-		return UploadedFile{}, errors.Join(ErrNoImageUploaded, err)
+		return nil, errors.Join(ErrNoImageUploaded, err)
 	} else if err != nil {
-		return UploadedFile{}, fmt.Errorf("getting file from form: %w", err)
+		return nil, fmt.Errorf("getting file from form: %w", err)
 	}
 	defer func() { _ = f.Close() }()
 
 	data, err := io.ReadAll(f)
 	if err != nil {
-		return UploadedFile{}, fmt.Errorf("reading file: %w", err)
+		return nil, fmt.Errorf("reading file: %w", err)
 	}
 
 	contentType := http.DetectContentType(data[:min(len(data), magicNumberSeek)])
 	if !allowedImageTypes[contentType] {
-		return UploadedFile{}, fmt.Errorf("mime type %q: %w", contentType, ErrUnsupportedMimeType)
+		return nil, fmt.Errorf("mime type %q: %w", contentType, ErrUnsupportedMimeType)
 	}
 
-	return UploadedFile{
+	return &UploadedFile{
 		Size:     int64(len(data)),
 		MimeType: contentType,
 		Suffix:   mimeTypeSuffix[contentType],

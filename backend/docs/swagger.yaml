@@ -152,12 +152,125 @@ paths:
       summary: Ping endpoint.
       tags:
       - Ping
-  /api/recipe:
+  /api/recipes:
     post:
       responses: {}
       summary: Create a recipe.
       tags:
-      - Recipe
+      - Recipes
+  /api/recipes/ingredients:
+    post:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Creates a new ingredient for a recipe owned by the authenticated user.
+        Expects multipart/form-data with basic fields and an optional image upload.
+      parameters:
+      - description: Recipe ID the ingredient belongs to
+        in: formData
+        name: recipe-id
+        required: true
+        type: string
+      - description: Ingredient name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Ingredient quantity
+        in: formData
+        name: quantity
+        required: true
+        type: number
+      - description: Ingredient unit (e.g. g, ml, tbsp)
+        in: formData
+        name: unit
+        type: string
+      - description: Ingredient image (JPEG/PNG)
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Ingredient created
+        "400":
+          description: Bad request / validation error / unsupported file type
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "403":
+          description: User does not own recipe
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "404":
+          description: Recipe not found
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      security:
+      - AccessTokenCookie: []
+      summary: Create a recipe ingredient
+      tags:
+      - Recipes
+      - Ingredients
+  /api/recipes/steps:
+    post:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Creates a new step for a recipe owned by the authenticated user.
+        Accepts multipart/form-data with required fields and an optional image upload.
+      parameters:
+      - description: ID of the recipe the step belongs to
+        in: formData
+        name: recipe-id
+        required: true
+        type: string
+      - description: Step instruction text
+        in: formData
+        name: instruction
+        required: true
+        type: string
+      - description: Optional step image (JPEG/PNG)
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Step created
+          schema:
+            type: string
+        "400":
+          description: Bad request / validation error / invalid file type
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "403":
+          description: User does not own recipe
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      security:
+      - AccessTokenCookie: []
+      summary: Create a recipe step
+      tags:
+      - Recipes
+      - Steps
   /api/session:
     post:
       parameters:

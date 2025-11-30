@@ -77,6 +77,7 @@ type RecipeIngredient struct {
 }
 
 type RecipeStep struct {
+	ID          int64
 	RecipeID    int64
 	StepNumber  int32
 	Instruction string
