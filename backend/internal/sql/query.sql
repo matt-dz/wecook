@@ -233,3 +233,11 @@ WHERE
 -- name: DeleteRecipeStep :exec
 DELETE FROM recipe_steps
 WHERE id = $1;
+
+-- name: UpdateRecipeStepInstruction :exec
+UPDATE
+  recipe_steps
+SET
+  instruction = $1
+WHERE
+  id = $2;

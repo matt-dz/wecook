@@ -642,6 +642,81 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "AccessToken": []
+                    }
+                ],
+                "description": "Updates a specific step within a recipe.\nSupports partial updates: users may update the instruction, the image, or both.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes"
+                ],
+                "summary": "Update a recipe step",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID of the recipe",
+                        "name": "recipeID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID of the step to update",
+                        "name": "stepID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Updated instruction text",
+                        "name": "instruction",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Updated step image (optional)",
+                        "name": "image",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Step updated successfully"
+                    },
+                    "400": {
+                        "description": "Bad request — invalid IDs, invalid file type, or malformed form",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Recipe not found, not owned by user, or step not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
             }
         },
         "/api/session": {

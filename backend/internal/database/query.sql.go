@@ -622,6 +622,25 @@ func (q *Queries) UpdateRecipeStepImage(ctx context.Context, arg UpdateRecipeSte
 	return err
 }
 
+const updateRecipeStepInstruction = `-- name: UpdateRecipeStepInstruction :exec
+UPDATE
+  recipe_steps
+SET
+  instruction = $1
+WHERE
+  id = $2
+`
+
+type UpdateRecipeStepInstructionParams struct {
+	Instruction string
+	ID          int64
+}
+
+func (q *Queries) UpdateRecipeStepInstruction(ctx context.Context, arg UpdateRecipeStepInstructionParams) error {
+	_, err := q.db.Exec(ctx, updateRecipeStepInstruction, arg.Instruction, arg.ID)
+	return err
+}
+
 const updateUserRefreshTokenHash = `-- name: UpdateUserRefreshTokenHash :exec
 UPDATE
   users
