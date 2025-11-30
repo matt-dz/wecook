@@ -1004,21 +1004,10 @@ func UpdateRecipeStep(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update instruction
-	if r.Form.Has("instruction") {
-		env.Logger.DebugContext(ctx, "updating recipe instruction")
-		err = env.Database.UpdateRecipeStepInstruction(ctx, database.UpdateRecipeStepInstructionParams{
-			Instruction: r.Form.Get("instruction"),
-			ID:          stepID,
-		})
-		if err != nil {
-			env.Logger.ErrorContext(ctx, "failed to update recipe instruction", slog.Any("error", err))
-			_ = apiError.EncodeInternalError(w, requestID)
-			return
-		}
-	}
-
 	// Update image
+	params := database.UpdateRecipeStepParams{
+		ID: stepID,
+	}
 	if uploadedImage != nil {
 		env.Logger.DebugContext(ctx, "writing new recipe image")
 		location, _, err := env.FileServer.Write(fileserver.NewStepsImage(request.RecipeID.String(),
@@ -1028,18 +1017,22 @@ func UpdateRecipeStep(w http.ResponseWriter, r *http.Request) {
 			_ = apiError.EncodeInternalError(w, requestID)
 			return
 		}
-		err = env.Database.UpdateRecipeStepImage(ctx, database.UpdateRecipeStepImageParams{
-			ImageUrl: pgtype.Text{
-				String: location,
-				Valid:  true,
-			},
-			ID: stepID,
-		})
-		if err != nil {
-			env.Logger.ErrorContext(ctx, "failed to update recipe step image url", slog.Any("error", err))
-			_ = apiError.EncodeInternalError(w, requestID)
-			return
-		}
+		params.ImageUrl.String = location
+		params.ImageUrl.Valid = true
+	}
+
+	// Update recipe step
+	env.Logger.DebugContext(ctx, "updating recipe step")
+	if r.Form.Has("instruction") {
+		env.Logger.DebugContext(ctx, "updating recipe instruction")
+		params.Instruction.String = r.Form.Get("instruction")
+		params.Instruction.Valid = true
+	}
+	err = env.Database.UpdateRecipeStep(ctx, params)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to update recipe step", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)

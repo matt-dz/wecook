@@ -634,6 +634,27 @@ func (q *Queries) UpdateRecipeIngredientImage(ctx context.Context, arg UpdateRec
 	return err
 }
 
+const updateRecipeStep = `-- name: UpdateRecipeStep :exec
+UPDATE
+  recipe_steps
+SET
+  instruction = coalesce($2, instruction),
+  image_url = coalesce($3, image_url)
+WHERE
+  id = $1
+`
+
+type UpdateRecipeStepParams struct {
+	ID          int64
+	Instruction pgtype.Text
+	ImageUrl    pgtype.Text
+}
+
+func (q *Queries) UpdateRecipeStep(ctx context.Context, arg UpdateRecipeStepParams) error {
+	_, err := q.db.Exec(ctx, updateRecipeStep, arg.ID, arg.Instruction, arg.ImageUrl)
+	return err
+}
+
 const updateRecipeStepImage = `-- name: UpdateRecipeStepImage :exec
 UPDATE
   recipe_steps
@@ -650,25 +671,6 @@ type UpdateRecipeStepImageParams struct {
 
 func (q *Queries) UpdateRecipeStepImage(ctx context.Context, arg UpdateRecipeStepImageParams) error {
 	_, err := q.db.Exec(ctx, updateRecipeStepImage, arg.ImageUrl, arg.ID)
-	return err
-}
-
-const updateRecipeStepInstruction = `-- name: UpdateRecipeStepInstruction :exec
-UPDATE
-  recipe_steps
-SET
-  instruction = $1
-WHERE
-  id = $2
-`
-
-type UpdateRecipeStepInstructionParams struct {
-	Instruction string
-	ID          int64
-}
-
-func (q *Queries) UpdateRecipeStepInstruction(ctx context.Context, arg UpdateRecipeStepInstructionParams) error {
-	_, err := q.db.Exec(ctx, updateRecipeStepInstruction, arg.Instruction, arg.ID)
 	return err
 }
 

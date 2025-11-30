@@ -234,13 +234,14 @@ WHERE
 DELETE FROM recipe_steps
 WHERE id = $1;
 
--- name: UpdateRecipeStepInstruction :exec
+-- name: UpdateRecipeStep :exec
 UPDATE
   recipe_steps
 SET
-  instruction = $1
+  instruction = coalesce(sqlc.narg ('instruction'), instruction),
+  image_url = coalesce(sqlc.narg ('image_url'), image_url)
 WHERE
-  id = $2;
+  id = $1;
 
 -- name: UpdateRecipeIngredient :exec
 UPDATE
