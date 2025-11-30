@@ -336,6 +336,66 @@ paths:
       summary: Get a recipe and its owner information
       tags:
       - Recipes
+    patch:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Partially updates a recipe. Supports updating title, description,
+        published status, cook time, and cover image. Fields not provided
+        are left unchanged. If the request body is empty, this is treated
+        as a no-op and returns 204.
+      parameters:
+      - description: ID of the recipe
+        in: path
+        name: recipeID
+        required: true
+        type: integer
+      - description: New title
+        in: formData
+        name: title
+        type: string
+      - description: New description
+        in: formData
+        name: description
+        type: string
+      - description: Published status
+        in: formData
+        name: published
+        type: boolean
+      - description: Cook time in minutes
+        in: formData
+        name: cook-time
+        type: integer
+      - description: New cover image
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Recipe updated successfully
+        "400":
+          description: Bad request (invalid form or data)
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "404":
+          description: Recipe not found or user does not own it
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      security:
+      - AccessToken: []
+      summary: Update a recipe
+      tags:
+      - Recipes
   /api/recipes/{recipeID}/cover:
     post:
       consumes:

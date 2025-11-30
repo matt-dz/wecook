@@ -253,3 +253,15 @@ SET
   image_url = coalesce(sqlc.narg ('image_url'), image_url)
 WHERE
   id = $1;
+
+-- name: UpdateRecipe :exec
+UPDATE
+  recipes
+SET
+  image_url = coalesce(sqlc.narg ('image_url'), image_url),
+  title = coalesce(sqlc.narg ('title'), title),
+  description = coalesce(sqlc.narg ('description'), description),
+  published = coalesce(sqlc.narg ('published'), published),
+  cook_time_minutes = coalesce(sqlc.narg ('cook_time_minutes'), cook_time_minutes)
+WHERE
+  id = $1;

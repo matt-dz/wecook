@@ -565,6 +565,40 @@ func (q *Queries) GetUserRole(ctx context.Context, id int64) (Role, error) {
 	return role, err
 }
 
+const updateRecipe = `-- name: UpdateRecipe :exec
+UPDATE
+  recipes
+SET
+  image_url = coalesce($2, image_url),
+  title = coalesce($3, title),
+  description = coalesce($4, description),
+  published = coalesce($5, published),
+  cook_time_minutes = coalesce($6, cook_time_minutes)
+WHERE
+  id = $1
+`
+
+type UpdateRecipeParams struct {
+	ID              int64
+	ImageUrl        pgtype.Text
+	Title           pgtype.Text
+	Description     pgtype.Text
+	Published       pgtype.Bool
+	CookTimeMinutes pgtype.Int4
+}
+
+func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) error {
+	_, err := q.db.Exec(ctx, updateRecipe,
+		arg.ID,
+		arg.ImageUrl,
+		arg.Title,
+		arg.Description,
+		arg.Published,
+		arg.CookTimeMinutes,
+	)
+	return err
+}
+
 const updateRecipeCoverImage = `-- name: UpdateRecipeCoverImage :exec
 UPDATE
   recipes
