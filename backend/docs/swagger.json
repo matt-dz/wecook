@@ -312,6 +312,121 @@
                 }
             }
         },
+        "/api/recipes/{recipeID}": {
+            "get": {
+                "description": "Retrieves a recipe by ID, including recipe details and the owner's basic information.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes"
+                ],
+                "summary": "Get a recipe and its owner information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the recipe to retrieve",
+                        "name": "recipeID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recipe found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_routes_recipes.GetRecipeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (invalid recipe ID)",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Recipe not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/recipes/{recipeID}/cover": {
+            "post": {
+                "security": [
+                    {
+                        "AccessTokenCookie": []
+                    }
+                ],
+                "description": "Replaces the cover image of a recipe owned by the authenticated user.\nExpects multipart/form-data containing a single image file.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes"
+                ],
+                "summary": "Update a recipe's cover image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the recipe to update",
+                        "name": "recipeID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Cover image (JPEG/PNG)",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Cover image updated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request / invalid image / missing file",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "User does not own recipe",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/api/session": {
             "post": {
                 "tags": [
@@ -431,6 +546,57 @@
             "properties": {
                 "user_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_api_routes_recipes.GetRecipeResponse": {
+            "type": "object",
+            "properties": {
+                "recipe": {
+                    "$ref": "#/definitions/internal_api_routes_recipes.RecipeResponseRecipe"
+                },
+                "user": {
+                    "$ref": "#/definitions/internal_api_routes_recipes.RecipeResponseUser"
+                }
+            }
+        },
+        "internal_api_routes_recipes.RecipeResponseRecipe": {
+            "type": "object",
+            "properties": {
+                "cook_time_minutes": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_api_routes_recipes.RecipeResponseUser": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
                 }
             }
         },

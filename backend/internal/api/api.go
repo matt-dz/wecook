@@ -67,6 +67,7 @@ func addRoutes(router *chi.Mux) {
 		r.With(middleware.AuthorizeRequest(role.RoleUser)).Post("/recipes/ingredients", recipes.CreateRecipeIngredient)
 		r.With(middleware.AuthorizeRequest(role.RoleUser)).Post("/recipes/steps", recipes.CreateRecipeStep)
 		r.With(middleware.AuthorizeRequest(role.RoleUser)).Post("/recipes/{recipeID}/cover", recipes.UpdateRecipeCover)
+		r.Get("/recipes/{recipeID}", recipes.GetRecipe)
 	})
 }
 

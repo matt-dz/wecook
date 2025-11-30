@@ -19,6 +19,7 @@ import (
 	"github.com/matt-dz/wecook/internal/recipe"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -335,24 +336,25 @@ func CreateRecipeStep(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateRecipeCover godoc
-// @Summary      Update a recipe's cover image
-// @Description  Replaces the cover image of a recipe owned by the authenticated user.
-// @Description  Expects multipart/form-data containing a single image file.
-// @Tags         Recipes
-// @Accept       multipart/form-data
-// @Produce      json
 //
-// @Param        recipeID   path      string  true   "ID of the recipe to update"
-// @Param        image      formData  file    true   "Cover image (JPEG/PNG)"
+//	@Summary		Update a recipe's cover image
+//	@Description	Replaces the cover image of a recipe owned by the authenticated user.
+//	@Description	Expects multipart/form-data containing a single image file.
+//	@Tags			Recipes
+//	@Accept			multipart/form-data
+//	@Produce		json
 //
-// @Success      201  {string}  string  "Cover image updated"
-// @Failure      400  {object}  apiError.Error  "Bad request / invalid image / missing file"
-// @Failure      401  {object}  apiError.Error  "Unauthorized"
-// @Failure      403  {object}  apiError.Error  "User does not own recipe"
-// @Failure      500  {object}  apiError.Error  "Internal server error"
+//	@Param			recipeID	path		string			true	"ID of the recipe to update"
+//	@Param			image		formData	file			true	"Cover image (JPEG/PNG)"
 //
-// @Security     AccessTokenCookie
-// @Router       /api/recipes/{recipeID}/cover [post]
+//	@Success		201			{string}	string			"Cover image updated"
+//	@Failure		400			{object}	apiError.Error	"Bad request / invalid image / missing file"
+//	@Failure		401			{object}	apiError.Error	"Unauthorized"
+//	@Failure		403			{object}	apiError.Error	"User does not own recipe"
+//	@Failure		500			{object}	apiError.Error	"Internal server error"
+//
+//	@Security		AccessTokenCookie
+//	@Router			/api/recipes/{recipeID}/cover [post]
 func UpdateRecipeCover(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	env := env.EnvFromCtx(ctx)
@@ -431,4 +433,74 @@ func UpdateRecipeCover(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+// GetRecipe godoc
+//
+//	@Summary		Get a recipe and its owner information
+//	@Description	Retrieves a recipe by ID, including recipe details and the owner's basic information.
+//	@Tags			Recipes
+//	@Produce		json
+//
+//	@Param			recipeID	path		string				true	"ID of the recipe to retrieve"
+//
+//	@Success		200			{object}	GetRecipeResponse	"Recipe found"
+//	@Failure		400			{object}	apiError.Error		"Bad request (invalid recipe ID)"
+//	@Failure		404			{object}	apiError.Error		"Recipe not found"
+//	@Failure		500			{object}	apiError.Error		"Internal server error"
+//
+//	@Router			/api/recipes/{recipeID} [get]
+func GetRecipe(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+
+	// Read request
+	env.Logger.DebugContext(ctx, "reading request")
+	recipeIDQ := recipeID(chi.URLParam(r, "recipeID"))
+	if err := recipeIDQ.Validate(); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate recipe id", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "bad request", requestID)
+		return
+	}
+	recipeID, _ := strconv.ParseInt(string(recipeIDQ), 10, 64)
+
+	// Get recipe and owner
+	env.Logger.DebugContext(ctx, "getting recipe and owner")
+	row, err := env.Database.GetRecipeAndOwner(ctx, recipeID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		env.Logger.ErrorContext(ctx, "could not find recipe and owner", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.RecipeNotFound, "recipe not found", requestID)
+		return
+	} else if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe and owner", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Write response
+	env.Logger.DebugContext(ctx, "writing response")
+	bytes, err := json.Marshal(GetRecipeResponse{
+		Recipe: RecipeResponseRecipe{
+			CookeTimeMinutes: uint(row.CookTimeMinutes.Int32),
+			UserID:           row.UserID.Int64,
+			CreatedAt:        row.CreatedAt.Time,
+			UpdatedAt:        row.UpdatedAt.Time,
+			ImageURL:         row.ImageUrl.String,
+			Title:            row.Title,
+			Description:      row.Description.String,
+		},
+		User: RecipeResponseUser{
+			FirstName: row.FirstName,
+			LastName:  row.LastName,
+			ID:        row.UserID.Int64,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to marshal response", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	w.Header().Add("Content-Type", "application/json")
+	_, _ = w.Write(bytes)
 }

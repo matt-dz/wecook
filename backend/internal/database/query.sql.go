@@ -188,6 +188,59 @@ func (q *Queries) GetAdminCount(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const getRecipeAndOwner = `-- name: GetRecipeAndOwner :one
+SELECT
+  r.user_id,
+  r.image_url,
+  r.title,
+  r.description,
+  r.created_at,
+  r.updated_at,
+  r.published,
+  r.cook_time_minutes,
+  u.first_name,
+  u.last_name,
+  u.id
+FROM
+  recipes r
+  JOIN users u ON r.user_id = u.id
+WHERE
+  r.id = $1
+`
+
+type GetRecipeAndOwnerRow struct {
+	UserID          pgtype.Int8
+	ImageUrl        pgtype.Text
+	Title           string
+	Description     pgtype.Text
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	Published       bool
+	CookTimeMinutes pgtype.Int4
+	FirstName       string
+	LastName        string
+	ID              int64
+}
+
+func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAndOwnerRow, error) {
+	row := q.db.QueryRow(ctx, getRecipeAndOwner, id)
+	var i GetRecipeAndOwnerRow
+	err := row.Scan(
+		&i.UserID,
+		&i.ImageUrl,
+		&i.Title,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Published,
+		&i.CookTimeMinutes,
+		&i.FirstName,
+		&i.LastName,
+		&i.ID,
+	)
+	return i, err
+}
+
 const getRecipeOwner = `-- name: GetRecipeOwner :one
 SELECT
   user_id
