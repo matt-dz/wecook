@@ -269,7 +269,7 @@ func CreateRecipeStep(w http.ResponseWriter, r *http.Request) {
 		_ = apiError.EncodeError(w, apiError.BadRequest, "invalid file type", requestID)
 		return
 	} else if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to read ingredient image", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "failed to read step image", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)
 		return
 	}
@@ -754,7 +754,7 @@ func DeleteRecipeIngredient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	env.Logger.DebugContext(ctx, "checking ingredient existence")
-	exists, err := env.Database.GetRecipeIngredientExistance(ctx, ingredientID)
+	exists, err := env.Database.GetRecipeIngredientExistence(ctx, ingredientID)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to get ingredient existence", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)
@@ -780,6 +780,111 @@ func DeleteRecipeIngredient(w http.ResponseWriter, r *http.Request) {
 	err = env.Database.DeleteRecipeIngredient(ctx, ingredientID)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to delete ingredient", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if imageURL.String != "" {
+		err := env.FileServer.Delete(imageURL.String)
+		if err != nil {
+			env.Logger.WarnContext(ctx, "failed to delete image, manual cleanup required",
+				slog.Any("error", err),
+				slog.String("image-path", imageURL.String))
+		}
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// DeleteRecipeStep godoc
+//
+//	@Summary		Delete a recipe step
+//	@Description	Deletes a specific step from a recipe.
+//	@Description	This operation is **idempotent**—deleting the same step twice will return `StepNotFound`.
+//	@Tags			Recipes, Steps
+//	@Security		AccessToken
+//	@Param			recipeID	path	int	true	"ID of the recipe"
+//	@Param			stepID		path	int	true	"ID of the step to delete"
+//	@Success		204			"Step successfully deleted"
+//	@Failure		400			{object}	apiError.Error	"Invalid recipe ID or step ID"
+//	@Failure		401			{object}	apiError.Error	"Unauthorized"
+//	@Failure		404			{object}	apiError.Error	"Recipe not found, user does not own the recipe, or step not found"
+//	@Failure		500			{object}	apiError.Error	"Internal server error"
+//	@Router			/api/recipes/{recipeID}/steps/{stepID} [delete]
+func DeleteRecipeStep(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Read request
+	env.Logger.DebugContext(ctx, "reading request")
+	recipeIDQ := recipeID(chi.URLParam(r, "recipeID"))
+	if err := recipeIDQ.Validate(); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate recipe id", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "invalid recipe id", requestID)
+		return
+	}
+	recipeID, _ := strconv.ParseInt(string(recipeIDQ), 10, 64)
+	stepIDQ := stepID(chi.URLParam(r, "stepID"))
+	if err := stepIDQ.Validate(); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate step id", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "invalid step id", requestID)
+		return
+	}
+	stepID, _ := strconv.ParseInt(string(stepIDQ), 10, 64)
+
+	// Check ownership
+	env.Logger.DebugContext(ctx, "checking user ownership")
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: recipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check recipe ownership", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if !ownsRecipe {
+		env.Logger.ErrorContext(ctx, "user does not own recipe")
+		_ = apiError.EncodeError(w, apiError.RecipeNotFound,
+			"recipe does not exist or user does not own it", requestID)
+		return
+	}
+	env.Logger.DebugContext(ctx, "checking step existence")
+	exists, err := env.Database.GetRecipeStepExistence(ctx, stepID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check step existence", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if !exists {
+		env.Logger.ErrorContext(ctx, "step not found", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.StepNotFound, "step not found", requestID)
+		return
+	}
+
+	// Get step image url
+	env.Logger.DebugContext(ctx, "getting step image url")
+	imageURL, err := env.Database.GetRecipeStepImageURL(ctx, stepID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get step image url", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Delete step
+	env.Logger.DebugContext(ctx, "deleting step")
+	err = env.Database.DeleteRecipeStep(ctx, stepID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to delete step", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)
 		return
 	}

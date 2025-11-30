@@ -425,6 +425,48 @@ paths:
       tags:
       - Recipes
       - Ingredients
+  /api/recipes/{recipeID}/steps/{stepID}:
+    delete:
+      description: |-
+        Deletes a specific step from a recipe.
+        This operation is **idempotent**—deleting the same step twice will return `StepNotFound`.
+      parameters:
+      - description: ID of the recipe
+        in: path
+        name: recipeID
+        required: true
+        type: integer
+      - description: ID of the step to delete
+        in: path
+        name: stepID
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Step successfully deleted
+        "400":
+          description: Invalid recipe ID or step ID
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "404":
+          description: Recipe not found, user does not own the recipe, or step not
+            found
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      security:
+      - AccessToken: []
+      summary: Delete a recipe step
+      tags:
+      - Recipes
+      - Steps
   /api/recipes/ingredients:
     post:
       consumes:

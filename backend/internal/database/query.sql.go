@@ -192,6 +192,16 @@ func (q *Queries) DeleteRecipeIngredient(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteRecipeStep = `-- name: DeleteRecipeStep :exec
+DELETE FROM recipe_steps
+WHERE id = $1
+`
+
+func (q *Queries) DeleteRecipeStep(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteRecipeStep, id)
+	return err
+}
+
 const getAdminCount = `-- name: GetAdminCount :one
 SELECT
   count(*)
@@ -262,7 +272,7 @@ func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAnd
 	return i, err
 }
 
-const getRecipeIngredientExistance = `-- name: GetRecipeIngredientExistance :one
+const getRecipeIngredientExistence = `-- name: GetRecipeIngredientExistence :one
 SELECT
   EXISTS (
     SELECT
@@ -273,8 +283,8 @@ SELECT
       id = $1)
 `
 
-func (q *Queries) GetRecipeIngredientExistance(ctx context.Context, id int64) (bool, error) {
-	row := q.db.QueryRow(ctx, getRecipeIngredientExistance, id)
+func (q *Queries) GetRecipeIngredientExistence(ctx context.Context, id int64) (bool, error) {
+	row := q.db.QueryRow(ctx, getRecipeIngredientExistence, id)
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
@@ -350,6 +360,40 @@ func (q *Queries) GetRecipeOwner(ctx context.Context, id int64) (pgtype.Int8, er
 	var user_id pgtype.Int8
 	err := row.Scan(&user_id)
 	return user_id, err
+}
+
+const getRecipeStepExistence = `-- name: GetRecipeStepExistence :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      recipe_steps
+    WHERE
+      id = $1)
+`
+
+func (q *Queries) GetRecipeStepExistence(ctx context.Context, id int64) (bool, error) {
+	row := q.db.QueryRow(ctx, getRecipeStepExistence, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const getRecipeStepImageURL = `-- name: GetRecipeStepImageURL :one
+SELECT
+  image_url
+FROM
+  recipe_steps
+WHERE
+  id = $1
+`
+
+func (q *Queries) GetRecipeStepImageURL(ctx context.Context, id int64) (pgtype.Text, error) {
+	row := q.db.QueryRow(ctx, getRecipeStepImageURL, id)
+	var image_url pgtype.Text
+	err := row.Scan(&image_url)
+	return image_url, err
 }
 
 const getRecipeSteps = `-- name: GetRecipeSteps :many

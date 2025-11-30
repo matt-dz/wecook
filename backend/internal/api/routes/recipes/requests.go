@@ -8,6 +8,7 @@ import (
 type (
 	recipeID     string
 	ingredientID string
+	stepID       string
 	quantity     string
 )
 
@@ -28,7 +29,18 @@ func (i ingredientID) Validate() error {
 		return errors.New("expected an integer")
 	}
 	if v < 0 {
-		return errors.New("recipe id should be non-negative")
+		return errors.New("ingredient id should be non-negative")
+	}
+	return nil
+}
+
+func (i stepID) Validate() error {
+	v, err := strconv.ParseInt(string(i), 10, 64)
+	if err != nil {
+		return errors.New("expected an integer")
+	}
+	if v < 0 {
+		return errors.New("step id should be non-negative")
 	}
 	return nil
 }

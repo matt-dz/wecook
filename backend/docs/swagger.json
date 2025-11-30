@@ -576,6 +576,66 @@
                 }
             }
         },
+        "/api/recipes/{recipeID}/steps/{stepID}": {
+            "delete": {
+                "security": [
+                    {
+                        "AccessToken": []
+                    }
+                ],
+                "description": "Deletes a specific step from a recipe.\nThis operation is **idempotent**—deleting the same step twice will return `StepNotFound`.",
+                "tags": [
+                    "Recipes",
+                    "Steps"
+                ],
+                "summary": "Delete a recipe step",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID of the recipe",
+                        "name": "recipeID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID of the step to delete",
+                        "name": "stepID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Step successfully deleted"
+                    },
+                    "400": {
+                        "description": "Invalid recipe ID or step ID",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Recipe not found, user does not own the recipe, or step not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/api/session": {
             "post": {
                 "tags": [

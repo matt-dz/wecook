@@ -202,7 +202,7 @@ FROM
 WHERE
   id = $1;
 
--- name: GetRecipeIngredientExistance :one
+-- name: GetRecipeIngredientExistence :one
 SELECT
   EXISTS (
     SELECT
@@ -211,3 +211,25 @@ SELECT
       recipe_ingredients
     WHERE
       id = $1);
+
+-- name: GetRecipeStepExistence :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      recipe_steps
+    WHERE
+      id = $1);
+
+-- name: GetRecipeStepImageURL :one
+SELECT
+  image_url
+FROM
+  recipe_steps
+WHERE
+  id = $1;
+
+-- name: DeleteRecipeStep :exec
+DELETE FROM recipe_steps
+WHERE id = $1;

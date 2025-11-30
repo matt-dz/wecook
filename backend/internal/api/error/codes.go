@@ -19,6 +19,7 @@ const (
 	RecipeNotFound          = "recipe_not_found"
 	RecipeNotOwned          = "recipe_not_owned"
 	IngredientNotFound      = "ingredient_not_found"
+	StepNotFound            = "step_not_found"
 )
 
 var errorCodeToStatusCode = map[ErrorCode]int{
@@ -36,4 +37,5 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	RecipeNotFound:          http.StatusNotFound,
 	RecipeNotOwned:          http.StatusForbidden,
 	IngredientNotFound:      http.StatusNotFound,
+	StepNotFound:            http.StatusNotFound,
 }

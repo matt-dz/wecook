@@ -11,12 +11,7 @@ import (
 // helper to create a test FileServer rooted at a temp dir.
 func newTestFileServer(t *testing.T) (*FileServer, string) {
 	t.Helper()
-
 	base := t.TempDir()
-
-	// Make sure allowed top-level dirs are predictable for tests
-	topLevelDirectories = []string{"covers", "steps", "ingredients"}
-
 	// Minimal construction: assumes FileServer has a baseDir field
 	return &FileServer{baseDir: base}, base
 }
