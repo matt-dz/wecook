@@ -467,7 +467,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 
 	// Get recipe and owner
 	env.Logger.DebugContext(ctx, "getting recipe and owner")
-	row, err := env.Database.GetRecipeAndOwner(ctx, recipeID)
+	row, err := env.Database.GetPublishedRecipeAndOwner(ctx, recipeID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		env.Logger.ErrorContext(ctx, "could not find recipe and owner", slog.Any("error", err))
 		_ = apiError.EncodeError(w, apiError.RecipeNotFound, "recipe not found", requestID)
@@ -1361,4 +1361,119 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// GetPersonalRecipe godoc
+//
+//	@Summary		Get a personal (owned) recipe
+//	@Description	Retrieves a recipe **only if it is owned by the authenticated user**.
+//	@Description	Includes full recipe details: steps, ingredients, metadata, and owner info.
+//	@Tags			Recipes
+//	@Security		AccessToken
+//	@Param			recipeID	path	int	true	"ID of the recipe"
+//	@Produce		json
+//	@Success		200	{object}	GetRecipeResponse	"Full recipe with steps and ingredients"
+//	@Failure		400	{object}	apiError.Error		"Bad request — invalid recipe ID"
+//	@Failure		404	{object}	apiError.Error		"Recipe not found or not owned by user"
+//	@Failure		500	{object}	apiError.Error		"Internal server error"
+//	@Router			/api/recipes/personal/{recipeID} [get]
+func GetPersonalRecipe(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+
+	// Read request
+	env.Logger.DebugContext(ctx, "reading request")
+	request := GetRecipeRequest{
+		RecipeID: integer64(chi.URLParam(r, "recipeID")),
+	}
+	validate := validator.New()
+	if err := validate.Struct(request); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate request", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "bad request", requestID)
+		return
+	}
+	recipeID, _ := request.RecipeID.Int()
+
+	// Get recipe and owner
+	env.Logger.DebugContext(ctx, "getting recipe and owner")
+	row, err := env.Database.GetRecipeAndOwner(ctx, recipeID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		env.Logger.ErrorContext(ctx, "could not find recipe and owner", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.RecipeNotFound, "recipe not found", requestID)
+		return
+	} else if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe and owner", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	steps, err := env.Database.GetRecipeSteps(ctx, recipeID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe steps", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	ingredients, err := env.Database.GetRecipeIngredients(ctx, recipeID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe ingredients", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Write response
+	res := GetRecipeResponse{
+		Recipe: recipe.RecipeWithIngredientsAndSteps{
+			CookeTimeMinutes: uint32(row.CookTimeMinutes.Int32),
+			UserID:           row.UserID.Int64,
+			CreatedAt:        row.CreatedAt.Time,
+			UpdatedAt:        row.UpdatedAt.Time,
+			Published:        row.Published,
+			Title:            row.Title,
+			Description:      row.Description.String,
+			Steps:            make([]recipe.RecipeStep, 0),
+			Ingredients:      make([]recipe.RecipeIngredient, 0),
+		},
+		Owner: recipe.RecipeOwner{
+			FirstName: row.FirstName,
+			LastName:  row.LastName,
+			ID:        row.UserID.Int64,
+		},
+	}
+	if row.ImageUrl.String != "" {
+		res.Recipe.ImageURL = env.FileServer.FileURL(row.ImageUrl.String)
+	}
+	for _, step := range steps {
+		res.Recipe.Steps = append(res.Recipe.Steps, recipe.RecipeStep{
+			ID:          step.ID,
+			RecipeID:    step.RecipeID,
+			StepNumber:  step.StepNumber,
+			Instruction: step.Instruction,
+			CreatedAt:   step.CreatedAt.Time,
+			UpdatedAt:   step.UpdatedAt.Time,
+		})
+		if step.ImageUrl.String != "" {
+			res.Recipe.Steps[len(res.Recipe.Steps)-1].ImageURL = env.FileServer.FileURL(step.ImageUrl.String)
+		}
+	}
+	for _, ingredient := range ingredients {
+		res.Recipe.Ingredients = append(res.Recipe.Ingredients, recipe.RecipeIngredient{
+			ID:       ingredient.ID,
+			RecipeID: ingredient.RecipeID,
+			Quantity: ingredient.Quantity,
+			Name:     ingredient.Name,
+			Unit:     ingredient.Unit.String,
+		})
+		if ingredient.ImageUrl.String != "" {
+			res.Recipe.Ingredients[len(res.Recipe.Ingredients)-1].ImageURL = env.FileServer.FileURL(ingredient.ImageUrl.String)
+		}
+	}
+	env.Logger.DebugContext(ctx, "writing response")
+	bytes, err := json.Marshal(res)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to marshal response", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	w.Header().Add("Content-Type", "application/json")
+	_, _ = w.Write(bytes)
 }

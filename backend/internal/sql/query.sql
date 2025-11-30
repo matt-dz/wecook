@@ -142,8 +142,27 @@ FROM
   recipes r
   JOIN users u ON r.user_id = u.id
 WHERE
+  r.id = $1;
+
+-- name: GetPublishedRecipeAndOwner :one
+SELECT
+  r.user_id,
+  r.image_url,
+  r.title,
+  r.description,
+  r.created_at,
+  r.updated_at,
+  r.published,
+  r.cook_time_minutes,
+  u.first_name,
+  u.last_name,
+  u.id
+FROM
+  recipes r
+  JOIN users u ON r.user_id = u.id
+WHERE
   r.id = $1
-  AND r.published = TRUE;
+  AND published = TRUE;
 
 -- name: GetRecipeSteps :many
 SELECT

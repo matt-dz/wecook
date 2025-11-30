@@ -277,6 +277,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/recipes/personal/{recipeID}": {
+            "get": {
+                "security": [
+                    {
+                        "AccessToken": []
+                    }
+                ],
+                "description": "Retrieves a recipe **only if it is owned by the authenticated user**.\nIncludes full recipe details: steps, ingredients, metadata, and owner info.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes"
+                ],
+                "summary": "Get a personal (owned) recipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID of the recipe",
+                        "name": "recipeID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Full recipe with steps and ingredients",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_routes_recipes.GetRecipeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request — invalid recipe ID",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Recipe not found or not owned by user",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/api/recipes/steps": {
             "post": {
                 "security": [

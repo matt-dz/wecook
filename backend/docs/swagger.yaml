@@ -726,6 +726,41 @@ paths:
       summary: Get recipes owned by the authenticated user
       tags:
       - Recipes
+  /api/recipes/personal/{recipeID}:
+    get:
+      description: |-
+        Retrieves a recipe **only if it is owned by the authenticated user**.
+        Includes full recipe details: steps, ingredients, metadata, and owner info.
+      parameters:
+      - description: ID of the recipe
+        in: path
+        name: recipeID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Full recipe with steps and ingredients
+          schema:
+            $ref: '#/definitions/internal_api_routes_recipes.GetRecipeResponse'
+        "400":
+          description: Bad request — invalid recipe ID
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "404":
+          description: Recipe not found or not owned by user
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      security:
+      - AccessToken: []
+      summary: Get a personal (owned) recipe
+      tags:
+      - Recipes
   /api/recipes/steps:
     post:
       consumes:
