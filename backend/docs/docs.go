@@ -245,6 +245,38 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/recipes/personal": {
+            "get": {
+                "description": "Returns all recipes created by the authenticated user, including recipe details and owner information.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes"
+                ],
+                "summary": "Get recipes owned by the authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "List of personal recipes",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_routes_recipes.GetPersonalRecipesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/api/recipes/steps": {
             "post": {
                 "security": [
@@ -526,6 +558,150 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_matt-dz_wecook_internal_recipe.Recipe": {
+            "type": "object",
+            "properties": {
+                "cook_time_minutes": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "published": {
+                    "type": "boolean"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_matt-dz_wecook_internal_recipe.RecipeAndOwner": {
+            "type": "object",
+            "properties": {
+                "owner": {
+                    "$ref": "#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeOwner"
+                },
+                "recipe": {
+                    "$ref": "#/definitions/github_com_matt-dz_wecook_internal_recipe.Recipe"
+                }
+            }
+        },
+        "github_com_matt-dz_wecook_internal_recipe.RecipeIngredient": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "recipe_id": {
+                    "type": "integer"
+                },
+                "unit": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_matt-dz_wecook_internal_recipe.RecipeOwner": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_matt-dz_wecook_internal_recipe.RecipeStep": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "instruction": {
+                    "type": "string"
+                },
+                "recipe_id": {
+                    "type": "integer"
+                },
+                "step_number": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_matt-dz_wecook_internal_recipe.RecipeWithIngredientsAndSteps": {
+            "type": "object",
+            "properties": {
+                "cook_time_minutes": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeIngredient"
+                    }
+                },
+                "published": {
+                    "type": "boolean"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeStep"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "internal_api_routes_admin.CreateAdminRequest": {
             "type": "object",
             "required": [
@@ -557,115 +733,25 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_api_routes_recipes.GetPersonalRecipesResponse": {
+            "type": "object",
+            "properties": {
+                "recipes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeAndOwner"
+                    }
+                }
+            }
+        },
         "internal_api_routes_recipes.GetRecipeResponse": {
             "type": "object",
             "properties": {
+                "owner": {
+                    "$ref": "#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeOwner"
+                },
                 "recipe": {
-                    "$ref": "#/definitions/internal_api_routes_recipes.RecipeResponseRecipe"
-                },
-                "user": {
-                    "$ref": "#/definitions/internal_api_routes_recipes.RecipeResponseUser"
-                }
-            }
-        },
-        "internal_api_routes_recipes.RecipeResponseRecipe": {
-            "type": "object",
-            "properties": {
-                "cook_time_minutes": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "image_url": {
-                    "type": "string"
-                },
-                "ingredients": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_api_routes_recipes.RecipeResponseRecipeIngredient"
-                    }
-                },
-                "steps": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_api_routes_recipes.RecipeResponseRecipeStep"
-                    }
-                },
-                "title": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_api_routes_recipes.RecipeResponseRecipeIngredient": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "image_url": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "quantity": {
-                    "type": "number"
-                },
-                "recipe_id": {
-                    "type": "integer"
-                },
-                "unit": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_api_routes_recipes.RecipeResponseRecipeStep": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "image_url": {
-                    "type": "string"
-                },
-                "instruction": {
-                    "type": "string"
-                },
-                "recipe_id": {
-                    "type": "integer"
-                },
-                "step_number": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_api_routes_recipes.RecipeResponseUser": {
-            "type": "object",
-            "properties": {
-                "first_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "last_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeWithIngredientsAndSteps"
                 }
             }
         },

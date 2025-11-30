@@ -337,6 +337,74 @@ func (q *Queries) GetRecipeSteps(ctx context.Context, recipeID int64) ([]RecipeS
 	return items, nil
 }
 
+const getRecipesByOwner = `-- name: GetRecipesByOwner :many
+SELECT
+  r.user_id,
+  r.image_url,
+  r.title,
+  r.description,
+  r.created_at,
+  r.updated_at,
+  r.published,
+  r.cook_time_minutes,
+  u.first_name,
+  u.last_name,
+  u.id
+FROM
+  recipes r
+  JOIN users u ON r.user_id = u.id
+WHERE
+  r.id = $1
+ORDER BY
+  r.updated_at DESC
+`
+
+type GetRecipesByOwnerRow struct {
+	UserID          pgtype.Int8
+	ImageUrl        pgtype.Text
+	Title           string
+	Description     pgtype.Text
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	Published       bool
+	CookTimeMinutes pgtype.Int4
+	FirstName       string
+	LastName        string
+	ID              int64
+}
+
+func (q *Queries) GetRecipesByOwner(ctx context.Context, id int64) ([]GetRecipesByOwnerRow, error) {
+	rows, err := q.db.Query(ctx, getRecipesByOwner, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetRecipesByOwnerRow
+	for rows.Next() {
+		var i GetRecipesByOwnerRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.ImageUrl,
+			&i.Title,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Published,
+			&i.CookTimeMinutes,
+			&i.FirstName,
+			&i.LastName,
+			&i.ID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUser = `-- name: GetUser :one
 SELECT
   id,

@@ -11,6 +11,100 @@ definitions:
       status:
         type: integer
     type: object
+  github_com_matt-dz_wecook_internal_recipe.Recipe:
+    properties:
+      cook_time_minutes:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      image_url:
+        type: string
+      published:
+        type: boolean
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  github_com_matt-dz_wecook_internal_recipe.RecipeAndOwner:
+    properties:
+      owner:
+        $ref: '#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeOwner'
+      recipe:
+        $ref: '#/definitions/github_com_matt-dz_wecook_internal_recipe.Recipe'
+    type: object
+  github_com_matt-dz_wecook_internal_recipe.RecipeIngredient:
+    properties:
+      id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      quantity:
+        type: number
+      recipe_id:
+        type: integer
+      unit:
+        type: string
+    type: object
+  github_com_matt-dz_wecook_internal_recipe.RecipeOwner:
+    properties:
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+    type: object
+  github_com_matt-dz_wecook_internal_recipe.RecipeStep:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      instruction:
+        type: string
+      recipe_id:
+        type: integer
+      step_number:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  github_com_matt-dz_wecook_internal_recipe.RecipeWithIngredientsAndSteps:
+    properties:
+      cook_time_minutes:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      image_url:
+        type: string
+      ingredients:
+        items:
+          $ref: '#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeIngredient'
+        type: array
+      published:
+        type: boolean
+      steps:
+        items:
+          $ref: '#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeStep'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
   internal_api_routes_admin.CreateAdminRequest:
     properties:
       email:
@@ -32,78 +126,19 @@ definitions:
       user_id:
         type: integer
     type: object
+  internal_api_routes_recipes.GetPersonalRecipesResponse:
+    properties:
+      recipes:
+        items:
+          $ref: '#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeAndOwner'
+        type: array
+    type: object
   internal_api_routes_recipes.GetRecipeResponse:
     properties:
+      owner:
+        $ref: '#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeOwner'
       recipe:
-        $ref: '#/definitions/internal_api_routes_recipes.RecipeResponseRecipe'
-      user:
-        $ref: '#/definitions/internal_api_routes_recipes.RecipeResponseUser'
-    type: object
-  internal_api_routes_recipes.RecipeResponseRecipe:
-    properties:
-      cook_time_minutes:
-        type: integer
-      created_at:
-        type: string
-      description:
-        type: string
-      image_url:
-        type: string
-      ingredients:
-        items:
-          $ref: '#/definitions/internal_api_routes_recipes.RecipeResponseRecipeIngredient'
-        type: array
-      steps:
-        items:
-          $ref: '#/definitions/internal_api_routes_recipes.RecipeResponseRecipeStep'
-        type: array
-      title:
-        type: string
-      updated_at:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  internal_api_routes_recipes.RecipeResponseRecipeIngredient:
-    properties:
-      id:
-        type: integer
-      image_url:
-        type: string
-      name:
-        type: string
-      quantity:
-        type: number
-      recipe_id:
-        type: integer
-      unit:
-        type: string
-    type: object
-  internal_api_routes_recipes.RecipeResponseRecipeStep:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      image_url:
-        type: string
-      instruction:
-        type: string
-      recipe_id:
-        type: integer
-      step_number:
-        type: integer
-      updated_at:
-        type: string
-    type: object
-  internal_api_routes_recipes.RecipeResponseUser:
-    properties:
-      first_name:
-        type: string
-      id:
-        type: integer
-      last_name:
-        type: string
+        $ref: '#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeWithIngredientsAndSteps'
     type: object
   internal_api_routes_users.CreateUserRequest:
     properties:
@@ -371,6 +406,28 @@ paths:
       tags:
       - Recipes
       - Ingredients
+  /api/recipes/personal:
+    get:
+      description: Returns all recipes created by the authenticated user, including
+        recipe details and owner information.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of personal recipes
+          schema:
+            $ref: '#/definitions/internal_api_routes_recipes.GetPersonalRecipesResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      summary: Get recipes owned by the authenticated user
+      tags:
+      - Recipes
   /api/recipes/steps:
     post:
       consumes:

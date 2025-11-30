@@ -6,11 +6,71 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 const (
 	magicNumberSeek = 512
 )
+
+type RecipeOwner struct {
+	ID        int64  `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
+type RecipeIngredient struct {
+	ID       int64   `json:"id"`
+	RecipeID int64   `json:"recipe_id"`
+	Quantity float32 `json:"quantity,omitempty"`
+	Name     string  `json:"name"`
+	Unit     string  `json:"unit,omitempty"`
+	ImageURL string  `json:"image_url,omitempty"`
+}
+
+type RecipeStep struct {
+	ID          int64     `json:"id"`
+	RecipeID    int64     `json:"recipe_id"`
+	StepNumber  int32     `json:"step_number"`
+	Instruction string    `json:"instruction"`
+	ImageURL    string    `json:"image_url,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type Recipe struct {
+	UserID           int64     `json:"user_id"`
+	Published        bool      `json:"published"`
+	CookeTimeMinutes uint32    `json:"cook_time_minutes"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	ImageURL         string    `json:"image_url,omitempty"`
+	Title            string    `json:"title"`
+	Description      string    `json:"description,omitempty"`
+}
+
+type RecipeAndOwner struct {
+	Recipe Recipe      `json:"recipe"`
+	Owner  RecipeOwner `json:"owner"`
+}
+
+type RecipeWithIngredientsAndSteps struct {
+	UserID           int64              `json:"user_id"`
+	Published        bool               `json:"published"`
+	CookeTimeMinutes uint32             `json:"cook_time_minutes"`
+	CreatedAt        time.Time          `json:"created_at"`
+	UpdatedAt        time.Time          `json:"updated_at"`
+	ImageURL         string             `json:"image_url,omitempty"`
+	Title            string             `json:"title"`
+	Description      string             `json:"description,omitempty"`
+	Ingredients      []RecipeIngredient `json:"ingredients"`
+	Steps            []RecipeStep       `json:"steps"`
+}
+
+type RecipeWithIngredientsAndStepsAndOwner struct {
+	Recipe RecipeWithIngredientsAndSteps `json:"recipe"`
+	Owner  RecipeOwner                   `json:"owner"`
+}
 
 type UploadedFile struct {
 	Size     int64

@@ -164,3 +164,24 @@ WHERE
   recipe_id = $1
 ORDER BY
   created_at ASC;
+
+-- name: GetRecipesByOwner :many
+SELECT
+  r.user_id,
+  r.image_url,
+  r.title,
+  r.description,
+  r.created_at,
+  r.updated_at,
+  r.published,
+  r.cook_time_minutes,
+  u.first_name,
+  u.last_name,
+  u.id
+FROM
+  recipes r
+  JOIN users u ON r.user_id = u.id
+WHERE
+  r.id = $1
+ORDER BY
+  r.updated_at DESC;

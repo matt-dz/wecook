@@ -492,17 +492,18 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 
 	// Write response
 	res := GetRecipeResponse{
-		Recipe: RecipeResponseRecipe{
-			CookeTimeMinutes: uint(row.CookTimeMinutes.Int32),
+		Recipe: recipe.RecipeWithIngredientsAndSteps{
+			CookeTimeMinutes: uint32(row.CookTimeMinutes.Int32),
 			UserID:           row.UserID.Int64,
 			CreatedAt:        row.CreatedAt.Time,
 			UpdatedAt:        row.UpdatedAt.Time,
+			Published:        row.Published,
 			Title:            row.Title,
 			Description:      row.Description.String,
-			Steps:            make([]RecipeResponseRecipeStep, 0),
-			Ingredients:      make([]RecipeResponseRecipeIngredient, 0),
+			Steps:            make([]recipe.RecipeStep, 0),
+			Ingredients:      make([]recipe.RecipeIngredient, 0),
 		},
-		User: RecipeResponseUser{
+		Owner: recipe.RecipeOwner{
 			FirstName: row.FirstName,
 			LastName:  row.LastName,
 			ID:        row.UserID.Int64,
@@ -512,7 +513,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 		res.Recipe.ImageURL = env.FileServer.FileURL(row.ImageUrl.String)
 	}
 	for _, step := range steps {
-		res.Recipe.Steps = append(res.Recipe.Steps, RecipeResponseRecipeStep{
+		res.Recipe.Steps = append(res.Recipe.Steps, recipe.RecipeStep{
 			ID:          step.ID,
 			RecipeID:    step.RecipeID,
 			StepNumber:  step.StepNumber,
@@ -525,7 +526,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	for _, ingredient := range ingredients {
-		res.Recipe.Ingredients = append(res.Recipe.Ingredients, RecipeResponseRecipeIngredient{
+		res.Recipe.Ingredients = append(res.Recipe.Ingredients, recipe.RecipeIngredient{
 			ID:       ingredient.ID,
 			RecipeID: ingredient.RecipeID,
 			Quantity: ingredient.Quantity,
@@ -545,4 +546,71 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json")
 	_, _ = w.Write(bytes)
+}
+
+// GetPersonalRecipes godoc
+// @Summary      Get recipes owned by the authenticated user
+// @Description  Returns all recipes created by the authenticated user, including recipe details and owner information.
+// @Tags         Recipes
+// @Produce      json
+//
+// @Success      200  {object}  GetPersonalRecipesResponse  "List of personal recipes"
+// @Failure      401  {object}  apiError.Error       "Unauthorized"
+// @Failure      500  {object}  apiError.Error       "Internal server error"
+//
+// @Router       /api/recipes/personal [get]
+func GetPersonalRecipes(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Get recipes
+	env.Logger.DebugContext(ctx, "getting user recipes")
+	recipes, err := env.Database.GetRecipesByOwner(ctx, userID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipes by owner", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Write response
+	env.Logger.DebugContext(ctx, "writing response")
+	resp := GetPersonalRecipesResponse{
+		Recipes: make([]recipe.RecipeAndOwner, 0),
+	}
+	for _, r := range recipes {
+		resp.Recipes = append(resp.Recipes, recipe.RecipeAndOwner{
+			Recipe: recipe.Recipe{
+				UserID:           r.UserID.Int64,
+				Published:        r.Published,
+				CookeTimeMinutes: uint32(r.CookTimeMinutes.Int32),
+				CreatedAt:        r.CreatedAt.Time,
+				UpdatedAt:        r.UpdatedAt.Time,
+				Title:            r.Title,
+				Description:      r.Description.String,
+			},
+			Owner: recipe.RecipeOwner{
+				ID:        r.UserID.Int64,
+				FirstName: r.FirstName,
+				LastName:  r.LastName,
+			},
+		})
+		if r.ImageUrl.String != "" {
+			resp.Recipes[len(resp.Recipes)-1].Recipe.ImageURL = env.FileServer.FileURL(r.ImageUrl.String)
+		}
+	}
+	marshaled, err := json.Marshal(resp)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to marshal response", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	w.Header().Add("Content-Type", "application/json")
+	_, _ = w.Write(marshaled)
 }
