@@ -581,6 +581,7 @@ paths:
       summary: Update a recipe step
       tags:
       - Recipes
+      - Steps
   /api/recipes/ingredients:
     post:
       consumes:

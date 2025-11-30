@@ -905,7 +905,7 @@ func DeleteRecipeStep(w http.ResponseWriter, r *http.Request) {
 //	@Summary		Update a recipe step
 //	@Description	Updates a specific step within a recipe.
 //	@Description	Supports partial updates: users may update the instruction, the image, or both.
-//	@Tags			Recipes
+//	@Tags			Recipes, Steps
 //	@Security		AccessToken
 //	@Param			recipeID	path		int		true	"ID of the recipe"
 //	@Param			stepID		path		int		true	"ID of the step to update"

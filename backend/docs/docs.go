@@ -745,7 +745,8 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Recipes"
+                    "Recipes",
+                    "Steps"
                 ],
                 "summary": "Update a recipe step",
                 "parameters": [
