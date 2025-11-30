@@ -206,6 +206,7 @@ FROM
   JOIN users u ON r.user_id = u.id
 WHERE
   r.id = $1
+  AND r.published = TRUE
 `
 
 type GetRecipeAndOwnerRow struct {

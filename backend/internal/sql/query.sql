@@ -142,7 +142,8 @@ FROM
   recipes r
   JOIN users u ON r.user_id = u.id
 WHERE
-  r.id = $1;
+  r.id = $1
+  AND r.published = TRUE;
 
 -- name: GetRecipeSteps :many
 SELECT
