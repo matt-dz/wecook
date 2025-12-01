@@ -1,3 +1,4 @@
+import type { KyResponse } from 'ky';
 import * as z from 'zod';
 
 export const ApiError = z.object({
@@ -26,3 +27,8 @@ enum ApiErrorCodes {
 }
 
 export { ApiErrorCodes };
+
+export async function parseError(response: KyResponse): Promise<z.infer<typeof ApiError>> {
+	const clone = response.clone();
+	return ApiError.parse(await clone.json());
+}

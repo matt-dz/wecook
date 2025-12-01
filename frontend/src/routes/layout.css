@@ -1,1 +1,63 @@
 @import 'tailwindcss';
+
+@font-face {
+	font-family: 'IowanOldStyleBT';
+	src: url('/iowanoldst-bt/iowan-old-style-bt.ttf') format('truetype');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'IowanOldStyleBT';
+	src: url('/iowanoldst-bt/iowan-old-style-italic-bt.ttf') format('truetype');
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'IowanOldStyleBT';
+	src: url('/iowanoldst-bt/iowan-old-style-bold-bt.ttf') format('truetype');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'IowanOldStyleBT';
+	src: url('/iowanoldst-bt/iowan-old-style-bold-italic-bt.ttf') format('truetype');
+	font-weight: 700;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'IowanOldStyleBT';
+	src: url('/iowanoldst-bt/iowan-old-style-black-bt.ttf') format('truetype');
+	font-weight: 900;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'IowanOldStyleBT';
+	src: url('/iowanoldst-bt/iowan-old-style-black-italic-bt.ttf') format('truetype');
+	font-weight: 900;
+	font-style: italic;
+	font-display: swap;
+}
+
+@theme {
+	--font-inter: 'Inter', sans-serif;
+}
+
+@layer base {
+	.font-inter {
+		font-optical-sizing: auto;
+	}
+}
+
+body {
+	font-family: 'IowanOldStyleBT', serif;
+}

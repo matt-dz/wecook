@@ -17,4 +17,16 @@ export async function refreshSession(options?: Options) {
 	});
 }
 
+export type LoginRequest = {
+	email: string;
+	password: string;
+};
+
+export async function login(fetch: FetchType, request: LoginRequest, options?: Options) {
+	return await fetch.post(`${PUBLIC_BACKEND_URL}/api/login`, {
+		...options,
+		json: request
+	});
+}
+
 export { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME };

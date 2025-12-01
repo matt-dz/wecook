@@ -1,5 +1,6 @@
 import ky, { type Options, type KyResponse, HTTPError } from 'ky';
 import { ApiError, ApiErrorCodes } from '$lib/errors/api';
+import { parseError as parseApiError } from '$lib/errors/api';
 import { refreshSession } from '$lib/auth';
 
 const baseOptions: Options = {
@@ -37,7 +38,8 @@ const fetch = ky.create({
 
 				// Exit if the token is not expired.
 				// The request failed for another reason.
-				if (!isExpiredToken(response.clone())) {
+				const isExpired = await isExpiredToken(response.clone());
+				if (!isExpired) {
 					return response;
 				}
 
@@ -65,6 +67,18 @@ const fetch = ky.create({
 		]
 	}
 });
+
+export async function parseError(error: HTTPError): Promise<string> {
+	const response = error.response;
+	try {
+		const parsedError = await parseApiError(response);
+		console.error(parsedError);
+		return parsedError.message;
+	} catch {
+		const errorText = await response.text();
+		return errorText;
+	}
+}
 
 type FetchType = typeof fetch;
 

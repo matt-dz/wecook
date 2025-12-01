@@ -38,8 +38,10 @@
 	},
 	"dependencies": {
 		"@sveltejs/adapter-node": "^5.4.0",
+		"clsx": "^2.1.1",
 		"ky": "^1.14.0",
 		"set-cookie-parser": "^2.7.2",
+		"tailwind-merge": "^3.4.0",
 		"zod": "^4.1.13"
 	}
 }
