@@ -88,7 +88,7 @@ func HandleRefreshSession(w http.ResponseWriter, r *http.Request) {
 
 	// Hash given refresh token
 	env.Logger.DebugContext(ctx, "Encoding given refresh token")
-	givenHash := argon2id.EncodeHashWithSalt(cookie.Value, *argonParams, argonSalt)
+	givenHash := argon2id.HashWithSalt(cookie.Value, *argonParams, argonSalt)
 
 	// Compare refresh tokens
 	env.Logger.DebugContext(ctx, "Comparing tokens")
