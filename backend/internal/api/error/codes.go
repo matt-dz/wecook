@@ -8,6 +8,7 @@ const (
 	InternalServerError     = "internal_server_error"
 	BadRequest              = "bad_request"
 	UnprocessibleEntity     = "unprocessible_entity"
+	InvalidCredentials      = "invalid_credentials"
 	InvalidAccessToken      = "invalid_access_token"
 	ExpiredAccessToken      = "expired_access_token"
 	InvalidRefreshToken     = "invalid_refresh_token"
@@ -38,4 +39,5 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	StepNotFound:            http.StatusNotFound,
 	InvalidRefreshToken:     http.StatusUnauthorized,
 	ExpiredRefreshToken:     http.StatusUnauthorized,
+	InvalidCredentials:      http.StatusUnauthorized,
 }

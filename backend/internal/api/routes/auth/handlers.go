@@ -87,7 +87,7 @@ func HandleRefreshSession(w http.ResponseWriter, r *http.Request) {
 
 	// Compare refresh tokens
 	env.Logger.DebugContext(ctx, "Comparing tokens")
-	if subtle.ConstantTimeCompare(trueRefreshHash, []byte(givenHash)) == 0 {
+	if subtle.ConstantTimeCompare(trueRefreshHash, givenHash) == 0 {
 		env.Logger.ErrorContext(ctx, "tokens do not match")
 		_ = apiError.EncodeError(w, apiError.InvalidRefreshToken, "invalid refresh token", requestID)
 		return

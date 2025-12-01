@@ -178,7 +178,7 @@ func HandleUserLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Comparing passwords
 	env.Logger.DebugContext(ctx, "Comparing passwords")
-	if subtle.ConstantTimeCompare([]byte(givenHash), trueHash) == 0 {
+	if subtle.ConstantTimeCompare(givenHash, trueHash) == 0 {
 		env.Logger.ErrorContext(ctx, "Given password is incorrect")
 		_ = apiError.EncodeError(w, apiError.InvalidCredentials, "username or password is incorrect", requestID)
 		return
