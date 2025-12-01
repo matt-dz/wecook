@@ -1,6 +1,7 @@
 import { verifySession, refreshSession } from '$lib/auth';
 import ky, { HTTPError, type Options } from 'ky';
-import { baseOptions, isExpiredToken } from '$lib/http';
+import { baseOptions } from '$lib/http';
+import { accessTokenExpired, refreshTokenExpired } from '$lib/errors/api';
 import { redirect, type Handle } from '@sveltejs/kit';
 import * as setCookie from 'set-cookie-parser';
 
@@ -26,7 +27,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				async (request, options, response) => {
 					// Exit if token is not expired.
 					// Failed for another reason.
-					if (!(await isExpiredToken(response))) {
+					if (!(await accessTokenExpired(response))) {
 						return response;
 					}
 
@@ -49,18 +50,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 						});
 					} catch (e) {
 						if (e instanceof HTTPError) {
-							e.response
-								.json()
-								.then((val) => {
-									console.error(
-										`Failed to verify session message=${e.message} body=${JSON.stringify(val)}`
-									);
-								})
-								.catch(() => {
-									console.error(`Failed to verify session message=${e.message}`);
-								});
+							if (await refreshTokenExpired(e.response)) {
+								console.error('failed to refresh session:', await e.response.clone().text());
+							}
+							return e.response;
 						}
-						return response;
+						throw e;
 					}
 
 					return await ky(request, {
@@ -80,16 +75,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 		await verifySession(fetch);
 	} catch (e) {
 		if (e instanceof HTTPError) {
-			e.response
-				.json()
-				.then((val) => {
-					console.error(
-						`Failed to verify session message=${e.message} body=${JSON.stringify(val)}`
-					);
-				})
-				.catch(() => {
-					console.error(`Failed to verify session message=${e.message}`);
-				});
+			if (await refreshTokenExpired(e.response)) {
+				redirect(303, '/login');
+			}
+			console.error(e.message);
+		} else {
+			console.log(e);
 		}
 		redirect(303, '/');
 	}

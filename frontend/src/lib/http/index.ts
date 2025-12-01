@@ -1,30 +1,23 @@
-import ky, { type Options, type KyResponse, HTTPError } from 'ky';
-import { ApiError, ApiErrorCodes } from '$lib/errors/api';
-import { parseError as parseApiError } from '$lib/errors/api';
+import ky, { type Options, HTTPError } from 'ky';
+import {
+	parseError as parseApiError,
+	accessTokenExpired,
+	refreshTokenExpired
+} from '$lib/errors/api';
 import { refreshSession } from '$lib/auth';
 
 const baseOptions: Options = {
 	retry: {
 		limit: 4,
-		backoffLimit: 10 * 1000 // 10 seconds
+		backoffLimit: 10 * 1000, // 10 seconds,
+		shouldRetry: async (s) => {
+			if (s.error instanceof HTTPError && (await refreshTokenExpired(s.error.response))) {
+				return false;
+			}
+			return undefined;
+		}
 	},
 	credentials: 'include'
-};
-
-const isExpiredToken = async (response: KyResponse) => {
-	try {
-		const res = ApiError.safeParse(await response.json());
-		if (!res.success) {
-			return false;
-		}
-
-		return (
-			(res.data.code === ApiErrorCodes.ExpiredToken && response.status === 401) ||
-			(res.data.code === ApiErrorCodes.InvalidToken && response.status === 401)
-		);
-	} catch {
-		return false;
-	}
 };
 
 const fetch = ky.create({
@@ -38,7 +31,7 @@ const fetch = ky.create({
 
 				// Exit if the token is not expired.
 				// The request failed for another reason.
-				const isExpired = await isExpiredToken(response.clone());
+				const isExpired = await accessTokenExpired(response);
 				if (!isExpired) {
 					return response;
 				}
@@ -48,18 +41,12 @@ const fetch = ky.create({
 					await refreshSession(baseOptions);
 				} catch (e) {
 					if (e instanceof HTTPError) {
-						e.response
-							.json()
-							.then((val) => {
-								console.error(
-									`Failed to verify session message=${e.message} body=${JSON.stringify(val)}`
-								);
-							})
-							.catch(() => {
-								console.error(`Failed to verify session message=${e.message}`);
-							});
+						if (await refreshTokenExpired(e.response)) {
+							console.error('failed to refresh session:', await e.response.clone().text());
+						}
+						return e.response;
 					}
-					return response;
+					throw e;
 				}
 
 				return ky.retry();
@@ -83,5 +70,5 @@ export async function parseError(error: HTTPError): Promise<string> {
 type FetchType = typeof fetch;
 
 export type { FetchType };
-export { baseOptions, isExpiredToken };
+export { baseOptions };
 export default fetch;

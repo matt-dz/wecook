@@ -9,13 +9,13 @@ export const ApiError = z.object({
 });
 
 enum ApiErrorCodes {
-	MissingCredentials = 'missing_credentials',
 	InternalServerError = 'internal_server_error',
 	BadRequest = 'bad_request',
 	UnprocessibleEntity = 'unprocessible_entity',
-	InvalidToken = 'invalid_token',
-	ExpiredToken = 'expired_token',
-	InvalidCredentials = 'invalid_credentials',
+	InvalidAccessToken = 'invalid_access_token',
+	ExpiredAccessToken = 'expired_access_token',
+	InvalidRefreshToken = 'invalid_refresh_token',
+	ExpiredRefreshToken = 'expired_refresh_token',
 	InsufficientPermissions = 'insufficient_permissions',
 	WeakPassword = 'weak_password',
 	EmailConflict = 'email_conflict',
@@ -23,7 +23,17 @@ enum ApiErrorCodes {
 	RecipeNotFound = 'recipe_not_found',
 	RecipeNotOwned = 'recipe_not_owned',
 	IngredientNotFound = 'ingredient_not_found',
-	StepNotFound = 'step_not_found'
+	StepNotFound = 'step_not_found',
+	InvalidCredentials = 'invalid_credentials'
+}
+
+export class RefreshTokenExpiredError extends Error {
+	name = 'RefreshTokenExpiredError';
+
+	constructor(message = 'Refresh token has expired') {
+		super(message);
+		Object.setPrototypeOf(this, new.target.prototype);
+	}
 }
 
 export { ApiErrorCodes };
@@ -31,4 +41,37 @@ export { ApiErrorCodes };
 export async function parseError(response: KyResponse): Promise<z.infer<typeof ApiError>> {
 	const clone = response.clone();
 	return ApiError.parse(await clone.json());
+}
+
+export async function accessTokenExpired(response: KyResponse) {
+	try {
+		const clone = response.clone();
+		const res = ApiError.safeParse(await clone.json());
+		if (!res.success) {
+			return false;
+		}
+
+		return (
+			(res.data.code === ApiErrorCodes.ExpiredAccessToken && response.status === 401) ||
+			(res.data.code === ApiErrorCodes.InvalidAccessToken && response.status === 401)
+		);
+	} catch {
+		return false;
+	}
+}
+
+export async function refreshTokenExpired(response: KyResponse) {
+	try {
+		const clone = response.clone();
+		const res = ApiError.safeParse(await clone.json());
+		if (!res.success) {
+			return false;
+		}
+		return (
+			(res.data.code === ApiErrorCodes.ExpiredRefreshToken && clone.status === 401) ||
+			(res.data.code === ApiErrorCodes.InvalidRefreshToken && clone.status === 401)
+		);
+	} catch {
+		return false;
+	}
 }

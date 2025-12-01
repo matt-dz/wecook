@@ -23,7 +23,7 @@
 				email: email,
 				password: password
 			});
-			goto(resolve('/'));
+			goto(resolve('/home'));
 		} catch (e) {
 			if (e instanceof HTTPError) {
 				error = await parseError(e);
