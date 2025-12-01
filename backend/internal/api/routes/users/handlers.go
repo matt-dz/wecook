@@ -174,11 +174,11 @@ func HandleUserLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Hash given password
 	env.Logger.DebugContext(ctx, "Hashing given password")
-	givenHash := argon2id.EncodeHashWithSalt(request.Password, *argonParams, argonSalt)
+	givenHash := argon2id.HashWithSalt(request.Password, *argonParams, argonSalt)
 
 	// Comparing passwords
 	env.Logger.DebugContext(ctx, "Comparing passwords")
-	if subtle.ConstantTimeCompare([]byte(givenHash), trueHash) != 0 {
+	if subtle.ConstantTimeCompare([]byte(givenHash), trueHash) == 0 {
 		env.Logger.ErrorContext(ctx, "Given password is incorrect")
 		_ = apiError.EncodeError(w, apiError.InvalidCredentials, "username or password is incorrect", requestID)
 		return
