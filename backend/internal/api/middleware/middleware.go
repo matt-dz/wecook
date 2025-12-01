@@ -92,7 +92,7 @@ func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
 			accessToken, err := r.Cookie(token.AccessTokenName(env))
 			if err != nil {
 				env.Logger.ErrorContext(r.Context(), "unable to get access token", slog.Any("error", err))
-				_ = apiError.EncodeError(w, apiError.InvalidToken, "invalid access token", requestID)
+				_ = apiError.EncodeError(w, apiError.InvalidAccessToken, "invalid access token", requestID)
 				return
 			}
 
@@ -110,11 +110,11 @@ func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
 			accessJwt, err := wcJwt.ValidateJWT(accessToken.Value, secretVersion, []byte(secret))
 			if errors.Is(err, jwt.ErrTokenExpired) {
 				env.Logger.ErrorContext(r.Context(), "access token expired", slog.Any("err", err))
-				_ = apiError.EncodeError(w, apiError.ExpiredToken, "access token expired", requestID)
+				_ = apiError.EncodeError(w, apiError.ExpiredAccessToken, "access token expired", requestID)
 				return
 			} else if err != nil {
 				env.Logger.ErrorContext(r.Context(), "invalid access token", slog.Any("error", err))
-				_ = apiError.EncodeError(w, apiError.InvalidToken, "invalid access token", requestID)
+				_ = apiError.EncodeError(w, apiError.InvalidAccessToken, "invalid access token", requestID)
 				return
 			}
 

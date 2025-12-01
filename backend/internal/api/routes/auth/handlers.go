@@ -46,7 +46,7 @@ func HandleRefreshSession(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(token.RefreshTokenName(env))
 	if errors.Is(err, http.ErrNoCookie) {
 		env.Logger.ErrorContext(ctx, "refresh token not found", slog.Any("error", err))
-		_ = apiError.EncodeError(w, apiError.MissingCredentials, "refresh token not found", requestID)
+		_ = apiError.EncodeError(w, apiError.InvalidRefreshToken, "refresh token not found", requestID)
 		return
 	}
 
@@ -55,7 +55,7 @@ func HandleRefreshSession(w http.ResponseWriter, r *http.Request) {
 	userID, err := token.ExtractUserIDFromRefreshToken(cookie.Value)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to extract user id from refresh token", slog.Any("error", err))
-		_ = apiError.EncodeError(w, apiError.InvalidCredentials, "malformed refresh token", requestID)
+		_ = apiError.EncodeError(w, apiError.InvalidRefreshToken, "malformed refresh token", requestID)
 		return
 	}
 
@@ -64,16 +64,11 @@ func HandleRefreshSession(w http.ResponseWriter, r *http.Request) {
 	refresh, err := env.Database.GetUserRefreshTokenHash(ctx, userID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		env.Logger.ErrorContext(ctx, "no user with given id", slog.Int64("user-id", userID), slog.Any("error", err))
-		_ = apiError.EncodeError(w, apiError.InvalidCredentials, "invalid refresh token", requestID)
+		_ = apiError.EncodeError(w, apiError.InvalidRefreshToken, "invalid refresh token", requestID)
 		return
 	} else if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to get user refresh hash", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)
-		return
-	}
-	if time.Now().After(refresh.RefreshTokenExpiresAt.Time) {
-		env.Logger.ErrorContext(ctx, "refresh token is expired")
-		_ = apiError.EncodeError(w, apiError.InvalidCredentials, "invalid refresh token", requestID)
 		return
 	}
 
@@ -94,10 +89,16 @@ func HandleRefreshSession(w http.ResponseWriter, r *http.Request) {
 	env.Logger.DebugContext(ctx, "Comparing tokens")
 	if subtle.ConstantTimeCompare(trueRefreshHash, []byte(givenHash)) == 0 {
 		env.Logger.ErrorContext(ctx, "tokens do not match")
-		_ = apiError.EncodeError(w, apiError.InvalidCredentials, "invalid refresh token", requestID)
+		_ = apiError.EncodeError(w, apiError.InvalidRefreshToken, "invalid refresh token", requestID)
 		return
 	}
 	env.Logger.DebugContext(ctx, "tokens match!")
+
+	if time.Now().After(refresh.RefreshTokenExpiresAt.Time) {
+		env.Logger.ErrorContext(ctx, "refresh token is expired")
+		_ = apiError.EncodeError(w, apiError.ExpiredRefreshToken, "refresh token is expired", requestID)
+		return
+	}
 
 	// Create new refresh token
 	env.Logger.DebugContext(ctx, "creating new refresh token")
