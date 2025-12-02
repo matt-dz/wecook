@@ -130,6 +130,11 @@ definitions:
       user_id:
         type: integer
     type: object
+  internal_api_routes_recipes.CreateRecipeResponse:
+    properties:
+      recipe_id:
+        type: integer
+    type: object
   internal_api_routes_recipes.GetPersonalRecipesResponse:
     properties:
       recipes:
@@ -323,10 +328,31 @@ paths:
       - Ping
   /api/recipes:
     post:
-      responses: {}
-      summary: Create a recipe.
+      consumes:
+      - application/json
+      description: Creates a new (empty) recipe for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recipe successfully created
+          schema:
+            $ref: '#/definitions/internal_api_routes_recipes.CreateRecipeResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "401":
+          description: Unauthorized — missing or invalid access token cookie
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      summary: Create a new recipe
       tags:
-      - Recipes
+      - recipes
   /api/recipes/{recipeID}:
     delete:
       description: |-

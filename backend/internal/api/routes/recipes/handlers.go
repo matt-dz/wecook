@@ -30,10 +30,18 @@ const (
 
 // CreateRecipe godoc
 //
-//	@Summary	Create a recipe.
-//	@Tags		Recipes
-//	@Succes		200 {object} CreateRecipeResponse
-//	@Router		/api/recipes [POST]
+//	@Summary		Create a new recipe
+//	@Description	Creates a new (empty) recipe for the authenticated user.
+//	@Tags			recipes
+//	@Accept			json
+//	@Produce		json
+//
+//	@Success		200	{object}	CreateRecipeResponse	"Recipe successfully created"
+//	@Failure		400	{object}	apiError.Error	"Bad request"
+//	@Failure		401	{object}	apiError.Error	"Unauthorized — missing or invalid access token cookie"
+//	@Failure		500	{object}	apiError.Error	"Internal server error"
+//
+//	@Router			/api/recipes [post]
 func CreateRecipe(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	env := env.EnvFromCtx(ctx)

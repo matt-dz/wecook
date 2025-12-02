@@ -229,11 +229,43 @@ const docTemplate = `{
         },
         "/api/recipes": {
             "post": {
-                "tags": [
-                    "Recipes"
+                "description": "Creates a new (empty) recipe for the authenticated user.",
+                "consumes": [
+                    "application/json"
                 ],
-                "summary": "Create a recipe.",
-                "responses": {}
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipes"
+                ],
+                "summary": "Create a new recipe",
+                "responses": {
+                    "200": {
+                        "description": "Recipe successfully created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_routes_recipes.CreateRecipeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized — missing or invalid access token cookie",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
             }
         },
         "/api/recipes/ingredients": {
@@ -1268,6 +1300,14 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_api_routes_recipes.CreateRecipeResponse": {
+            "type": "object",
+            "properties": {
+                "recipe_id": {
                     "type": "integer"
                 }
             }
