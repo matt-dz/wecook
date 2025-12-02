@@ -6,7 +6,7 @@ import { redirect, type Handle } from '@sveltejs/kit';
 import * as setCookie from 'set-cookie-parser';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	if (!event.route.id?.startsWith('/(app)/')) {
+	if (!event.route.id?.startsWith('/(user)/')) {
 		const response = await resolve(event);
 		return response;
 	}

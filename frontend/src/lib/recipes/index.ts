@@ -9,7 +9,7 @@ const RecipeOwner = z.object({
 	id: z.int()
 });
 
-const Recipe = z.object({
+export const Recipe = z.object({
 	cook_time_minutes: z.int(),
 	title: z.string(),
 	published: z.boolean(),
@@ -17,15 +17,20 @@ const Recipe = z.object({
 	updated_at: z.iso.datetime(),
 	description: z.string().optional(),
 	image_url: z.string().optional(),
-	user_id: z.int()
+	user_id: z.int(),
+	id: z.int()
 });
 
-const RecipeAndOwner = z.object({
+export type RecipeType = z.infer<typeof Recipe>;
+
+export const RecipeAndOwner = z.object({
 	owner: RecipeOwner,
 	recipe: Recipe
 });
 
-const GetPersonalRecipesResponse = z.object({
+export type RecipeAndOwnerType = z.infer<typeof RecipeAndOwner>;
+
+export const GetPersonalRecipesResponse = z.object({
 	recipes: z.array(RecipeAndOwner)
 });
 
