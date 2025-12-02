@@ -15,12 +15,15 @@
 </div>
 
 <div class="flex justify-center">
-	{#if !data.recipes?.recipes}
+	{#if data.recipes?.recipes}
 		<div
-			class="grid w-full max-w-5xl grid-cols-1 place-items-center items-center px-6 min-[650px]:grid-cols-2 min-[900px]:grid-cols-3"
+			class="grid w-full max-w-5xl grid-cols-1 place-items-center items-center gap-4 px-6 min-[650px]:grid-cols-2 min-[900px]:grid-cols-3"
 		>
 			{#each data.recipes?.recipes as recipe (recipe.recipe.id)}
-				<Recipe {recipe} />
+				<Recipe
+					className="h-[60vw] w-[90vw] min-[650px]:h-[25vw] min-[650px]:w-[40vw] min-[900px]:h-[20vw] min-[900px]:w-[30vw] min-[900px]:max-h-[196px] min-[900px]:max-w-[296px]"
+					{recipe}
+				/>
 			{/each}
 		</div>
 	{:else}

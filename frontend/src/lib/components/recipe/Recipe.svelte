@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { formatDuration } from '$lib/time';
 	import { resolve } from '$app/paths';
+	import { twMerge } from 'tailwind-merge';
+	import clsx from 'clsx';
 	import type { RecipeAndOwnerType } from '$lib/recipes';
 	interface Props {
 		recipe: RecipeAndOwnerType;
+		className?: string;
 	}
 
-	let { recipe }: Props = $props();
+	let { recipe, className }: Props = $props();
 </script>
 
 <a
@@ -16,7 +19,14 @@
 	})}
 >
 	{#if recipe.recipe.image_url !== undefined}
-		<div class="h-40 w-[260px] overflow-hidden rounded-lg border-2 border-solid border-black">
+		<div
+			class={twMerge(
+				clsx(
+					'h-40 w-[260px] overflow-hidden rounded-lg border-2 border-solid border-black',
+					className
+				)
+			)}
+		>
 			<img
 				src={recipe.recipe.image_url}
 				alt="cover"
@@ -24,7 +34,11 @@
 			/>
 		</div>
 	{:else}
-		<div class="h-40 w-[260px] rounded-lg border border-solid border-black bg-cyan-300"></div>
+		<div
+			class={twMerge(
+				clsx('h-40 w-[260px] rounded-lg border border-solid border-black bg-cyan-300', className)
+			)}
+		></div>
 	{/if}
 
 	<h1 class="text-lg font-semibold">{recipe.recipe.title}</h1>
