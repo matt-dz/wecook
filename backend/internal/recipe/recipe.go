@@ -29,9 +29,9 @@ type RecipeIngredient struct {
 }
 
 type RecipeStep struct {
+	StepNumber  int32     `json:"step_number"`
 	ID          int64     `json:"id"`
 	RecipeID    int64     `json:"recipe_id"`
-	StepNumber  int32     `json:"step_number"`
 	Instruction string    `json:"instruction"`
 	ImageURL    string    `json:"image_url,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -39,9 +39,10 @@ type RecipeStep struct {
 }
 
 type Recipe struct {
-	UserID           int64     `json:"user_id"`
 	Published        bool      `json:"published"`
 	CookeTimeMinutes uint32    `json:"cook_time_minutes"`
+	UserID           int64     `json:"user_id"`
+	ID               int64     `json:"id"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
 	ImageURL         string    `json:"image_url,omitempty"`
@@ -55,9 +56,10 @@ type RecipeAndOwner struct {
 }
 
 type RecipeWithIngredientsAndSteps struct {
-	UserID           int64              `json:"user_id"`
 	Published        bool               `json:"published"`
 	CookeTimeMinutes uint32             `json:"cook_time_minutes"`
+	UserID           int64              `json:"user_id"`
+	ID               int64              `json:"id"`
 	CreatedAt        time.Time          `json:"created_at"`
 	UpdatedAt        time.Time          `json:"updated_at"`
 	ImageURL         string             `json:"image_url,omitempty"`

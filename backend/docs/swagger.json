@@ -1095,6 +1095,9 @@
                 "description": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "image_url": {
                     "type": "string"
                 },
@@ -1197,6 +1200,9 @@
                 },
                 "description": {
                     "type": "string"
+                },
+                "id": {
+                    "type": "integer"
                 },
                 "image_url": {
                     "type": "string"

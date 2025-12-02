@@ -19,6 +19,8 @@ definitions:
         type: string
       description:
         type: string
+      id:
+        type: integer
       image_url:
         type: string
       published:
@@ -86,6 +88,8 @@ definitions:
         type: string
       description:
         type: string
+      id:
+        type: integer
       image_url:
         type: string
       ingredients:

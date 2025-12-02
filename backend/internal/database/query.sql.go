@@ -227,6 +227,7 @@ SELECT
   r.created_at,
   r.updated_at,
   r.published,
+  r.id,
   r.cook_time_minutes,
   u.first_name,
   u.last_name,
@@ -247,10 +248,11 @@ type GetPublishedRecipeAndOwnerRow struct {
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
 	Published       bool
+	ID              int64
 	CookTimeMinutes pgtype.Int4
 	FirstName       string
 	LastName        string
-	ID              int64
+	ID_2            int64
 }
 
 func (q *Queries) GetPublishedRecipeAndOwner(ctx context.Context, id int64) (GetPublishedRecipeAndOwnerRow, error) {
@@ -264,10 +266,11 @@ func (q *Queries) GetPublishedRecipeAndOwner(ctx context.Context, id int64) (Get
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Published,
+		&i.ID,
 		&i.CookTimeMinutes,
 		&i.FirstName,
 		&i.LastName,
-		&i.ID,
+		&i.ID_2,
 	)
 	return i, err
 }
@@ -281,6 +284,7 @@ SELECT
   r.created_at,
   r.updated_at,
   r.published,
+  r.id,
   r.cook_time_minutes,
   u.first_name,
   u.last_name,
@@ -300,10 +304,11 @@ type GetRecipeAndOwnerRow struct {
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
 	Published       bool
+	ID              int64
 	CookTimeMinutes pgtype.Int4
 	FirstName       string
 	LastName        string
-	ID              int64
+	ID_2            int64
 }
 
 func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAndOwnerRow, error) {
@@ -317,10 +322,11 @@ func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAnd
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Published,
+		&i.ID,
 		&i.CookTimeMinutes,
 		&i.FirstName,
 		&i.LastName,
-		&i.ID,
+		&i.ID_2,
 	)
 	return i, err
 }
@@ -498,6 +504,7 @@ SELECT
   r.updated_at,
   r.published,
   r.cook_time_minutes,
+  r.id,
   u.first_name,
   u.last_name,
   u.id
@@ -519,9 +526,10 @@ type GetRecipesByOwnerRow struct {
 	UpdatedAt       pgtype.Timestamptz
 	Published       bool
 	CookTimeMinutes pgtype.Int4
+	ID              int64
 	FirstName       string
 	LastName        string
-	ID              int64
+	ID_2            int64
 }
 
 func (q *Queries) GetRecipesByOwner(ctx context.Context, id int64) ([]GetRecipesByOwnerRow, error) {
@@ -542,9 +550,10 @@ func (q *Queries) GetRecipesByOwner(ctx context.Context, id int64) ([]GetRecipes
 			&i.UpdatedAt,
 			&i.Published,
 			&i.CookTimeMinutes,
+			&i.ID,
 			&i.FirstName,
 			&i.LastName,
-			&i.ID,
+			&i.ID_2,
 		); err != nil {
 			return nil, err
 		}

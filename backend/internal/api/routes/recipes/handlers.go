@@ -499,6 +499,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 			UpdatedAt:        row.UpdatedAt.Time,
 			Published:        row.Published,
 			Title:            row.Title,
+			ID:               row.ID,
 			Description:      row.Description.String,
 			Steps:            make([]recipe.RecipeStep, 0),
 			Ingredients:      make([]recipe.RecipeIngredient, 0),
@@ -595,6 +596,7 @@ func GetPersonalRecipes(w http.ResponseWriter, r *http.Request) {
 				UpdatedAt:        r.UpdatedAt.Time,
 				Title:            r.Title,
 				Description:      r.Description.String,
+				ID:               r.ID,
 			},
 			Owner: recipe.RecipeOwner{
 				ID:        r.UserID.Int64,
@@ -1430,6 +1432,7 @@ func GetPersonalRecipe(w http.ResponseWriter, r *http.Request) {
 			Published:        row.Published,
 			Title:            row.Title,
 			Description:      row.Description.String,
+			ID:               row.ID,
 			Steps:            make([]recipe.RecipeStep, 0),
 			Ingredients:      make([]recipe.RecipeIngredient, 0),
 		},

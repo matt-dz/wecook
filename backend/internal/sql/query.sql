@@ -134,6 +134,7 @@ SELECT
   r.created_at,
   r.updated_at,
   r.published,
+  r.id,
   r.cook_time_minutes,
   u.first_name,
   u.last_name,
@@ -153,6 +154,7 @@ SELECT
   r.created_at,
   r.updated_at,
   r.published,
+  r.id,
   r.cook_time_minutes,
   u.first_name,
   u.last_name,
@@ -194,6 +196,7 @@ SELECT
   r.updated_at,
   r.published,
   r.cook_time_minutes,
+  r.id,
   u.first_name,
   u.last_name,
   u.id
