@@ -3,9 +3,9 @@
 	import { resolve } from '$app/paths';
 	import { twMerge } from 'tailwind-merge';
 	import clsx from 'clsx';
-	import type { RecipeAndOwnerType } from '$lib/recipes';
+	import type { RecipeAndOwnerWithoutStepsAndIngredientsType } from '$lib/recipes';
 	interface Props {
-		recipe: RecipeAndOwnerType;
+		recipe: RecipeAndOwnerWithoutStepsAndIngredientsType;
 		className?: string;
 	}
 

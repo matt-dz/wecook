@@ -4,7 +4,6 @@
 	import Button from '$lib/components/button/Button.svelte';
 
 	let { data }: PageProps = $props();
-	console.log(data);
 </script>
 
 <div class="mt-8 mb-4 flex justify-center px-6">
