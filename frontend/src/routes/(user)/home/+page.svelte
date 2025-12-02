@@ -7,7 +7,7 @@
 	console.log(data);
 </script>
 
-<div class="mt-8 mb-4 flex justify-center">
+<div class="mt-8 mb-4 flex justify-center px-6">
 	<div class="flex w-full max-w-5xl justify-between border-b border-solid border-gray-300 pb-2">
 		<h1 class="text-xl">Recipes</h1>
 		<Button className="text-sm">New Recipe</Button>
@@ -17,7 +17,7 @@
 <div class="flex justify-center">
 	{#if data.recipes?.recipes}
 		<div
-			class="grid w-full max-w-5xl grid-cols-1 place-items-center items-center gap-4 px-6 min-[650px]:grid-cols-2 min-[900px]:grid-cols-3"
+			class="grid w-full max-w-5xl grid-cols-1 place-items-center items-center gap-4 min-[650px]:grid-cols-2 min-[900px]:grid-cols-3"
 		>
 			{#each data.recipes?.recipes as recipe (recipe.recipe.id)}
 				<Recipe
