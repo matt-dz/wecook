@@ -32,7 +32,7 @@ const (
 //
 //	@Summary		Create a new recipe
 //	@Description	Creates a new (empty) recipe for the authenticated user.
-//	@Tags			recipes
+//	@Tags			Recipes
 //	@Accept			json
 //	@Produce		json
 //
