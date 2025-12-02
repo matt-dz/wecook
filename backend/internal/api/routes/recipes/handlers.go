@@ -172,7 +172,7 @@ func CreateRecipeIngredient(w http.ResponseWriter, r *http.Request) {
 		Quantity: float32(quantity),
 		Unit: pgtype.Text{
 			String: request.Unit,
-			Valid:  request.Unit == "",
+			Valid:  request.Unit != "",
 		},
 		Name:     request.Name,
 		ImageUrl: pgtype.Text{Valid: false},
