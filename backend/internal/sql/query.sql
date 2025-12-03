@@ -136,6 +136,7 @@ SELECT
   r.published,
   r.id,
   r.cook_time_minutes,
+  r.servings,
   u.first_name,
   u.last_name,
   u.id
@@ -156,6 +157,7 @@ SELECT
   r.published,
   r.id,
   r.cook_time_minutes,
+  r.servings,
   u.first_name,
   u.last_name,
   u.id
@@ -197,6 +199,7 @@ SELECT
   r.published,
   r.cook_time_minutes,
   r.id,
+  r.servings,
   u.first_name,
   u.last_name,
   u.id
@@ -284,6 +287,7 @@ SET
   title = coalesce(sqlc.narg ('title'), title),
   description = coalesce(sqlc.narg ('description'), description),
   published = coalesce(sqlc.narg ('published'), published),
-  cook_time_minutes = coalesce(sqlc.narg ('cook_time_minutes'), cook_time_minutes)
+  cook_time_minutes = coalesce(sqlc.narg ('cook_time_minutes'), cook_time_minutes),
+  servings = coalesce(sqlc.narg ('servings'), servings)
 WHERE
   id = $1;

@@ -237,7 +237,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "recipes"
+                    "Recipes"
                 ],
                 "summary": "Create a new recipe",
                 "responses": {
@@ -1144,6 +1144,9 @@ const docTemplate = `{
                 "published": {
                     "type": "boolean"
                 },
+                "servings": {
+                    "type": "number"
+                },
                 "title": {
                     "type": "string"
                 },
@@ -1255,6 +1258,9 @@ const docTemplate = `{
                 },
                 "published": {
                     "type": "boolean"
+                },
+                "servings": {
+                    "type": "number"
                 },
                 "steps": {
                     "type": "array",

@@ -29,15 +29,16 @@ CREATE TABLE recipes (
   title text NOT NULL,
   description text,
   created_at timestamptz NOT NULL DEFAULT NOW(),
-  updated_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz NOT NULL DEFAULT NOW(),
   published bool NOT NULL DEFAULT FALSE,
-  cook_time_minutes int CHECK (cook_time_minutes >= 0)
+  cook_time_minutes int CHECK (cook_time_minutes >= 0),
+  servings real CHECK (servings > 0)
 );
 
 CREATE TABLE recipe_ingredients (
   id bigserial PRIMARY KEY,
   recipe_id bigint NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
-  quantity real NOT NULL,
+  quantity real NOT NULL CHECK (quantity > 0),
   unit text,
   name text NOT NULL,
   image_url text,

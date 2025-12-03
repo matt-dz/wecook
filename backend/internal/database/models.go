@@ -63,6 +63,7 @@ type Recipe struct {
 	UpdatedAt       pgtype.Timestamptz
 	Published       bool
 	CookTimeMinutes pgtype.Int4
+	Servings        pgtype.Float4
 }
 
 type RecipeIngredient struct {

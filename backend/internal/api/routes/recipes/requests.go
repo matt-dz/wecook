@@ -97,6 +97,7 @@ type UpdateRecipeForm struct {
 	Description     string    `validate:"omitempty"`
 	Published       string    `validate:"omitempty,boolean"`
 	CookTimeMinutes integer32 `validate:"omitempty,validateFn"`
+	Servings        string    `validate:"omitempty,numeric"`
 }
 
 type GetRecipeRequest struct {

@@ -41,6 +41,7 @@ type RecipeStep struct {
 type Recipe struct {
 	Published        bool      `json:"published"`
 	CookeTimeMinutes uint32    `json:"cook_time_minutes"`
+	Servings         float32   `json:"servings"`
 	UserID           int64     `json:"user_id"`
 	ID               int64     `json:"id"`
 	CreatedAt        time.Time `json:"created_at"`
@@ -58,6 +59,7 @@ type RecipeAndOwner struct {
 type RecipeWithIngredientsAndSteps struct {
 	Published        bool               `json:"published"`
 	CookeTimeMinutes uint32             `json:"cook_time_minutes"`
+	Servings         float32            `json:"servings"`
 	UserID           int64              `json:"user_id"`
 	ID               int64              `json:"id"`
 	CreatedAt        time.Time          `json:"created_at"`

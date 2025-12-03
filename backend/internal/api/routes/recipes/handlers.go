@@ -37,9 +37,9 @@ const (
 //	@Produce		json
 //
 //	@Success		200	{object}	CreateRecipeResponse	"Recipe successfully created"
-//	@Failure		400	{object}	apiError.Error	"Bad request"
-//	@Failure		401	{object}	apiError.Error	"Unauthorized — missing or invalid access token cookie"
-//	@Failure		500	{object}	apiError.Error	"Internal server error"
+//	@Failure		400	{object}	apiError.Error			"Bad request"
+//	@Failure		401	{object}	apiError.Error			"Unauthorized — missing or invalid access token cookie"
+//	@Failure		500	{object}	apiError.Error			"Internal server error"
 //
 //	@Router			/api/recipes [post]
 func CreateRecipe(w http.ResponseWriter, r *http.Request) {
@@ -508,6 +508,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 			Published:        row.Published,
 			Title:            row.Title,
 			ID:               row.ID,
+			Servings:         row.Servings.Float32,
 			Description:      row.Description.String,
 			Steps:            make([]recipe.RecipeStep, 0),
 			Ingredients:      make([]recipe.RecipeIngredient, 0),
@@ -605,6 +606,7 @@ func GetPersonalRecipes(w http.ResponseWriter, r *http.Request) {
 				Title:            r.Title,
 				Description:      r.Description.String,
 				ID:               r.ID,
+				Servings:         r.Servings.Float32,
 			},
 			Owner: recipe.RecipeOwner{
 				ID:        r.UserID.Int64,
@@ -1310,6 +1312,7 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		Description:     r.Form.Get("description"),
 		Published:       r.Form.Get("published"),
 		CookTimeMinutes: integer32(r.Form.Get("cook-time")),
+		Servings:        r.Form.Get("servings"),
 	}
 	if err := validate.Struct(form); err != nil {
 		env.Logger.ErrorContext(ctx, "failed to validate form", slog.Any("error", err))
@@ -1347,7 +1350,7 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		published, err := strconv.ParseBool(form.Published)
 		if err != nil {
 			env.Logger.ErrorContext(ctx, "failed to parse published field", slog.Any("error", err))
-			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid published field", requestID)
+			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid published", requestID)
 			return
 		}
 		updateParams.Published.Bool = published
@@ -1357,11 +1360,22 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		cookTime, err := form.CookTimeMinutes.Int()
 		if err != nil {
 			env.Logger.ErrorContext(ctx, "failed to parse cook-time field", slog.Any("error", err))
-			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid field", requestID)
+			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid cook time", requestID)
 			return
 		}
 		updateParams.CookTimeMinutes.Int32 = int32(cookTime)
 		updateParams.CookTimeMinutes.Valid = true
+	}
+	if r.Form.Has("servings") {
+		servings, err := strconv.ParseFloat(form.Servings, 32)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to parse servings field", slog.Any("error", err))
+			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid servings", requestID)
+			return
+		}
+		updateParams.Servings.Float32 = float32(servings)
+		updateParams.Servings.Valid = true
+
 	}
 	err = env.Database.UpdateRecipe(ctx, updateParams)
 	if err != nil {
@@ -1441,6 +1455,7 @@ func GetPersonalRecipe(w http.ResponseWriter, r *http.Request) {
 			Title:            row.Title,
 			Description:      row.Description.String,
 			ID:               row.ID,
+			Servings:         row.Servings.Float32,
 			Steps:            make([]recipe.RecipeStep, 0),
 			Ingredients:      make([]recipe.RecipeIngredient, 0),
 		},

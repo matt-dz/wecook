@@ -229,6 +229,7 @@ SELECT
   r.published,
   r.id,
   r.cook_time_minutes,
+  r.servings,
   u.first_name,
   u.last_name,
   u.id
@@ -250,6 +251,7 @@ type GetPublishedRecipeAndOwnerRow struct {
 	Published       bool
 	ID              int64
 	CookTimeMinutes pgtype.Int4
+	Servings        pgtype.Float4
 	FirstName       string
 	LastName        string
 	ID_2            int64
@@ -268,6 +270,7 @@ func (q *Queries) GetPublishedRecipeAndOwner(ctx context.Context, id int64) (Get
 		&i.Published,
 		&i.ID,
 		&i.CookTimeMinutes,
+		&i.Servings,
 		&i.FirstName,
 		&i.LastName,
 		&i.ID_2,
@@ -286,6 +289,7 @@ SELECT
   r.published,
   r.id,
   r.cook_time_minutes,
+  r.servings,
   u.first_name,
   u.last_name,
   u.id
@@ -306,6 +310,7 @@ type GetRecipeAndOwnerRow struct {
 	Published       bool
 	ID              int64
 	CookTimeMinutes pgtype.Int4
+	Servings        pgtype.Float4
 	FirstName       string
 	LastName        string
 	ID_2            int64
@@ -324,6 +329,7 @@ func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAnd
 		&i.Published,
 		&i.ID,
 		&i.CookTimeMinutes,
+		&i.Servings,
 		&i.FirstName,
 		&i.LastName,
 		&i.ID_2,
@@ -505,6 +511,7 @@ SELECT
   r.published,
   r.cook_time_minutes,
   r.id,
+  r.servings,
   u.first_name,
   u.last_name,
   u.id
@@ -527,6 +534,7 @@ type GetRecipesByOwnerRow struct {
 	Published       bool
 	CookTimeMinutes pgtype.Int4
 	ID              int64
+	Servings        pgtype.Float4
 	FirstName       string
 	LastName        string
 	ID_2            int64
@@ -551,6 +559,7 @@ func (q *Queries) GetRecipesByOwner(ctx context.Context, id int64) ([]GetRecipes
 			&i.Published,
 			&i.CookTimeMinutes,
 			&i.ID,
+			&i.Servings,
 			&i.FirstName,
 			&i.LastName,
 			&i.ID_2,
@@ -635,7 +644,8 @@ SET
   title = coalesce($3, title),
   description = coalesce($4, description),
   published = coalesce($5, published),
-  cook_time_minutes = coalesce($6, cook_time_minutes)
+  cook_time_minutes = coalesce($6, cook_time_minutes),
+  servings = coalesce($7, servings)
 WHERE
   id = $1
 `
@@ -647,6 +657,7 @@ type UpdateRecipeParams struct {
 	Description     pgtype.Text
 	Published       pgtype.Bool
 	CookTimeMinutes pgtype.Int4
+	Servings        pgtype.Float4
 }
 
 func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) error {
@@ -657,6 +668,7 @@ func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) erro
 		arg.Description,
 		arg.Published,
 		arg.CookTimeMinutes,
+		arg.Servings,
 	)
 	return err
 }

@@ -25,6 +25,8 @@ definitions:
         type: string
       published:
         type: boolean
+      servings:
+        type: number
       title:
         type: string
       updated_at:
@@ -98,6 +100,8 @@ definitions:
         type: array
       published:
         type: boolean
+      servings:
+        type: number
       steps:
         items:
           $ref: '#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeStep'
@@ -352,7 +356,7 @@ paths:
             $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
       summary: Create a new recipe
       tags:
-      - recipes
+      - Recipes
   /api/recipes/{recipeID}:
     delete:
       description: |-
