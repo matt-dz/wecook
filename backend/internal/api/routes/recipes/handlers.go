@@ -1228,6 +1228,7 @@ func UpdateRecipeIngredient(w http.ResponseWriter, r *http.Request) {
 //	@Param			description	formData	string	false	"New description"
 //	@Param			published	formData	bool	false	"Published status"
 //	@Param			cook-time	formData	int		false	"Cook time in minutes"
+//	@Param			servings	formData	number	false	"Servings"
 //	@Param			image		formData	file	false	"New cover image"
 //
 //	@Success		204			"Recipe updated successfully"

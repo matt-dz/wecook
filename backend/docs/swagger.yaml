@@ -457,6 +457,10 @@ paths:
         in: formData
         name: cook-time
         type: integer
+      - description: Servings
+        in: formData
+        name: servings
+        type: number
       - description: New cover image
         in: formData
         name: image

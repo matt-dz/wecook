@@ -670,6 +670,12 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
+                        "type": "number",
+                        "description": "Servings",
+                        "name": "servings",
+                        "in": "formData"
+                    },
+                    {
                         "type": "file",
                         "description": "New cover image",
                         "name": "image",
