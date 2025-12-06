@@ -9,8 +9,14 @@ const RecipeOwner = z.object({
 	id: z.int()
 });
 
+export const TimeUnit = z.enum(['minutes', 'hours', 'days']);
+export type TimeUnitType = z.infer<typeof TimeUnit>;
+
 export const RecipeWithoutStepsAndIngredients = z.object({
-	cook_time_minutes: z.int(),
+	cook_time_amount: z.int().optional(),
+	cook_time_unit: TimeUnit.optional(),
+	prep_time_amount: z.int().optional(),
+	prep_time_unit: TimeUnit.optional(),
 	title: z.string(),
 	published: z.boolean(),
 	created_at: z.iso.datetime(),
@@ -18,6 +24,7 @@ export const RecipeWithoutStepsAndIngredients = z.object({
 	description: z.string().optional(),
 	image_url: z.string().optional(),
 	user_id: z.int(),
+	servings: z.number().optional(),
 	id: z.int()
 });
 
@@ -43,7 +50,10 @@ export const Ingredient = z.object({
 });
 
 export const Recipe = z.object({
-	cook_time_minutes: z.int(),
+	cook_time_amount: z.int().optional(),
+	cook_time_unit: z.enum(['minutes', 'hours', 'days']),
+	prep_time_amount: z.int().optional(),
+	prep_time_unit: z.enum(['minutes', 'hours', 'days']),
 	title: z.string(),
 	published: z.boolean(),
 	created_at: z.iso.datetime(),
@@ -52,6 +62,7 @@ export const Recipe = z.object({
 	image_url: z.string().optional(),
 	user_id: z.int(),
 	id: z.int(),
+	servings: z.number().optional(),
 	ingredients: z.array(Ingredient),
 	steps: z.array(Step)
 });
@@ -93,4 +104,30 @@ export async function GetRecipe(
 ): Promise<RecipeAndOwnerType> {
 	const res = await fetch(`${PUBLIC_BACKEND_URL}/api/recipes/${id}`, options).json();
 	return RecipeAndOwner.parse(res);
+}
+
+export const CreateRecipeResponse = z.object({
+	recipe_id: z.int()
+});
+
+export type CreateRecipeResponseType = z.infer<typeof CreateRecipeResponse>;
+
+export async function CreateRecipe(
+	fetch: FetchType,
+	options?: Options
+): Promise<CreateRecipeResponseType> {
+	const res = await fetch.post(`${PUBLIC_BACKEND_URL}/api/recipes`, options).json();
+	return CreateRecipeResponse.parse(res);
+}
+
+export const GetPersonalRecipeResponse = RecipeAndOwner;
+export type GetPersonalRecipeResponseType = z.infer<typeof GetPersonalRecipeResponse>;
+
+export async function GetPersonalRecipe(
+	fetch: FetchType,
+	id: number,
+	options?: Options
+): Promise<GetPersonalRecipeResponseType> {
+	const res = await fetch.get(`${PUBLIC_BACKEND_URL}/api/recipes/personal/${id}`, options).json();
+	return GetPersonalRecipeResponse.parse(res);
 }

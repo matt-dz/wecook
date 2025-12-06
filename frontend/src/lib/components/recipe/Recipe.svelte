@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatDuration } from '$lib/time';
+	import { formatDuration, toMinutes } from '$lib/time';
 	import { resolve } from '$app/paths';
 	import { twMerge } from 'tailwind-merge';
 	import clsx from 'clsx';
@@ -10,6 +10,14 @@
 	}
 
 	let { recipe, className }: Props = $props();
+
+	const totalCookTime =
+		(recipe.recipe?.cook_time_amount && recipe.recipe?.cook_time_unit
+			? toMinutes(recipe.recipe.cook_time_amount, recipe.recipe.cook_time_unit)
+			: 0) +
+		(recipe.recipe?.prep_time_amount && recipe.recipe?.prep_time_unit
+			? toMinutes(recipe.recipe.prep_time_amount, recipe.recipe.prep_time_unit)
+			: 0);
 </script>
 
 <a
@@ -43,5 +51,5 @@
 
 	<h1 class="text-lg font-semibold">{recipe.recipe.title}</h1>
 	<h2 class="text-sm capitalize">{recipe.owner.first_name} {recipe.owner.last_name}</h2>
-	<h3 class="text-sm text-gray-400">{formatDuration(recipe.recipe.cook_time_minutes)}</h3>
+	<h3 class="text-sm text-gray-400">{formatDuration(totalCookTime)}</h3>
 </a>

@@ -1,15 +1,44 @@
 <script lang="ts">
-	import type { PageProps } from './$types';
 	import Recipe from '$lib/components/recipe/Recipe.svelte';
 	import Button from '$lib/components/button/Button.svelte';
+	import type { PageProps } from './$types';
+	import { CreateRecipe } from '$lib/recipes';
+	import fetch, { isRetryable } from '$lib/http';
+	import { HTTPError, TimeoutError } from 'ky';
+	import { refreshTokenExpired } from '$lib/errors/api';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let { data }: PageProps = $props();
+
+	const createNewRecipe = async () => {
+		try {
+			const recipe = await CreateRecipe(fetch);
+			goto(resolve(`/recipes/${recipe.recipe_id.toString()}/edit`));
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error(e.response);
+				if (await refreshTokenExpired(e.response)) {
+					goto(resolve('/login'));
+				} else if (isRetryable(e.response)) {
+					alert('something went wrong. try again later.');
+				} else {
+					alert('uh-oh, something bad happened.');
+				}
+			} else if (e instanceof TimeoutError) {
+				alert('request timed out. try again later.');
+			} else {
+				alert('uh-oh, an un-retryable error occured.');
+				console.error(e);
+			}
+		}
+	};
 </script>
 
 <div class="mt-8 mb-4 flex justify-center px-6">
 	<div class="flex w-full max-w-5xl justify-between border-b border-solid border-gray-300 pb-2">
 		<h1 class="text-xl">Recipes</h1>
-		<Button className="text-sm">New Recipe</Button>
+		<Button onclick={createNewRecipe} className="text-sm">New Recipe</Button>
 	</div>
 </div>
 

@@ -1,10 +1,12 @@
-import ky, { type Options, HTTPError } from 'ky';
+import ky, { type KyResponse, type Options, HTTPError } from 'ky';
 import {
 	parseError as parseApiError,
 	accessTokenExpired,
 	refreshTokenExpired
 } from '$lib/errors/api';
 import { refreshSession } from '$lib/auth';
+
+const retryCodes = [408, 413, 429, 500, 502, 503, 504];
 
 const baseOptions: Options = {
 	retry: {
@@ -15,7 +17,8 @@ const baseOptions: Options = {
 				return false;
 			}
 			return undefined;
-		}
+		},
+		statusCodes: retryCodes
 	},
 	credentials: 'include'
 };
@@ -65,6 +68,10 @@ export async function parseError(error: HTTPError): Promise<string> {
 		const errorText = await response.text();
 		return errorText;
 	}
+}
+
+export function isRetryable(response: KyResponse) {
+	return retryCodes.includes(response.status);
 }
 
 type FetchType = typeof fetch;

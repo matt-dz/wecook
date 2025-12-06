@@ -1,10 +1,11 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { formatDuration } from '$lib/time';
+	import { toMinutes, formatDuration } from '$lib/time';
 	import Input from '$lib/components/input/Input.svelte';
 
 	let { data }: PageProps = $props();
 	let portion: number = $state(1);
+	const recipe = data.recipe;
 
 	let ingredients = $derived.by(() => {
 		const adjustedPortion = portion === null || portion <= 0 ? 1 : portion;
@@ -18,6 +19,14 @@
 		const invalid = ['e', 'E', '+', '-'];
 		if (invalid.includes(e.key)) e.preventDefault();
 	};
+
+	const totalCookTime =
+		(recipe.recipe?.cook_time_amount && recipe.recipe?.cook_time_unit
+			? toMinutes(recipe.recipe.cook_time_amount, recipe.recipe.cook_time_unit)
+			: 0) +
+		(recipe.recipe?.prep_time_amount && recipe.recipe?.prep_time_unit
+			? toMinutes(recipe.recipe.prep_time_amount, recipe.recipe.prep_time_unit)
+			: 0);
 </script>
 
 <svelte:head>
@@ -34,7 +43,7 @@
 					{data.recipe.owner.last_name}
 				</h2>
 				<h3 class="text-lg text-gray-500">
-					Cook Time: {formatDuration(data.recipe.recipe.cook_time_minutes)}
+					Cook Time: {formatDuration(totalCookTime)}
 				</h3>
 			</div>
 

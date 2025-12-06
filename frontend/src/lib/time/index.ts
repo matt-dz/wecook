@@ -1,3 +1,13 @@
+export function toMinutes(amount: number, unit: 'minutes' | 'hours' | 'days'): number {
+	switch (unit) {
+		case 'minutes':
+			return amount;
+		case 'hours':
+			return amount * 60;
+		case 'days':
+			return amount * 60 * 24;
+	}
+}
 export function formatDuration(minutes: number): string {
 	if (minutes < 60) {
 		return plural(minutes, 'minute');
