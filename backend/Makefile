@@ -12,7 +12,7 @@ BIN_DIR:=bin
 all: build
 
 .PHONY: build
-build: fmt lint swagger
+build: fmt lint docs
 	@echo "🔨  Building $(SERVER_BIN)…"
 	go build -o $(BIN_DIR)/$(SERVER_BIN) $(SERVER_DIR)/main.go
 	@echo "✓  Built $(BIN_DIR)/$(SERVER_BIN)"
@@ -24,12 +24,12 @@ docker-build:
 	@echo "✓  Built $(SERVER_BIN)"
 
 .PHONY: run
-run: swagger
+run: docs
 	@echo "🚀  Starting..."
 	go run $(SERVER_DIR)/main.go
 
 .PHONY: fmt
-fmt: swagger-fmt sql-fmt
+fmt: sql-fmt
 	@echo "🎨  Formatting source code..."
 	golangci-lint fmt -v
 
@@ -38,16 +38,10 @@ lint:
 	@echo "🔍  Linting source code..."
 	golangci-lint run -v
 
-.PHONY: swagger
-swagger:
-	@echo "📜  Generating swagger docs..."
-	swag init -g internal/api/api.go \
-		--parseInternal --parseDependency
-
-.PHONY: swagger-fmt
-swagger-fmt:
-	@echo "🎨  Formatting swagger docs..."
-	swag fmt
+.PHONY: docs
+docs:
+	@echo "📝 Generating OpenAPI client..."
+	go tool oapi-codegen -config docs/cfg.yaml docs/api.yaml
 
 .PHONY: sql-fmt
 sql-fmt:
@@ -63,12 +57,6 @@ sqlc: sql-fmt
 clean:
 	@echo "🧹 Cleaning $(BIN_DIR)"
 	rm $(BIN_DIR)/*
-
-.PHONY: keys
-keys:
-	@python3 scripts/generate-keys.py \
-		--jwks-path ./keys/jwks.json \
-		--private-keys-path ./keys/private-keys.json
 
 .PHONY: help
 help:

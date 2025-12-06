@@ -1,0 +1,1305 @@
+openapi: 3.0.3
+info:
+  title: WeCook API
+  version: "1.0"
+  description: API Server for the WeCook application.
+  contact: {}
+
+servers:
+  - url: /
+
+paths:
+  /api/admin:
+    post:
+      summary: Create an admin.
+      tags:
+        - Admin
+      requestBody:
+        description: Create Admin Request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdminRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAdminResponse"
+        "409":
+          description: Status Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Unprocessible Entity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/admin/user:
+    post:
+      summary: Create a user.
+      tags:
+        - User
+      requestBody:
+        description: Create User Request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateUserResponse"
+        "409":
+          description: Status Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Unprocessible Entity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/auth/session/refresh:
+    post:
+      summary: Refresh session tokens
+      tags:
+        - Auth
+      description: >
+        Uses a valid refresh token cookie to issue a new access and refresh token pair.
+      responses:
+        "200":
+          description: New access and refresh tokens set as HTTP cookies
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Missing or malformed refresh token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/auth/session/verify:
+    get:
+      summary: Verify user session
+      tags:
+        - Auth
+      description: |
+        Validates the user's access token cookie, checks expiration,
+        and ensures the user has the required role.
+      responses:
+        "204":
+          description: Session is valid
+        "400":
+          description: Invalid token or malformed cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Expired or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/login:
+    post:
+      summary: User login.
+      tags:
+        - User
+      requestBody:
+        description: User Login Request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLoginRequest"
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/ping:
+    get:
+      summary: Ping endpoint.
+      tags:
+        - Ping
+      responses:
+        "200":
+          description: OK
+
+  /api/recipes:
+    post:
+      summary: Create a new recipe
+      tags:
+        - Recipes
+      description: >
+        Creates a new (empty) recipe for the authenticated user.
+      responses:
+        "200":
+          description: Recipe successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateRecipeResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized — missing or invalid access token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/recipes/{recipeID}:
+    get:
+      summary: Get a recipe and its owner information
+      tags:
+        - Recipes
+      description: >
+        Retrieves a recipe by ID, including recipe details and the owner's basic information.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe to retrieve
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Recipe found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRecipeResponse"
+        "400":
+          description: Bad request (invalid recipe ID)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: Delete a recipe
+      tags:
+        - Recipes
+      description: |
+        Deletes a recipe owned by the authenticated user.
+        This operation is idempotent — deleting an already deleted or non-owned recipe results in a 404.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe to delete
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Recipe deleted successfully
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad request (invalid recipe ID)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessToken: []
+
+    patch:
+      summary: Update a recipe
+      tags:
+        - Recipes
+      description: |
+        Partially updates a recipe. Supports updating title, description,
+        published status, cook time, prep time, servings, and cover image.
+        Fields not provided are left unchanged. If the request body is empty,
+        this is treated as a no-op and returns 204.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: New title
+                description:
+                  type: string
+                  description: New description
+                published:
+                  type: boolean
+                  description: Published status
+                cook-time-amount:
+                  type: integer
+                  description: Cook time amount
+                cook-time-unit:
+                  type: string
+                  description: Cook time unit (minutes, hours, days)
+                prep-time-amount:
+                  type: integer
+                  description: Prep time amount
+                prep-time-unit:
+                  type: string
+                  description: Prep time unit (minutes, hours, days)
+                servings:
+                  type: number
+                  description: Servings
+                image:
+                  type: string
+                  format: binary
+                  description: New cover image
+      responses:
+        "204":
+          description: Recipe updated successfully
+        "400":
+          description: Bad request (invalid form or data)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found or user does not own it
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessToken: []
+
+    put:
+      summary: Update a recipe with all sub-resources
+      tags:
+        - Recipes
+      description: |
+        Completely updates a recipe including ingredients and steps.
+        Sub-resources without an ID will be created. Sub-resources with an ID will be updated.
+        Sub-resources in the database but not in the request will be deleted.
+        An empty request body is treated as a no-op. Supports image uploads for cover, ingredients, and steps.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+                  description: >
+                    JSON string containing recipe update data.
+                    This string MUST be valid JSON and conform to the
+                    UpdateRecipeFullData schema defined in components.schemas.UpdateRecipeFullData.
+                  example: >
+                    {
+                      "title": "My Updated Recipe",
+                      "description": "Updated description",
+                      "published": true,
+                      "servings": 4,
+                      "ingredients": [
+                        {
+                          "id": 1,
+                          "name": "Flour",
+                          "quantity": 500,
+                          "unit": "g"
+                        }
+                      ],
+                      "steps": [
+                        {
+                          "id": 1,
+                          "step_number": 1,
+                          "instruction": "Mix everything"
+                        }
+                      ]
+                    }
+                cover:
+                  type: string
+                  format: binary
+                  description: Cover image for recipe
+                ingredient-images:
+                  type: array
+                  description: Image for ingredient at index (0-based, ordered to align with data payload)
+                  items:
+                    type: string
+                    format: binary
+                step-images:
+                  type: array
+                  description: Images for steps (0-based, ordered to align with data payload)
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "204":
+          description: Recipe updated successfully
+        "400":
+          description: Bad request (invalid data or validation error)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found or user does not own it
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessToken: []
+
+  /api/recipes/{recipeID}/cover:
+    post:
+      summary: Update a recipe's cover image
+      tags:
+        - Recipes
+      description: |
+        Replaces the cover image of a recipe owned by the authenticated user.
+        Expects multipart/form-data containing a single image file.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Cover image (JPEG/PNG)
+      responses:
+        "201":
+          description: Cover image updated
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad request / invalid image / missing file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: User does not own recipe
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessToken: []
+
+  /api/recipes/{recipeID}/ingredients/{ingredientID}:
+    delete:
+      summary: Delete a recipe ingredient
+      tags:
+        - Recipes
+        - Ingredients
+      description: |
+        Deletes an ingredient from a recipe owned by the authenticated user.
+        This operation is idempotent — deleting a non-existent ingredient returns 404.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe
+          schema:
+            type: string
+        - name: ingredientID
+          in: path
+          required: true
+          description: ID of the ingredient to delete
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Ingredient deleted successfully
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Invalid recipe ID or ingredient ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found, not owned by user, or ingredient not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    patch:
+      summary: Update a recipe ingredient
+      tags:
+        - Recipes
+        - Ingredients
+      description: |
+        Partially updates a recipe ingredient.
+        Supports updating the ingredient's name, unit, quantity, or image.
+        Fields are only updated if provided. Sending an empty body results in a no-op.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe
+          schema:
+            type: integer
+        - name: ingredientID
+          in: path
+          required: true
+          description: ID of the ingredient to update
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: string
+                  description: Updated quantity (float)
+                unit:
+                  type: string
+                  description: Updated unit (e.g. 'tsp', 'grams')
+                name:
+                  type: string
+                  description: Updated ingredient name
+                image:
+                  type: string
+                  format: binary
+                  description: Updated ingredient image
+      responses:
+        "204":
+          description: Ingredient updated successfully
+        "400":
+          description: Bad request (invalid form or invalid fields)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found, ingredient not found, or recipe not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessToken: []
+
+  /api/recipes/{recipeID}/steps/{stepID}:
+    delete:
+      summary: Delete a recipe step
+      tags:
+        - Recipes
+        - Steps
+      description: |
+        Deletes a specific step from a recipe.
+        This operation is **idempotent**—deleting the same step twice will return `StepNotFound`.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe
+          schema:
+            type: integer
+        - name: stepID
+          in: path
+          required: true
+          description: ID of the step to delete
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Step successfully deleted
+        "400":
+          description: Invalid recipe ID or step ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found, user does not own the recipe, or step not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessToken: []
+
+    patch:
+      summary: Update a recipe step
+      tags:
+        - Recipes
+        - Steps
+      description: |
+        Updates a specific step within a recipe.
+        Supports partial updates: users may update the instruction, the image, or both.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe
+          schema:
+            type: integer
+        - name: stepID
+          in: path
+          required: true
+          description: ID of the step to update
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                instruction:
+                  type: string
+                  description: Updated instruction text
+                image:
+                  type: string
+                  format: binary
+                  description: Updated step image (optional)
+      responses:
+        "204":
+          description: Step updated successfully
+        "400":
+          description: Bad request — invalid IDs, invalid file type, or malformed form
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found, not owned by user, or step not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessToken: []
+
+  /api/recipes/ingredients:
+    post:
+      summary: Create a recipe ingredient
+      tags:
+        - Recipes
+        - Ingredients
+      description: |
+        Creates a new ingredient for a recipe owned by the authenticated user.
+        Expects multipart/form-data with basic fields and an optional image upload.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - recipe-id
+                - name
+                - quantity
+              properties:
+                recipe-id:
+                  type: string
+                  description: Recipe ID the ingredient belongs to
+                name:
+                  type: string
+                  description: Ingredient name
+                quantity:
+                  type: number
+                  description: Ingredient quantity
+                unit:
+                  type: string
+                  description: Ingredient unit (e.g. g, ml, tbsp)
+                image:
+                  type: string
+                  format: binary
+                  description: Ingredient image (JPEG/PNG)
+      responses:
+        "201":
+          description: Ingredient created
+        "400":
+          description: Bad request / validation error / unsupported file type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: User does not own recipe
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessToken: []
+
+  /api/recipes/personal:
+    get:
+      summary: Get recipes owned by the authenticated user
+      tags:
+        - Recipes
+      description: >
+        Returns all recipes created by the authenticated user, including
+        recipe details and owner information.
+      responses:
+        "200":
+          description: List of personal recipes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPersonalRecipesResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/recipes/personal/{recipeID}:
+    get:
+      summary: Get a personal (owned) recipe
+      tags:
+        - Recipes
+      description: |
+        Retrieves a recipe **only if it is owned by the authenticated user**.
+        Includes full recipe details: steps, ingredients, metadata, and owner info.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Full recipe with steps and ingredients
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRecipeResponse"
+        "400":
+          description: Bad request — invalid recipe ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessToken: []
+
+  /api/recipes/steps:
+    post:
+      summary: Create a recipe step
+      tags:
+        - Recipes
+        - Steps
+      description: |
+        Creates a new step for a recipe owned by the authenticated user.
+        Accepts multipart/form-data with required fields and an optional image upload.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - recipe-id
+                - instruction
+              properties:
+                recipe-id:
+                  type: string
+                  description: ID of the recipe the step belongs to
+                instruction:
+                  type: string
+                  description: Step instruction text
+                image:
+                  type: string
+                  format: binary
+                  description: Optional step image (JPEG/PNG)
+      responses:
+        "201":
+          description: Step created
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad request / validation error / invalid file type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: User does not own recipe
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessToken: []
+
+  /api/setup/admin:
+    post:
+      summary: Setup the first admin.
+      tags:
+        - Admin
+      description: This endpoint should only be hit once on system startup.
+      requestBody:
+        description: Create Admin Request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdminRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAdminResponse"
+        "409":
+          description: Status Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Unprocessible Entity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Error:
+      type: object
+      description: Standard error response
+      properties:
+        code:
+          type: string
+        error_id:
+          type: string
+        message:
+          type: string
+        status:
+          type: integer
+
+    Recipe:
+      type: object
+      properties:
+        cook_time_amount:
+          type: integer
+        cook_time_unit:
+          type: string
+        created_at:
+          type: string
+        description:
+          type: string
+        id:
+          type: integer
+        image_url:
+          type: string
+        prep_time_amount:
+          type: integer
+        prep_time_unit:
+          type: string
+        published:
+          type: boolean
+        servings:
+          type: number
+        title:
+          type: string
+        updated_at:
+          type: string
+        user_id:
+          type: integer
+
+    RecipeOwner:
+      type: object
+      properties:
+        first_name:
+          type: string
+        id:
+          type: integer
+        last_name:
+          type: string
+
+    RecipeIngredient:
+      type: object
+      properties:
+        id:
+          type: integer
+        image_url:
+          type: string
+        name:
+          type: string
+        quantity:
+          type: number
+        recipe_id:
+          type: integer
+        unit:
+          type: string
+
+    RecipeStep:
+      type: object
+      properties:
+        created_at:
+          type: string
+        id:
+          type: integer
+        image_url:
+          type: string
+        instruction:
+          type: string
+        recipe_id:
+          type: integer
+        step_number:
+          type: integer
+        updated_at:
+          type: string
+
+    RecipeAndOwner:
+      type: object
+      properties:
+        owner:
+          $ref: "#/components/schemas/RecipeOwner"
+        recipe:
+          $ref: "#/components/schemas/Recipe"
+
+    RecipeWithIngredientsAndSteps:
+      type: object
+      properties:
+        cook_time_amount:
+          type: integer
+        cook_time_unit:
+          type: string
+        created_at:
+          type: string
+        description:
+          type: string
+        id:
+          type: integer
+        image_url:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeIngredient"
+        prep_time_amount:
+          type: integer
+        prep_time_unit:
+          type: string
+        published:
+          type: boolean
+        servings:
+          type: number
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeStep"
+        title:
+          type: string
+        updated_at:
+          type: string
+        user_id:
+          type: integer
+
+    CreateAdminRequest:
+      type: object
+      required:
+        - email
+        - first_name
+        - last_name
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        password:
+          type: string
+
+    CreateAdminResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+
+    CreateRecipeResponse:
+      type: object
+      properties:
+        recipe_id:
+          type: integer
+
+    GetPersonalRecipesResponse:
+      type: object
+      properties:
+        recipes:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeAndOwner"
+
+    GetRecipeResponse:
+      type: object
+      properties:
+        owner:
+          $ref: "#/components/schemas/RecipeOwner"
+        recipe:
+          $ref: "#/components/schemas/RecipeWithIngredientsAndSteps"
+
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+        - first_name
+        - last_name
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        password:
+          type: string
+
+    CreateUserResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+
+    UserLoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    UpdateRecipeIngredient:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 0
+        name:
+          type: string
+        quantity:
+          type: float
+          minimum: 0
+        unit:
+          type: string
+
+    UpdateRecipeStep:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 0
+        instruction:
+          type: string
+        step_number:
+          type: number
+          minimum: 1
+      required: []
+
+    UpdateRecipe:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        published:
+          type: boolean
+        servings:
+          type: float
+          minimum: 0
+          exclusiveMinimum: true
+        cook_time_amount:
+          type: integer
+          minimum: 0
+        cook_time_unit:
+          $ref: "#/components/schemas/TimeUnit"
+        prep_time_amount:
+          type: integer
+          minimum: 0
+        prep_time_unit:
+          $ref: "#/components/schemas/TimeUnit"
+        ingredients:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpdateRecipeIngredient"
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpdateRecipeStep"
+
+    TimeUnit:
+      type: string
+      enum:
+        - minutes
+        - hours
+        - days
+
+  securitySchemes:
+    AccessToken:
+      type: apiKey
+      in: cookie
+      name: access_token
