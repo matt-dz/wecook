@@ -60,17 +60,32 @@ func AddRequestID(next http.Handler) http.Handler {
 func AddCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e := env.EnvFromCtx(r.Context())
-		if e.Get("ENV") == "PROD" {
-			baseURL := e.Get("BASE_URL")
-			if baseURL == "" {
-				e.Logger.WarnContext(r.Context(), "BASE_URL not set; Access-Control-Allow-Origin will be empty")
-			}
-			w.Header().Add("Access-Control-Allow-Origin", baseURL)
-		} else {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		baseURL := e.Get("BASE_URL")
+		isProd := e.Get("ENV") == "PROD"
+
+		// Determine allowed origin based on the incoming Origin header
+		var allowedOrigin string
+		if isProd {
+			allowedOrigin = baseURL
+		} else if origin != "" {
+			// In dev mode, allow all origins
+			allowedOrigin = origin
 		}
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Add("Access-Control-Max-Age", "86400")
+
+		if allowedOrigin == "" && baseURL != "" {
+			// Fallback to BASE_URL if no matching origin
+			allowedOrigin = baseURL
+		}
+
+		if allowedOrigin == "" {
+			e.Logger.WarnContext(r.Context(),
+				"BASE_URL not set and no valid origin found; Access-Control-Allow-Origin will be empty")
+		}
+
+		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+		w.Header().Set("Access-Control-Max-Age", "86400")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 

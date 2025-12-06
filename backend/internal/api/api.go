@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	serverPort = 8080
+	defaultPort = "8080"
 )
 
 func addDocs(r *chi.Mux, serverAddr string) {
@@ -98,6 +98,11 @@ func addRoutes(router *chi.Mux) {
 //	@host						localhost:8080
 //	@BasePath					/api
 func Start(env *env.Env) error {
+	serverPort := env.Get("SERVER_PORT")
+	if serverPort == "" {
+		serverPort = defaultPort
+	}
+
 	router := chi.NewRouter()
 	router.Use(middleware.AddRequestID)
 	router.Use(middleware.LogRequest(env.Logger))
@@ -105,10 +110,10 @@ func Start(env *env.Env) error {
 	router.Use(middleware.AddCors)
 
 	addRoutes(router)
-	addDocs(router, fmt.Sprintf("0.0.0.0:%d", serverPort))
+	addDocs(router, fmt.Sprintf("localhost:%s", serverPort))
 	http.Handle("/", router)
 
-	env.Logger.Info(fmt.Sprintf("Listening at 0.0.0.0:%d", serverPort))
-	env.Logger.Info(fmt.Sprintf("Swagger UI available at http://0.0.0.0:%d/api/swagger/index.html", serverPort))
-	return http.ListenAndServe(fmt.Sprintf(":%d", serverPort), nil)
+	env.Logger.Info(fmt.Sprintf("Listening at localhost:%s", serverPort))
+	env.Logger.Info(fmt.Sprintf("Swagger UI available at http://localhost:%s/api/swagger/index.html", serverPort))
+	return http.ListenAndServe(fmt.Sprintf(":%s", serverPort), nil)
 }

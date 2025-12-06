@@ -228,8 +228,11 @@ SELECT
   r.updated_at,
   r.published,
   r.id,
-  r.cook_time_minutes,
   r.servings,
+  r.cook_time_amount,
+  r.cook_time_unit,
+  r.prep_time_amount,
+  r.prep_time_unit,
   u.first_name,
   u.last_name,
   u.id
@@ -242,19 +245,22 @@ WHERE
 `
 
 type GetPublishedRecipeAndOwnerRow struct {
-	UserID          pgtype.Int8
-	ImageUrl        pgtype.Text
-	Title           string
-	Description     pgtype.Text
-	CreatedAt       pgtype.Timestamptz
-	UpdatedAt       pgtype.Timestamptz
-	Published       bool
-	ID              int64
-	CookTimeMinutes pgtype.Int4
-	Servings        pgtype.Float4
-	FirstName       string
-	LastName        string
-	ID_2            int64
+	UserID         pgtype.Int8
+	ImageUrl       pgtype.Text
+	Title          string
+	Description    pgtype.Text
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+	Published      bool
+	ID             int64
+	Servings       pgtype.Float4
+	CookTimeAmount pgtype.Int4
+	CookTimeUnit   NullTimeUnit
+	PrepTimeAmount pgtype.Int4
+	PrepTimeUnit   NullTimeUnit
+	FirstName      string
+	LastName       string
+	ID_2           int64
 }
 
 func (q *Queries) GetPublishedRecipeAndOwner(ctx context.Context, id int64) (GetPublishedRecipeAndOwnerRow, error) {
@@ -269,8 +275,11 @@ func (q *Queries) GetPublishedRecipeAndOwner(ctx context.Context, id int64) (Get
 		&i.UpdatedAt,
 		&i.Published,
 		&i.ID,
-		&i.CookTimeMinutes,
 		&i.Servings,
+		&i.CookTimeAmount,
+		&i.CookTimeUnit,
+		&i.PrepTimeAmount,
+		&i.PrepTimeUnit,
 		&i.FirstName,
 		&i.LastName,
 		&i.ID_2,
@@ -288,7 +297,10 @@ SELECT
   r.updated_at,
   r.published,
   r.id,
-  r.cook_time_minutes,
+  r.cook_time_amount,
+  r.cook_time_unit,
+  r.prep_time_amount,
+  r.prep_time_unit,
   r.servings,
   u.first_name,
   u.last_name,
@@ -301,19 +313,22 @@ WHERE
 `
 
 type GetRecipeAndOwnerRow struct {
-	UserID          pgtype.Int8
-	ImageUrl        pgtype.Text
-	Title           string
-	Description     pgtype.Text
-	CreatedAt       pgtype.Timestamptz
-	UpdatedAt       pgtype.Timestamptz
-	Published       bool
-	ID              int64
-	CookTimeMinutes pgtype.Int4
-	Servings        pgtype.Float4
-	FirstName       string
-	LastName        string
-	ID_2            int64
+	UserID         pgtype.Int8
+	ImageUrl       pgtype.Text
+	Title          string
+	Description    pgtype.Text
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+	Published      bool
+	ID             int64
+	CookTimeAmount pgtype.Int4
+	CookTimeUnit   NullTimeUnit
+	PrepTimeAmount pgtype.Int4
+	PrepTimeUnit   NullTimeUnit
+	Servings       pgtype.Float4
+	FirstName      string
+	LastName       string
+	ID_2           int64
 }
 
 func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAndOwnerRow, error) {
@@ -328,7 +343,10 @@ func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAnd
 		&i.UpdatedAt,
 		&i.Published,
 		&i.ID,
-		&i.CookTimeMinutes,
+		&i.CookTimeAmount,
+		&i.CookTimeUnit,
+		&i.PrepTimeAmount,
+		&i.PrepTimeUnit,
 		&i.Servings,
 		&i.FirstName,
 		&i.LastName,
@@ -509,7 +527,10 @@ SELECT
   r.created_at,
   r.updated_at,
   r.published,
-  r.cook_time_minutes,
+  r.cook_time_amount,
+  r.cook_time_unit,
+  r.prep_time_amount,
+  r.prep_time_unit,
   r.id,
   r.servings,
   u.first_name,
@@ -525,19 +546,22 @@ ORDER BY
 `
 
 type GetRecipesByOwnerRow struct {
-	UserID          pgtype.Int8
-	ImageUrl        pgtype.Text
-	Title           string
-	Description     pgtype.Text
-	CreatedAt       pgtype.Timestamptz
-	UpdatedAt       pgtype.Timestamptz
-	Published       bool
-	CookTimeMinutes pgtype.Int4
-	ID              int64
-	Servings        pgtype.Float4
-	FirstName       string
-	LastName        string
-	ID_2            int64
+	UserID         pgtype.Int8
+	ImageUrl       pgtype.Text
+	Title          string
+	Description    pgtype.Text
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+	Published      bool
+	CookTimeAmount pgtype.Int4
+	CookTimeUnit   NullTimeUnit
+	PrepTimeAmount pgtype.Int4
+	PrepTimeUnit   NullTimeUnit
+	ID             int64
+	Servings       pgtype.Float4
+	FirstName      string
+	LastName       string
+	ID_2           int64
 }
 
 func (q *Queries) GetRecipesByOwner(ctx context.Context, id int64) ([]GetRecipesByOwnerRow, error) {
@@ -557,7 +581,10 @@ func (q *Queries) GetRecipesByOwner(ctx context.Context, id int64) ([]GetRecipes
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Published,
-			&i.CookTimeMinutes,
+			&i.CookTimeAmount,
+			&i.CookTimeUnit,
+			&i.PrepTimeAmount,
+			&i.PrepTimeUnit,
 			&i.ID,
 			&i.Servings,
 			&i.FirstName,
@@ -644,20 +671,26 @@ SET
   title = coalesce($3, title),
   description = coalesce($4, description),
   published = coalesce($5, published),
-  cook_time_minutes = coalesce($6, cook_time_minutes),
-  servings = coalesce($7, servings)
+  cook_time_amount = coalesce($6, cook_time_amount),
+  cook_time_unit = coalesce($7, cook_time_unit),
+  prep_time_amount = coalesce($8, prep_time_amount),
+  prep_time_unit = coalesce($9, prep_time_unit),
+  servings = coalesce($10, servings)
 WHERE
   id = $1
 `
 
 type UpdateRecipeParams struct {
-	ID              int64
-	ImageUrl        pgtype.Text
-	Title           pgtype.Text
-	Description     pgtype.Text
-	Published       pgtype.Bool
-	CookTimeMinutes pgtype.Int4
-	Servings        pgtype.Float4
+	ID             int64
+	ImageUrl       pgtype.Text
+	Title          pgtype.Text
+	Description    pgtype.Text
+	Published      pgtype.Bool
+	CookTimeAmount pgtype.Int4
+	CookTimeUnit   NullTimeUnit
+	PrepTimeAmount pgtype.Int4
+	PrepTimeUnit   NullTimeUnit
+	Servings       pgtype.Float4
 }
 
 func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) error {
@@ -667,7 +700,10 @@ func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) erro
 		arg.Title,
 		arg.Description,
 		arg.Published,
-		arg.CookTimeMinutes,
+		arg.CookTimeAmount,
+		arg.CookTimeUnit,
+		arg.PrepTimeAmount,
+		arg.PrepTimeUnit,
 		arg.Servings,
 	)
 	return err

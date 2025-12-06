@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
@@ -88,7 +87,7 @@ func NewAccessTokenCookie(token string, env *env.Env) *http.Cookie {
 		Secure:   false,
 	}
 
-	if env.Get("ENV") == "production" {
+	if env.IsProd() {
 		cookie.Secure = true
 	}
 
@@ -106,7 +105,7 @@ func NewRefreshTokenCookie(token string, env *env.Env) *http.Cookie {
 		Secure:   false,
 	}
 
-	if os.Getenv("ENV") == "production" {
+	if env.IsProd() {
 		cookie.Secure = true
 	}
 

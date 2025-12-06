@@ -93,11 +93,14 @@ type UpdateRecipeRequest struct {
 }
 
 type UpdateRecipeForm struct {
-	Title           string    `validate:"omitempty"`
-	Description     string    `validate:"omitempty"`
-	Published       string    `validate:"omitempty,boolean"`
-	CookTimeMinutes integer32 `validate:"omitempty,validateFn"`
-	Servings        string    `validate:"omitempty,numeric"`
+	Title          string    `validate:"omitempty"`
+	Description    string    `validate:"omitempty"`
+	Published      string    `validate:"omitempty,boolean"`
+	CookTimeAmount integer32 `validate:"omitempty,validateFn"`
+	CookTimeUnit   string    `validate:"omitempty,oneof=minutes hours days"`
+	PrepTimeAmount integer32 `validate:"omitempty,validateFn"`
+	PrepTimeUnit   string    `validate:"omitempty,oneof=minutes hours days"`
+	Servings       string    `validate:"omitempty,numeric"`
 }
 
 type GetRecipeRequest struct {

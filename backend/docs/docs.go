@@ -626,7 +626,7 @@ const docTemplate = `{
                         "AccessToken": []
                     }
                 ],
-                "description": "Partially updates a recipe. Supports updating title, description,\npublished status, cook time, and cover image. Fields not provided\nare left unchanged. If the request body is empty, this is treated\nas a no-op and returns 204.",
+                "description": "Partially updates a recipe. Supports updating title, description,\npublished status, cook time, prep time, servings, and cover image.\nFields not provided are left unchanged. If the request body is empty,\nthis is treated as a no-op and returns 204.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -665,8 +665,26 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Cook time in minutes",
-                        "name": "cook-time",
+                        "description": "Cook time amount",
+                        "name": "cook-time-amount",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cook time unit (minutes, hours, days)",
+                        "name": "cook-time-unit",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Prep time amount",
+                        "name": "prep-time-amount",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Prep time unit (minutes, hours, days)",
+                        "name": "prep-time-unit",
                         "in": "formData"
                     },
                     {
@@ -1132,8 +1150,11 @@ const docTemplate = `{
         "github_com_matt-dz_wecook_internal_recipe.Recipe": {
             "type": "object",
             "properties": {
-                "cook_time_minutes": {
+                "cook_time_amount": {
                     "type": "integer"
+                },
+                "cook_time_unit": {
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -1145,6 +1166,12 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "image_url": {
+                    "type": "string"
+                },
+                "prep_time_amount": {
+                    "type": "integer"
+                },
+                "prep_time_unit": {
                     "type": "string"
                 },
                 "published": {
@@ -1241,8 +1268,11 @@ const docTemplate = `{
         "github_com_matt-dz_wecook_internal_recipe.RecipeWithIngredientsAndSteps": {
             "type": "object",
             "properties": {
-                "cook_time_minutes": {
+                "cook_time_amount": {
                     "type": "integer"
+                },
+                "cook_time_unit": {
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -1261,6 +1291,12 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeIngredient"
                     }
+                },
+                "prep_time_amount": {
+                    "type": "integer"
+                },
+                "prep_time_unit": {
+                    "type": "string"
                 },
                 "published": {
                     "type": "boolean"

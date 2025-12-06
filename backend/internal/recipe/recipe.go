@@ -39,16 +39,19 @@ type RecipeStep struct {
 }
 
 type Recipe struct {
-	Published        bool      `json:"published"`
-	CookeTimeMinutes uint32    `json:"cook_time_minutes"`
-	Servings         float32   `json:"servings"`
-	UserID           int64     `json:"user_id"`
-	ID               int64     `json:"id"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	ImageURL         string    `json:"image_url,omitempty"`
-	Title            string    `json:"title"`
-	Description      string    `json:"description,omitempty"`
+	Published      bool      `json:"published"`
+	CookTimeAmount int32     `json:"cook_time_amount,omitempty"`
+	CookTimeUnit   string    `json:"cook_time_unit,omitempty"`
+	PrepTimeAmount int32     `json:"prep_time_amount,omitempty"`
+	PrepTimeUnit   string    `json:"prep_time_unit,omitempty"`
+	Servings       float32   `json:"servings"`
+	UserID         int64     `json:"user_id"`
+	ID             int64     `json:"id"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	ImageURL       string    `json:"image_url,omitempty"`
+	Title          string    `json:"title"`
+	Description    string    `json:"description,omitempty"`
 }
 
 type RecipeAndOwner struct {
@@ -57,18 +60,21 @@ type RecipeAndOwner struct {
 }
 
 type RecipeWithIngredientsAndSteps struct {
-	Published        bool               `json:"published"`
-	CookeTimeMinutes uint32             `json:"cook_time_minutes"`
-	Servings         float32            `json:"servings"`
-	UserID           int64              `json:"user_id"`
-	ID               int64              `json:"id"`
-	CreatedAt        time.Time          `json:"created_at"`
-	UpdatedAt        time.Time          `json:"updated_at"`
-	ImageURL         string             `json:"image_url,omitempty"`
-	Title            string             `json:"title"`
-	Description      string             `json:"description,omitempty"`
-	Ingredients      []RecipeIngredient `json:"ingredients"`
-	Steps            []RecipeStep       `json:"steps"`
+	Published      bool               `json:"published"`
+	CookTimeAmount int32              `json:"cook_time_amount,omitempty"`
+	CookTimeUnit   string             `json:"cook_time_unit,omitempty"`
+	PrepTimeAmount int32              `json:"prep_time_amount,omitempty"`
+	PrepTimeUnit   string             `json:"prep_time_unit,omitempty"`
+	Servings       float32            `json:"servings"`
+	UserID         int64              `json:"user_id"`
+	ID             int64              `json:"id"`
+	CreatedAt      time.Time          `json:"created_at"`
+	UpdatedAt      time.Time          `json:"updated_at"`
+	ImageURL       string             `json:"image_url,omitempty"`
+	Title          string             `json:"title"`
+	Description    string             `json:"description,omitempty"`
+	Ingredients    []RecipeIngredient `json:"ingredients"`
+	Steps          []RecipeStep       `json:"steps"`
 }
 
 type RecipeWithIngredientsAndStepsAndOwner struct {

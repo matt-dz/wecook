@@ -13,8 +13,10 @@ definitions:
     type: object
   github_com_matt-dz_wecook_internal_recipe.Recipe:
     properties:
-      cook_time_minutes:
+      cook_time_amount:
         type: integer
+      cook_time_unit:
+        type: string
       created_at:
         type: string
       description:
@@ -22,6 +24,10 @@ definitions:
       id:
         type: integer
       image_url:
+        type: string
+      prep_time_amount:
+        type: integer
+      prep_time_unit:
         type: string
       published:
         type: boolean
@@ -84,8 +90,10 @@ definitions:
     type: object
   github_com_matt-dz_wecook_internal_recipe.RecipeWithIngredientsAndSteps:
     properties:
-      cook_time_minutes:
+      cook_time_amount:
         type: integer
+      cook_time_unit:
+        type: string
       created_at:
         type: string
       description:
@@ -98,6 +106,10 @@ definitions:
         items:
           $ref: '#/definitions/github_com_matt-dz_wecook_internal_recipe.RecipeIngredient'
         type: array
+      prep_time_amount:
+        type: integer
+      prep_time_unit:
+        type: string
       published:
         type: boolean
       servings:
@@ -432,9 +444,9 @@ paths:
       - multipart/form-data
       description: |-
         Partially updates a recipe. Supports updating title, description,
-        published status, cook time, and cover image. Fields not provided
-        are left unchanged. If the request body is empty, this is treated
-        as a no-op and returns 204.
+        published status, cook time, prep time, servings, and cover image.
+        Fields not provided are left unchanged. If the request body is empty,
+        this is treated as a no-op and returns 204.
       parameters:
       - description: ID of the recipe
         in: path
@@ -453,10 +465,22 @@ paths:
         in: formData
         name: published
         type: boolean
-      - description: Cook time in minutes
+      - description: Cook time amount
         in: formData
-        name: cook-time
+        name: cook-time-amount
         type: integer
+      - description: Cook time unit (minutes, hours, days)
+        in: formData
+        name: cook-time-unit
+        type: string
+      - description: Prep time amount
+        in: formData
+        name: prep-time-amount
+        type: integer
+      - description: Prep time unit (minutes, hours, days)
+        in: formData
+        name: prep-time-unit
+        type: string
       - description: Servings
         in: formData
         name: servings

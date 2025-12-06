@@ -501,17 +501,20 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	// Write response
 	res := GetRecipeResponse{
 		Recipe: recipe.RecipeWithIngredientsAndSteps{
-			CookeTimeMinutes: uint32(row.CookTimeMinutes.Int32),
-			UserID:           row.UserID.Int64,
-			CreatedAt:        row.CreatedAt.Time,
-			UpdatedAt:        row.UpdatedAt.Time,
-			Published:        row.Published,
-			Title:            row.Title,
-			ID:               row.ID,
-			Servings:         row.Servings.Float32,
-			Description:      row.Description.String,
-			Steps:            make([]recipe.RecipeStep, 0),
-			Ingredients:      make([]recipe.RecipeIngredient, 0),
+			CookTimeAmount: row.CookTimeAmount.Int32,
+			CookTimeUnit:   string(row.CookTimeUnit.TimeUnit),
+			PrepTimeAmount: row.PrepTimeAmount.Int32,
+			PrepTimeUnit:   string(row.PrepTimeUnit.TimeUnit),
+			UserID:         row.UserID.Int64,
+			CreatedAt:      row.CreatedAt.Time,
+			UpdatedAt:      row.UpdatedAt.Time,
+			Published:      row.Published,
+			Title:          row.Title,
+			ID:             row.ID,
+			Servings:       row.Servings.Float32,
+			Description:    row.Description.String,
+			Steps:          make([]recipe.RecipeStep, 0),
+			Ingredients:    make([]recipe.RecipeIngredient, 0),
 		},
 		Owner: recipe.RecipeOwner{
 			FirstName: row.FirstName,
@@ -598,15 +601,18 @@ func GetPersonalRecipes(w http.ResponseWriter, r *http.Request) {
 	for _, r := range recipes {
 		resp.Recipes = append(resp.Recipes, recipe.RecipeAndOwner{
 			Recipe: recipe.Recipe{
-				UserID:           r.UserID.Int64,
-				Published:        r.Published,
-				CookeTimeMinutes: uint32(r.CookTimeMinutes.Int32),
-				CreatedAt:        r.CreatedAt.Time,
-				UpdatedAt:        r.UpdatedAt.Time,
-				Title:            r.Title,
-				Description:      r.Description.String,
-				ID:               r.ID,
-				Servings:         r.Servings.Float32,
+				UserID:         r.UserID.Int64,
+				Published:      r.Published,
+				CookTimeAmount: r.CookTimeAmount.Int32,
+				CookTimeUnit:   string(r.CookTimeUnit.TimeUnit),
+				PrepTimeAmount: r.PrepTimeAmount.Int32,
+				PrepTimeUnit:   string(r.PrepTimeUnit.TimeUnit),
+				CreatedAt:      r.CreatedAt.Time,
+				UpdatedAt:      r.UpdatedAt.Time,
+				Title:          r.Title,
+				Description:    r.Description.String,
+				ID:             r.ID,
+				Servings:       r.Servings.Float32,
 			},
 			Owner: recipe.RecipeOwner{
 				ID:        r.UserID.Int64,
@@ -1215,27 +1221,30 @@ func UpdateRecipeIngredient(w http.ResponseWriter, r *http.Request) {
 //
 //	@Summary		Update a recipe
 //	@Description	Partially updates a recipe. Supports updating title, description,
-//	@Description	published status, cook time, and cover image. Fields not provided
-//	@Description	are left unchanged. If the request body is empty, this is treated
-//	@Description	as a no-op and returns 204.
+//	@Description	published status, cook time, prep time, servings, and cover image.
+//	@Description	Fields not provided are left unchanged. If the request body is empty,
+//	@Description	this is treated as a no-op and returns 204.
 //	@Tags			Recipes
 //	@Security		AccessToken
 //	@Accept			multipart/form-data
 //	@Produce		json
 //
-//	@Param			recipeID	path		int		true	"ID of the recipe"
-//	@Param			title		formData	string	false	"New title"
-//	@Param			description	formData	string	false	"New description"
-//	@Param			published	formData	bool	false	"Published status"
-//	@Param			cook-time	formData	int		false	"Cook time in minutes"
-//	@Param			servings	formData	number	false	"Servings"
-//	@Param			image		formData	file	false	"New cover image"
+//	@Param			recipeID			path		int		true	"ID of the recipe"
+//	@Param			title				formData	string	false	"New title"
+//	@Param			description			formData	string	false	"New description"
+//	@Param			published			formData	bool	false	"Published status"
+//	@Param			cook-time-amount	formData	int		false	"Cook time amount"
+//	@Param			cook-time-unit		formData	string	false	"Cook time unit (minutes, hours, days)"
+//	@Param			prep-time-amount	formData	int		false	"Prep time amount"
+//	@Param			prep-time-unit		formData	string	false	"Prep time unit (minutes, hours, days)"
+//	@Param			servings			formData	number	false	"Servings"
+//	@Param			image				formData	file	false	"New cover image"
 //
-//	@Success		204			"Recipe updated successfully"
-//	@Failure		400			{object}	apiError.Error	"Bad request (invalid form or data)"
-//	@Failure		401			{object}	apiError.Error	"Unauthorized"
-//	@Failure		404			{object}	apiError.Error	"Recipe not found or user does not own it"
-//	@Failure		500			{object}	apiError.Error	"Internal server error"
+//	@Success		204					"Recipe updated successfully"
+//	@Failure		400					{object}	apiError.Error	"Bad request (invalid form or data)"
+//	@Failure		401					{object}	apiError.Error	"Unauthorized"
+//	@Failure		404					{object}	apiError.Error	"Recipe not found or user does not own it"
+//	@Failure		500					{object}	apiError.Error	"Internal server error"
 //
 //	@Router			/api/recipes/{recipeID} [patch]
 func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
@@ -1309,11 +1318,14 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	form := UpdateRecipeForm{
-		Title:           r.Form.Get("title"),
-		Description:     r.Form.Get("description"),
-		Published:       r.Form.Get("published"),
-		CookTimeMinutes: integer32(r.Form.Get("cook-time")),
-		Servings:        r.Form.Get("servings"),
+		Title:          r.Form.Get("title"),
+		Description:    r.Form.Get("description"),
+		Published:      r.Form.Get("published"),
+		CookTimeAmount: integer32(r.Form.Get("cook-time-amount")),
+		CookTimeUnit:   r.Form.Get("cook-time-unit"),
+		PrepTimeAmount: integer32(r.Form.Get("prep-time-amount")),
+		PrepTimeUnit:   r.Form.Get("prep-time-unit"),
+		Servings:       r.Form.Get("servings"),
 	}
 	if err := validate.Struct(form); err != nil {
 		env.Logger.ErrorContext(ctx, "failed to validate form", slog.Any("error", err))
@@ -1357,15 +1369,33 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		updateParams.Published.Bool = published
 		updateParams.Published.Valid = true
 	}
-	if r.Form.Has("cook-time") {
-		cookTime, err := form.CookTimeMinutes.Int()
+	if r.Form.Has("cook-time-amount") {
+		cookTimeAmount, err := form.CookTimeAmount.Int()
 		if err != nil {
-			env.Logger.ErrorContext(ctx, "failed to parse cook-time field", slog.Any("error", err))
-			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid cook time", requestID)
+			env.Logger.ErrorContext(ctx, "failed to parse cook-time-amount field", slog.Any("error", err))
+			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid cook time amount", requestID)
 			return
 		}
-		updateParams.CookTimeMinutes.Int32 = int32(cookTime)
-		updateParams.CookTimeMinutes.Valid = true
+		updateParams.CookTimeAmount.Int32 = int32(cookTimeAmount)
+		updateParams.CookTimeAmount.Valid = true
+	}
+	if r.Form.Has("cook-time-unit") {
+		updateParams.CookTimeUnit.TimeUnit = database.TimeUnit(form.CookTimeUnit)
+		updateParams.CookTimeUnit.Valid = true
+	}
+	if r.Form.Has("prep-time-amount") {
+		prepTimeAmount, err := form.PrepTimeAmount.Int()
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to parse prep-time-amount field", slog.Any("error", err))
+			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid prep time amount", requestID)
+			return
+		}
+		updateParams.PrepTimeAmount.Int32 = int32(prepTimeAmount)
+		updateParams.PrepTimeAmount.Valid = true
+	}
+	if r.Form.Has("prep-time-unit") {
+		updateParams.PrepTimeUnit.TimeUnit = database.TimeUnit(form.PrepTimeUnit)
+		updateParams.PrepTimeUnit.Valid = true
 	}
 	if r.Form.Has("servings") {
 		servings, err := strconv.ParseFloat(form.Servings, 32)
@@ -1406,6 +1436,12 @@ func GetPersonalRecipe(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	env := env.EnvFromCtx(ctx)
 	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get user id", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
 
 	// Read request
 	env.Logger.DebugContext(ctx, "reading request")
@@ -1421,17 +1457,23 @@ func GetPersonalRecipe(w http.ResponseWriter, r *http.Request) {
 	recipeID, _ := request.RecipeID.Int()
 
 	// Get recipe and owner
-	env.Logger.DebugContext(ctx, "getting recipe and owner")
+	env.Logger.DebugContext(ctx, "getting recipe and owner", slog.Int64("recipe-id", recipeID))
 	row, err := env.Database.GetRecipeAndOwner(ctx, recipeID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		env.Logger.ErrorContext(ctx, "could not find recipe and owner", slog.Any("error", err))
-		_ = apiError.EncodeError(w, apiError.RecipeNotFound, "recipe not found", requestID)
+		_ = apiError.EncodeError(w, apiError.RecipeNotFound, "recipe not owned by user or does not exist", requestID)
 		return
 	} else if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to get recipe and owner", slog.Any("error", err))
 		_ = apiError.EncodeInternalError(w, requestID)
 		return
 	}
+	if row.UserID.Int64 != userID {
+		env.Logger.ErrorContext(ctx, "not owned by user")
+		_ = apiError.EncodeError(w, apiError.RecipeNotFound, "recipe not owned by user or does not exist", requestID)
+		return
+	}
+
 	steps, err := env.Database.GetRecipeSteps(ctx, recipeID)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to get recipe steps", slog.Any("error", err))
@@ -1448,17 +1490,20 @@ func GetPersonalRecipe(w http.ResponseWriter, r *http.Request) {
 	// Write response
 	res := GetRecipeResponse{
 		Recipe: recipe.RecipeWithIngredientsAndSteps{
-			CookeTimeMinutes: uint32(row.CookTimeMinutes.Int32),
-			UserID:           row.UserID.Int64,
-			CreatedAt:        row.CreatedAt.Time,
-			UpdatedAt:        row.UpdatedAt.Time,
-			Published:        row.Published,
-			Title:            row.Title,
-			Description:      row.Description.String,
-			ID:               row.ID,
-			Servings:         row.Servings.Float32,
-			Steps:            make([]recipe.RecipeStep, 0),
-			Ingredients:      make([]recipe.RecipeIngredient, 0),
+			CookTimeAmount: row.CookTimeAmount.Int32,
+			CookTimeUnit:   string(row.CookTimeUnit.TimeUnit),
+			PrepTimeAmount: row.PrepTimeAmount.Int32,
+			PrepTimeUnit:   string(row.PrepTimeUnit.TimeUnit),
+			UserID:         row.UserID.Int64,
+			CreatedAt:      row.CreatedAt.Time,
+			UpdatedAt:      row.UpdatedAt.Time,
+			Published:      row.Published,
+			Title:          row.Title,
+			Description:    row.Description.String,
+			ID:             row.ID,
+			Servings:       row.Servings.Float32,
+			Steps:          make([]recipe.RecipeStep, 0),
+			Ingredients:    make([]recipe.RecipeIngredient, 0),
 		},
 		Owner: recipe.RecipeOwner{
 			FirstName: row.FirstName,

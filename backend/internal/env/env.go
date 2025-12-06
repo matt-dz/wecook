@@ -27,6 +27,10 @@ func (e *Env) Get(key string) string {
 	return os.Getenv(key)
 }
 
+func (e *Env) IsProd() bool {
+	return e.Get("ENV") == "PROD"
+}
+
 func New(logger *slog.Logger, database *database.Database,
 	http *http.HTTP, fileserver *fileserver.FileServer,
 ) *Env {

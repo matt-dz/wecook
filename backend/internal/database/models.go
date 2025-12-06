@@ -53,17 +53,63 @@ func (ns NullRole) Value() (driver.Value, error) {
 	return string(ns.Role), nil
 }
 
+type TimeUnit string
+
+const (
+	TimeUnitMinutes TimeUnit = "minutes"
+	TimeUnitHours   TimeUnit = "hours"
+	TimeUnitDays    TimeUnit = "days"
+)
+
+func (e *TimeUnit) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TimeUnit(s)
+	case string:
+		*e = TimeUnit(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TimeUnit: %T", src)
+	}
+	return nil
+}
+
+type NullTimeUnit struct {
+	TimeUnit TimeUnit
+	Valid    bool // Valid is true if TimeUnit is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTimeUnit) Scan(value interface{}) error {
+	if value == nil {
+		ns.TimeUnit, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TimeUnit.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTimeUnit) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TimeUnit), nil
+}
+
 type Recipe struct {
-	ID              int64
-	UserID          pgtype.Int8
-	ImageUrl        pgtype.Text
-	Title           string
-	Description     pgtype.Text
-	CreatedAt       pgtype.Timestamptz
-	UpdatedAt       pgtype.Timestamptz
-	Published       bool
-	CookTimeMinutes pgtype.Int4
-	Servings        pgtype.Float4
+	ID             int64
+	UserID         pgtype.Int8
+	ImageUrl       pgtype.Text
+	Title          string
+	Description    pgtype.Text
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+	Published      bool
+	CookTimeAmount pgtype.Int4
+	CookTimeUnit   NullTimeUnit
+	PrepTimeAmount pgtype.Int4
+	PrepTimeUnit   NullTimeUnit
+	Servings       pgtype.Float4
 }
 
 type RecipeIngredient struct {

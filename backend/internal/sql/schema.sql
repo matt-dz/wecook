@@ -3,6 +3,12 @@ CREATE TYPE ROLE AS enum (
   'user'
 );
 
+CREATE TYPE time_unit AS enum (
+  'minutes',
+  'hours',
+  'days'
+);
+
 CREATE TABLE users (
   id bigserial PRIMARY KEY,
   email text NOT NULL,
@@ -31,7 +37,10 @@ CREATE TABLE recipes (
   created_at timestamptz NOT NULL DEFAULT NOW(),
   updated_at timestamptz NOT NULL DEFAULT NOW(),
   published bool NOT NULL DEFAULT FALSE,
-  cook_time_minutes int CHECK (cook_time_minutes >= 0),
+  cook_time_amount int CHECK (cook_time_amount >= 0),
+  cook_time_unit time_unit,
+  prep_time_amount int CHECK (prep_time_amount >= 0),
+  prep_time_unit time_unit,
   servings real CHECK (servings > 0)
 );
 
