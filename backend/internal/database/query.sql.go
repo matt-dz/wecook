@@ -11,6 +11,21 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type BulkInsertRecipeIngredientsParams struct {
+	RecipeID int64
+	Quantity float32
+	Unit     pgtype.Text
+	Name     string
+	ImageUrl pgtype.Text
+}
+
+type BulkInsertRecipeStepsParams struct {
+	RecipeID    int64
+	Instruction string
+	ImageUrl    pgtype.Text
+	StepNumber  int32
+}
+
 const checkRecipeOwnership = `-- name: CheckRecipeOwnership :one
 SELECT
   EXISTS (
@@ -192,6 +207,22 @@ func (q *Queries) DeleteRecipeIngredient(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteRecipeIngredientsByIDs = `-- name: DeleteRecipeIngredientsByIDs :exec
+DELETE FROM recipe_ingredients
+WHERE recipe_id = $1
+  AND id = ANY ($2::bigint[])
+`
+
+type DeleteRecipeIngredientsByIDsParams struct {
+	RecipeID int64
+	Column2  []int64
+}
+
+func (q *Queries) DeleteRecipeIngredientsByIDs(ctx context.Context, arg DeleteRecipeIngredientsByIDsParams) error {
+	_, err := q.db.Exec(ctx, deleteRecipeIngredientsByIDs, arg.RecipeID, arg.Column2)
+	return err
+}
+
 const deleteRecipeStep = `-- name: DeleteRecipeStep :exec
 DELETE FROM recipe_steps
 WHERE id = $1
@@ -199,6 +230,22 @@ WHERE id = $1
 
 func (q *Queries) DeleteRecipeStep(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, deleteRecipeStep, id)
+	return err
+}
+
+const deleteRecipeStepsByIDs = `-- name: DeleteRecipeStepsByIDs :exec
+DELETE FROM recipe_steps
+WHERE recipe_id = $1
+  AND id = ANY ($2::bigint[])
+`
+
+type DeleteRecipeStepsByIDsParams struct {
+	RecipeID int64
+	Column2  []int64
+}
+
+func (q *Queries) DeleteRecipeStepsByIDs(ctx context.Context, arg DeleteRecipeStepsByIDsParams) error {
+	_, err := q.db.Exec(ctx, deleteRecipeStepsByIDs, arg.RecipeID, arg.Column2)
 	return err
 }
 
@@ -373,6 +420,35 @@ func (q *Queries) GetRecipeIngredientExistence(ctx context.Context, id int64) (b
 	return exists, err
 }
 
+const getRecipeIngredientIDs = `-- name: GetRecipeIngredientIDs :many
+SELECT
+  id
+FROM
+  recipe_ingredients
+WHERE
+  recipe_id = $1
+`
+
+func (q *Queries) GetRecipeIngredientIDs(ctx context.Context, recipeID int64) ([]int64, error) {
+	rows, err := q.db.Query(ctx, getRecipeIngredientIDs, recipeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRecipeIngredientImageURL = `-- name: GetRecipeIngredientImageURL :one
 SELECT
   image_url
@@ -461,6 +537,35 @@ func (q *Queries) GetRecipeStepExistence(ctx context.Context, id int64) (bool, e
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
+}
+
+const getRecipeStepIDs = `-- name: GetRecipeStepIDs :many
+SELECT
+  id
+FROM
+  recipe_steps
+WHERE
+  recipe_id = $1
+`
+
+func (q *Queries) GetRecipeStepIDs(ctx context.Context, recipeID int64) ([]int64, error) {
+	rows, err := q.db.Query(ctx, getRecipeStepIDs, recipeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getRecipeStepImageURL = `-- name: GetRecipeStepImageURL :one

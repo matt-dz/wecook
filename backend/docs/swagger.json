@@ -556,6 +556,86 @@
                     }
                 }
             },
+            "put": {
+                "security": [
+                    {
+                        "AccessToken": []
+                    }
+                ],
+                "description": "Completely updates a recipe including ingredients and steps.\nSub-resources without an ID will be created. Sub-resources with an ID will be updated.\nSub-resources in the database but not in the request will be deleted.\nAn empty request body is treated as a no-op. Supports image uploads for cover, ingredients, and steps.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recipes"
+                ],
+                "summary": "Update a recipe with all sub-resources",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID of the recipe",
+                        "name": "recipeID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON string containing recipe update data (UpdateRecipeFullData)",
+                        "name": "data",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Cover image for recipe",
+                        "name": "cover",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Image for ingredient at index (0-based)",
+                        "name": "ingredient-{index}",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Image for step at index (0-based)",
+                        "name": "step-{index}",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Recipe updated successfully"
+                    },
+                    "400": {
+                        "description": "Bad request (invalid data or validation error)",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Recipe not found or user does not own it",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_matt-dz_wecook_internal_api_error.Error"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {

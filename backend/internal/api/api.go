@@ -80,6 +80,7 @@ func addRoutes(router *chi.Mux) {
 			r.Patch("/recipes/{recipeID}/steps/{stepID}", recipes.UpdateRecipeStep)
 			r.Patch("/recipes/{recipeID}/ingredients/{ingredientID}", recipes.UpdateRecipeIngredient)
 			r.Patch("/recipes/{recipeID}", recipes.UpdateRecipe)
+			r.Put("/recipes/{recipeID}", recipes.UpdateRecipeFull)
 		})
 		r.Get("/recipes/{recipeID}", recipes.GetRecipe)
 	})

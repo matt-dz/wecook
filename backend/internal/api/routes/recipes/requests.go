@@ -9,6 +9,7 @@ type (
 	integer64 string
 	integer32 string
 	quantity  string
+	timeUnit  string
 )
 
 func (i integer64) Validate() error {
@@ -60,6 +61,19 @@ func (q quantity) Validate() error {
 	return nil
 }
 
+func (t timeUnit) Validate() error {
+	switch string(t) {
+	case "minutes", "hours", "days":
+		return nil
+	default:
+		return errors.New("time unit must be one of: minutes, hours, days")
+	}
+}
+
+func (t timeUnit) String() string {
+	return string(t)
+}
+
 type CreateIngredientRequest struct {
 	RecipeID integer64 `validate:"required,numeric"`
 	Name     string    `validate:"required"`
@@ -105,4 +119,29 @@ type UpdateRecipeForm struct {
 
 type GetRecipeRequest struct {
 	RecipeID integer64 `validate:"required"`
+}
+
+type UpdateRecipeFullData struct {
+	Title          *string                          `json:"title" validate:"omitempty"`
+	Description    *string                          `json:"description" validate:"omitempty"`
+	Published      *bool                            `json:"published" validate:"omitempty"`
+	CookTimeAmount *int32                           `json:"cook_time_amount" validate:"omitempty,gte=0"`
+	CookTimeUnit   *timeUnit                        `json:"cook_time_unit" validate:"omitempty,validateFn"`
+	PrepTimeAmount *int32                           `json:"prep_time_amount" validate:"omitempty,gte=0"`
+	PrepTimeUnit   *timeUnit                        `json:"prep_time_unit" validate:"omitempty,validateFn"`
+	Servings       *float32                         `json:"servings" validate:"omitempty,gt=0"`
+	Ingredients    []UpdateRecipeFullDataIngredient `json:"ingredients" validate:"omitempty,dive"`
+	Steps          []UpdateRecipeFullDataStep       `json:"steps" validate:"omitempty,dive"`
+}
+
+type UpdateRecipeFullDataIngredient struct {
+	ID       *int64  `json:"id" validate:"omitempty"`
+	Quantity float32 `json:"quantity" validate:"required,gt=0"`
+	Unit     *string `json:"unit" validate:"omitempty"`
+	Name     string  `json:"name" validate:"required"`
+}
+
+type UpdateRecipeFullDataStep struct {
+	ID          *int64 `json:"id" validate:"omitempty"`
+	Instruction string `json:"instruction" validate:"required"`
 }

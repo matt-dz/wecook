@@ -515,6 +515,62 @@ paths:
       summary: Update a recipe
       tags:
       - Recipes
+    put:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Completely updates a recipe including ingredients and steps.
+        Sub-resources without an ID will be created. Sub-resources with an ID will be updated.
+        Sub-resources in the database but not in the request will be deleted.
+        An empty request body is treated as a no-op. Supports image uploads for cover, ingredients, and steps.
+      parameters:
+      - description: ID of the recipe
+        in: path
+        name: recipeID
+        required: true
+        type: integer
+      - description: JSON string containing recipe update data (UpdateRecipeFullData)
+        in: formData
+        name: data
+        type: string
+      - description: Cover image for recipe
+        in: formData
+        name: cover
+        type: file
+      - description: Image for ingredient at index (0-based)
+        in: formData
+        name: ingredient-{index}
+        type: file
+      - description: Image for step at index (0-based)
+        in: formData
+        name: step-{index}
+        type: file
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Recipe updated successfully
+        "400":
+          description: Bad request (invalid data or validation error)
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "404":
+          description: Recipe not found or user does not own it
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_matt-dz_wecook_internal_api_error.Error'
+      security:
+      - AccessToken: []
+      summary: Update a recipe with all sub-resources
+      tags:
+      - Recipes
   /api/recipes/{recipeID}/cover:
     post:
       consumes:

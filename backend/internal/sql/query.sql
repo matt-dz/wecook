@@ -303,3 +303,57 @@ SET
   servings = coalesce(sqlc.narg ('servings'), servings)
 WHERE
   id = $1;
+
+-- name: GetRecipeIngredientIDs :many
+SELECT
+  id
+FROM
+  recipe_ingredients
+WHERE
+  recipe_id = $1;
+
+-- name: GetRecipeStepIDs :many
+SELECT
+  id
+FROM
+  recipe_steps
+WHERE
+  recipe_id = $1;
+
+-- name: DeleteRecipeIngredientsByIDs :exec
+DELETE FROM recipe_ingredients
+WHERE recipe_id = $1
+  AND id = ANY ($2::bigint[]);
+
+-- name: DeleteRecipeStepsByIDs :exec
+DELETE FROM recipe_steps
+WHERE recipe_id = $1
+  AND id = ANY ($2::bigint[]);
+
+-- name: BulkInsertRecipeIngredients :copyfrom
+INSERT INTO recipe_ingredients (recipe_id, quantity, unit, name, image_url)
+  VALUES ($1, $2, $3, $4, $5);
+
+-- name: BulkInsertRecipeSteps :copyfrom
+INSERT INTO recipe_steps (recipe_id, instruction, image_url, step_number)
+  VALUES ($1, $2, $3, $4);
+
+-- name: BulkUpdateRecipeIngredients :batchexec
+UPDATE
+  recipe_ingredients
+SET
+  quantity = $2,
+  unit = $3,
+  name = $4,
+  image_url = $5
+WHERE
+  id = $1;
+
+-- name: BulkUpdateRecipeSteps :batchexec
+UPDATE
+  recipe_steps
+SET
+  instruction = $2,
+  image_url = $3
+WHERE
+  id = $1;

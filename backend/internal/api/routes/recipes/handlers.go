@@ -4,6 +4,7 @@ package recipes
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -1548,4 +1549,476 @@ func GetPersonalRecipe(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json")
 	_, _ = w.Write(bytes)
+}
+
+// UpdateRecipeFull godoc
+//
+//	@Summary		Update a recipe with all sub-resources
+//	@Description	Completely updates a recipe including ingredients and steps.
+//	@Description	Sub-resources without an ID will be created. Sub-resources with an ID will be updated.
+//	@Description	Sub-resources in the database but not in the request will be deleted.
+//	@Description	An empty request body is treated as a no-op. Supports image uploads for cover, ingredients, and steps.
+//	@Tags			Recipes
+//	@Security		AccessToken
+//	@Accept			multipart/form-data
+//	@Produce		json
+//
+//	@Param			recipeID			path		int		true	"ID of the recipe"
+//	@Param			data				formData	string	false	"JSON string containing recipe update data (UpdateRecipeFullData)"
+//	@Param			cover				formData	file	false	"Cover image for recipe"
+//	@Param			ingredient-{index}	formData	file	false	"Image for ingredient at index (0-based)"
+//	@Param			step-{index}		formData	file	false	"Image for step at index (0-based)"
+//
+//	@Success		204					"Recipe updated successfully"
+//	@Failure		400					{object}	apiError.Error	"Bad request (invalid data or validation error)"
+//	@Failure		401					{object}	apiError.Error	"Unauthorized"
+//	@Failure		404					{object}	apiError.Error	"Recipe not found or user does not own it"
+//	@Failure		500					{object}	apiError.Error	"Internal server error"
+//
+//	@Router			/api/recipes/{recipeID} [put]
+func UpdateRecipeFull(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Read recipeID
+	env.Logger.DebugContext(ctx, "reading request")
+	recipeIDQ := integer64(chi.URLParam(r, "recipeID"))
+	if err := recipeIDQ.Validate(); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate recipe id", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "bad request", requestID)
+		return
+	}
+	recipeID, _ := recipeIDQ.Int()
+
+	// Check ownership
+	env.Logger.DebugContext(ctx, "checking ownership")
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: recipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check recipe ownership", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+	if !ownsRecipe {
+		env.Logger.ErrorContext(ctx, "user does not own recipe")
+		_ = apiError.EncodeError(w, apiError.RecipeNotFound,
+			"recipe does not exist or user does not own it", requestID)
+		return
+	}
+
+	// Parse multipart form
+	env.Logger.DebugContext(ctx, "parsing multipart form")
+	if r.ContentLength == 0 {
+		env.Logger.DebugContext(ctx, "request is empty")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to parse multipart form", slog.Any("error", err))
+		_ = apiError.EncodeError(w, apiError.BadRequest, "request too large or invalid", requestID)
+		return
+	}
+
+	// Parse JSON data field
+	var data UpdateRecipeFullData
+	dataField := strings.TrimSpace(r.Form.Get("data"))
+	if dataField != "" {
+		if err := json.Unmarshal([]byte(dataField), &data); err != nil {
+			env.Logger.ErrorContext(ctx, "failed to parse data field", slog.Any("error", err))
+			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid data field", requestID)
+			return
+		}
+		validate := validator.New(validator.WithRequiredStructEnabled())
+		if err := validate.Struct(data); err != nil {
+			env.Logger.ErrorContext(ctx, "failed to validate data", slog.Any("error", err))
+			_ = apiError.EncodeError(w, apiError.BadRequest, "validation failed", requestID)
+			return
+		}
+	}
+
+	// Update recipe fields
+	env.Logger.DebugContext(ctx, "updating recipe")
+	updateParams := database.UpdateRecipeParams{
+		ID: recipeID,
+	}
+	if data.Title != nil {
+		updateParams.Title.String = *data.Title
+		updateParams.Title.Valid = true
+	}
+	if data.Description != nil {
+		updateParams.Description.String = *data.Description
+		updateParams.Description.Valid = true
+	}
+	if data.Published != nil {
+		updateParams.Published.Bool = *data.Published
+		updateParams.Published.Valid = true
+	}
+	if data.CookTimeAmount != nil {
+		updateParams.CookTimeAmount.Int32 = *data.CookTimeAmount
+		updateParams.CookTimeAmount.Valid = true
+	}
+	if data.CookTimeUnit != nil {
+		updateParams.CookTimeUnit.TimeUnit = database.TimeUnit(data.CookTimeUnit.String())
+		updateParams.CookTimeUnit.Valid = true
+	}
+	if data.PrepTimeAmount != nil {
+		updateParams.PrepTimeAmount.Int32 = *data.PrepTimeAmount
+		updateParams.PrepTimeAmount.Valid = true
+	}
+	if data.PrepTimeUnit != nil {
+		updateParams.PrepTimeUnit.TimeUnit = database.TimeUnit(data.PrepTimeUnit.String())
+		updateParams.PrepTimeUnit.Valid = true
+	}
+	if data.Servings != nil {
+		updateParams.Servings.Float32 = *data.Servings
+		updateParams.Servings.Valid = true
+	}
+
+	// Handle cover image upload
+	coverImage, err := recipe.ReadImage(r, "cover")
+	if err == nil {
+		env.Logger.DebugContext(ctx, "uploading cover image")
+		path := fileserver.NewCoverImage(strconv.FormatInt(recipeID, 10), coverImage.Suffix)
+		imageURL, _, err := env.FileServer.Write(path, coverImage.Data)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to upload cover image", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+		updateParams.ImageUrl.String = imageURL
+		updateParams.ImageUrl.Valid = true
+	} else if !errors.Is(err, recipe.ErrNoImageUploaded) {
+		if errors.Is(err, recipe.ErrUnsupportedMimeType) {
+			env.Logger.ErrorContext(ctx, "unsupported cover image type", slog.Any("error", err))
+			_ = apiError.EncodeError(w, apiError.BadRequest, "invalid cover image type", requestID)
+			return
+		}
+		env.Logger.ErrorContext(ctx, "failed to read cover image", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	err = env.Database.UpdateRecipe(ctx, updateParams)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to update recipe", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Get existing ingredients to track image URLs for cleanup
+	existingIngredients, err := env.Database.GetRecipeIngredients(ctx, recipeID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get existing ingredients", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Process ingredients
+	env.Logger.DebugContext(ctx, "processing ingredients")
+	var ingredientsToUpdate []database.BulkUpdateRecipeIngredientsParams
+	var ingredientsToInsert []database.BulkInsertRecipeIngredientsParams
+	var ingredientIDsToKeep []int64
+	oldIngredientImageURLs := make(map[int64]string)
+
+	for _, existing := range existingIngredients {
+		if existing.ImageUrl.String != "" {
+			oldIngredientImageURLs[existing.ID] = existing.ImageUrl.String
+		}
+	}
+
+	for idx, ingredient := range data.Ingredients {
+		var imageURL string
+
+		// Try to read image for this ingredient
+		ingredientImage, err := recipe.ReadImage(r, fmt.Sprintf("ingredient-%d", idx))
+		if err == nil {
+			env.Logger.DebugContext(ctx, "uploading ingredient image", slog.Int("index", idx))
+			var ingredientIDStr string
+			if ingredient.ID != nil {
+				ingredientIDStr = strconv.FormatInt(*ingredient.ID, 10)
+			} else {
+				ingredientIDStr = fmt.Sprintf("new-%d", idx)
+			}
+			path := fileserver.NewIngredientsImage(strconv.FormatInt(recipeID, 10), ingredientIDStr, ingredientImage.Suffix)
+			imageURL, _, err = env.FileServer.Write(path, ingredientImage.Data)
+			if err != nil {
+				env.Logger.ErrorContext(ctx, "failed to upload ingredient image", slog.Any("error", err))
+				_ = apiError.EncodeInternalError(w, requestID)
+				return
+			}
+		} else if !errors.Is(err, recipe.ErrNoImageUploaded) {
+			if errors.Is(err, recipe.ErrUnsupportedMimeType) {
+				env.Logger.ErrorContext(ctx, "unsupported ingredient image type", slog.Int("index", idx), slog.Any("error", err))
+				msg := fmt.Sprintf("invalid ingredient image type at index %d", idx)
+				_ = apiError.EncodeError(w, apiError.BadRequest, msg, requestID)
+				return
+			}
+			env.Logger.ErrorContext(ctx, "failed to read ingredient image", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+
+		if ingredient.ID != nil {
+			// Prepare batch update
+			ingredientIDsToKeep = append(ingredientIDsToKeep, *ingredient.ID)
+			params := database.BulkUpdateRecipeIngredientsParams{
+				ID:       *ingredient.ID,
+				Quantity: ingredient.Quantity,
+				Name:     ingredient.Name,
+			}
+			if ingredient.Unit != nil {
+				params.Unit = pgtype.Text{String: *ingredient.Unit, Valid: true}
+			}
+			if imageURL != "" {
+				params.ImageUrl = pgtype.Text{String: imageURL, Valid: true}
+				// Delete old image if replaced
+				if oldURL, exists := oldIngredientImageURLs[*ingredient.ID]; exists && oldURL != imageURL {
+					if err := env.FileServer.Delete(oldURL); err != nil {
+						env.Logger.WarnContext(ctx, "failed to delete old ingredient image",
+							slog.String("url", oldURL), slog.Any("error", err))
+					}
+				}
+			}
+			ingredientsToUpdate = append(ingredientsToUpdate, params)
+		} else {
+			// Prepare batch insert
+			params := database.BulkInsertRecipeIngredientsParams{
+				RecipeID: recipeID,
+				Quantity: ingredient.Quantity,
+				Name:     ingredient.Name,
+			}
+			if ingredient.Unit != nil {
+				params.Unit = pgtype.Text{String: *ingredient.Unit, Valid: true}
+			}
+			if imageURL != "" {
+				params.ImageUrl = pgtype.Text{String: imageURL, Valid: true}
+			}
+			ingredientsToInsert = append(ingredientsToInsert, params)
+		}
+	}
+
+	// Execute bulk update for ingredients
+	if len(ingredientsToUpdate) > 0 {
+		env.Logger.DebugContext(ctx, "bulk updating ingredients", slog.Int("count", len(ingredientsToUpdate)))
+		batchResults := env.Database.BulkUpdateRecipeIngredients(ctx, ingredientsToUpdate)
+		batchResults.Exec(func(i int, err error) {
+			if err != nil {
+				env.Logger.ErrorContext(ctx, "failed to update ingredient in batch", slog.Int("index", i), slog.Any("error", err))
+			}
+		})
+		if err := batchResults.Close(); err != nil {
+			env.Logger.ErrorContext(ctx, "failed to close batch results", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+	}
+
+	// Execute bulk insert for ingredients
+	if len(ingredientsToInsert) > 0 {
+		env.Logger.DebugContext(ctx, "bulk inserting ingredients", slog.Int("count", len(ingredientsToInsert)))
+		count, err := env.Database.BulkInsertRecipeIngredients(ctx, ingredientsToInsert)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to bulk insert ingredients", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+		env.Logger.DebugContext(ctx, "bulk inserted ingredients", slog.Int64("count", count))
+	}
+
+	// Delete ingredients not in the request
+	var ingredientsToDelete []int64
+	for _, existing := range existingIngredients {
+		found := false
+		for _, keepID := range ingredientIDsToKeep {
+			if existing.ID == keepID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			ingredientsToDelete = append(ingredientsToDelete, existing.ID)
+			// Delete associated image
+			if existing.ImageUrl.String != "" {
+				if err := env.FileServer.Delete(existing.ImageUrl.String); err != nil {
+					env.Logger.WarnContext(ctx, "failed to delete ingredient image",
+						slog.String("url", existing.ImageUrl.String), slog.Any("error", err))
+				}
+			}
+		}
+	}
+
+	if len(ingredientsToDelete) > 0 {
+		env.Logger.DebugContext(ctx, "deleting ingredients", slog.Int("count", len(ingredientsToDelete)))
+		err = env.Database.DeleteRecipeIngredientsByIDs(ctx, database.DeleteRecipeIngredientsByIDsParams{
+			RecipeID: recipeID,
+			Column2:  ingredientsToDelete,
+		})
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to delete ingredients", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+	}
+
+	// Get existing steps to track image URLs for cleanup
+	existingSteps, err := env.Database.GetRecipeSteps(ctx, recipeID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get existing steps", slog.Any("error", err))
+		_ = apiError.EncodeInternalError(w, requestID)
+		return
+	}
+
+	// Process steps
+	env.Logger.DebugContext(ctx, "processing steps")
+	var stepsToUpdate []database.BulkUpdateRecipeStepsParams
+	var stepsToInsert []database.BulkInsertRecipeStepsParams
+	var stepIDsToKeep []int64
+	oldStepImageURLs := make(map[int64]string)
+
+	for _, existing := range existingSteps {
+		if existing.ImageUrl.String != "" {
+			oldStepImageURLs[existing.ID] = existing.ImageUrl.String
+		}
+	}
+
+	for idx, step := range data.Steps {
+		var imageURL string
+
+		// Try to read image for this step
+		stepImage, err := recipe.ReadImage(r, fmt.Sprintf("step-%d", idx))
+		if err == nil {
+			env.Logger.DebugContext(ctx, "uploading step image", slog.Int("index", idx))
+			var stepIDStr string
+			if step.ID != nil {
+				stepIDStr = strconv.FormatInt(*step.ID, 10)
+			} else {
+				stepIDStr = fmt.Sprintf("new-%d", idx)
+			}
+			path := fileserver.NewStepsImage(strconv.FormatInt(recipeID, 10), stepIDStr, stepImage.Suffix)
+			imageURL, _, err = env.FileServer.Write(path, stepImage.Data)
+			if err != nil {
+				env.Logger.ErrorContext(ctx, "failed to upload step image", slog.Any("error", err))
+				_ = apiError.EncodeInternalError(w, requestID)
+				return
+			}
+		} else if !errors.Is(err, recipe.ErrNoImageUploaded) {
+			if errors.Is(err, recipe.ErrUnsupportedMimeType) {
+				env.Logger.ErrorContext(ctx, "unsupported step image type", slog.Int("index", idx), slog.Any("error", err))
+				_ = apiError.EncodeError(w, apiError.BadRequest, fmt.Sprintf("invalid step image type at index %d", idx), requestID)
+				return
+			}
+			env.Logger.ErrorContext(ctx, "failed to read step image", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+
+		if step.ID != nil {
+			// Prepare batch update
+			stepIDsToKeep = append(stepIDsToKeep, *step.ID)
+			params := database.BulkUpdateRecipeStepsParams{
+				ID:          *step.ID,
+				Instruction: step.Instruction,
+			}
+			if imageURL != "" {
+				params.ImageUrl = pgtype.Text{String: imageURL, Valid: true}
+				// Delete old image if replaced
+				if oldURL, exists := oldStepImageURLs[*step.ID]; exists && oldURL != imageURL {
+					if err := env.FileServer.Delete(oldURL); err != nil {
+						env.Logger.WarnContext(ctx, "failed to delete old step image",
+							slog.String("url", oldURL), slog.Any("error", err))
+					}
+				}
+			}
+			stepsToUpdate = append(stepsToUpdate, params)
+		} else {
+			// Prepare batch insert
+			params := database.BulkInsertRecipeStepsParams{
+				RecipeID:    recipeID,
+				Instruction: step.Instruction,
+				StepNumber:  int32(idx + 1),
+			}
+			if imageURL != "" {
+				params.ImageUrl = pgtype.Text{String: imageURL, Valid: true}
+			}
+			stepsToInsert = append(stepsToInsert, params)
+		}
+	}
+
+	// Execute bulk update for steps
+	if len(stepsToUpdate) > 0 {
+		env.Logger.DebugContext(ctx, "bulk updating steps", slog.Int("count", len(stepsToUpdate)))
+		batchResults := env.Database.BulkUpdateRecipeSteps(ctx, stepsToUpdate)
+		batchResults.Exec(func(i int, err error) {
+			if err != nil {
+				env.Logger.ErrorContext(ctx, "failed to update step in batch", slog.Int("index", i), slog.Any("error", err))
+			}
+		})
+		if err := batchResults.Close(); err != nil {
+			env.Logger.ErrorContext(ctx, "failed to close batch results", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+	}
+
+	// Execute bulk insert for steps
+	if len(stepsToInsert) > 0 {
+		env.Logger.DebugContext(ctx, "bulk inserting steps", slog.Int("count", len(stepsToInsert)))
+		count, err := env.Database.BulkInsertRecipeSteps(ctx, stepsToInsert)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to bulk insert steps", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+		env.Logger.DebugContext(ctx, "bulk inserted steps", slog.Int64("count", count))
+	}
+
+	// Delete steps not in the request
+	var stepsToDelete []int64
+	for _, existing := range existingSteps {
+		found := false
+		for _, keepID := range stepIDsToKeep {
+			if existing.ID == keepID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			stepsToDelete = append(stepsToDelete, existing.ID)
+			// Delete associated image
+			if existing.ImageUrl.String != "" {
+				if err := env.FileServer.Delete(existing.ImageUrl.String); err != nil {
+					env.Logger.WarnContext(ctx, "failed to delete step image",
+						slog.String("url", existing.ImageUrl.String), slog.Any("error", err))
+				}
+			}
+		}
+	}
+
+	if len(stepsToDelete) > 0 {
+		env.Logger.DebugContext(ctx, "deleting steps", slog.Int("count", len(stepsToDelete)))
+		err = env.Database.DeleteRecipeStepsByIDs(ctx, database.DeleteRecipeStepsByIDsParams{
+			RecipeID: recipeID,
+			Column2:  stepsToDelete,
+		})
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to delete steps", slog.Any("error", err))
+			_ = apiError.EncodeInternalError(w, requestID)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
