@@ -17,6 +17,11 @@ type Error struct {
 	ErrorID string    `json:"error_id"`
 }
 
+func (e *Error) Error() string {
+	data, _ := json.Marshal(e)
+	return string(data)
+}
+
 func buildError(code ErrorCode, message, errorID string) Error {
 	return Error{
 		Code:    code,
@@ -31,6 +36,20 @@ func EncodeError(w http.ResponseWriter, code ErrorCode, message, errorID string)
 	w.WriteHeader(errorCodeToStatusCode[code])
 
 	if err := json.NewEncoder(w).Encode(buildError(code, message, errorID)); err != nil {
+		return fmt.Errorf("encoding error: %w", err)
+	}
+	return nil
+}
+
+func EncodeUnknownError(w http.ResponseWriter, message, errorID string, statusCode int) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(Error{
+		Code:    UnknownError,
+		Status:  statusCode,
+		Message: message,
+		ErrorID: errorID,
+	}); err != nil {
 		return fmt.Errorf("encoding error: %w", err)
 	}
 	return nil

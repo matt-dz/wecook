@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
-	_ "github.com/matt-dz/wecook/docs"
+	"github.com/matt-dz/wecook/docs"
 	"github.com/matt-dz/wecook/internal/api/middleware"
+	api "github.com/matt-dz/wecook/internal/api/openapi"
 	"github.com/matt-dz/wecook/internal/api/routes/admin"
 	"github.com/matt-dz/wecook/internal/api/routes/auth"
 	"github.com/matt-dz/wecook/internal/api/routes/ping"
@@ -16,39 +17,15 @@ import (
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/role"
 
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/go-chi/chi/v5"
-	httpSwagger "github.com/swaggo/http-swagger/v2"
+	oapimw "github.com/oapi-codegen/nethttp-middleware"
 )
 
 const (
 	defaultPort = "8080"
 )
-
-func addDocs(r *chi.Mux, serverAddr string) {
-	swagger := httpSwagger.Handler(
-		httpSwagger.URL(fmt.Sprintf("http://%s/api/swagger/doc.json", serverAddr)),
-		httpSwagger.DeepLinking(true),
-		httpSwagger.DocExpansion("none"),
-		httpSwagger.DomID("swagger-ui"),
-	)
-
-	r.Mount("/api/swagger", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		// Handle preflight
-		if req.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		// Allow GET to serve Swagger
-		if req.Method == http.MethodGet {
-			swagger.ServeHTTP(w, req)
-			return
-		}
-
-		// Block anything else
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-	}))
-}
 
 func addRoutes(router *chi.Mux) {
 	router.Route("/api", func(r chi.Router) {
@@ -104,17 +81,38 @@ func Start(env *env.Env) error {
 		serverPort = defaultPort
 	}
 
-	router := chi.NewRouter()
+	server := api.NewServer()
+	router := chi.NewMux()
+	spec, err := docs.Docs.ReadFile("api.yaml")
+	if err != nil {
+		return fmt.Errorf("reading openapi spec: %w", err)
+	}
+	swagger, err := openapi3.NewLoader().LoadFromData(spec)
+	if err != nil {
+		return fmt.Errorf("creating openapi loader: %w", err)
+	}
+	swagger.Servers = nil
+
 	router.Use(middleware.AddRequestID)
 	router.Use(middleware.LogRequest(env.Logger))
 	router.Use(middleware.InjectEnv(env))
 	router.Use(middleware.AddCors)
+	router.Use(oapimw.OapiRequestValidatorWithOptions(swagger, &oapimw.Options{
+		Options: openapi3filter.Options{
+			AuthenticationFunc: middleware.OAPIAuthFunc,
+		},
+		ErrorHandlerWithOpts: middleware.OAPIErrorHandler,
+	}))
 
-	addRoutes(router)
-	addDocs(router, fmt.Sprintf("localhost:%s", serverPort))
-	http.Handle("/", router)
+	api.HandlerFromMux(
+		api.NewStrictHandler(server, nil),
+		router)
+	s := &http.Server{
+		Handler: router,
+		Addr:    "0.0.0.0:" + serverPort,
+	}
 
 	env.Logger.Info(fmt.Sprintf("Listening at localhost:%s", serverPort))
 	env.Logger.Info(fmt.Sprintf("Swagger UI available at http://localhost:%s/api/swagger/index.html", serverPort))
-	return http.ListenAndServe(fmt.Sprintf(":%s", serverPort), nil)
+	return s.ListenAndServe()
 }

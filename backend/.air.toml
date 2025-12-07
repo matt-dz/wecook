@@ -5,7 +5,7 @@ tmp_dir = "bin"
 [build]
   args_bin = []
   bin = "./bin/main"
-  cmd = "make swagger && go build -o ./bin/main ./cmd/wecook/main.go"
+  cmd = "go build -o ./bin/main ./cmd/wecook/main.go"
   delay = 1000
   exclude_dir = ["assets", "bin", "vendor", "testdata", "docs", ".github"]
   exclude_file = []

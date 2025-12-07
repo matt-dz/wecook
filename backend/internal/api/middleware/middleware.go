@@ -2,12 +2,15 @@
 package middleware
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
 
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/go-chi/httplog/v3"
 	"github.com/golang-jwt/jwt/v5"
 	apiError "github.com/matt-dz/wecook/internal/api/error"
@@ -18,6 +21,7 @@ import (
 	"github.com/matt-dz/wecook/internal/log"
 	"github.com/matt-dz/wecook/internal/role"
 
+	oapimw "github.com/oapi-codegen/nethttp-middleware"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -98,6 +102,7 @@ func AddCors(next http.Handler) http.Handler {
 	})
 }
 
+// AuthorizeRequest creates a middleware that validates JWT tokens and checks user roles.
 func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -160,4 +165,140 @@ func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+// OAPIAuthFunc is the authentication function for oapi-codegen middleware.
+func OAPIAuthFunc(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+	// Extract security scheme name to determine required role
+	var requiredRole role.Role
+	switch input.SecuritySchemeName {
+	case "AccessTokenAdmin":
+		requiredRole = role.RoleAdmin
+	case "AccessTokenUser":
+		requiredRole = role.RoleUser
+	default:
+		// No authentication required
+		return nil
+	}
+
+	env := env.EnvFromCtx(ctx)
+	requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(ctx))
+
+	accessToken, err := input.RequestValidationInput.Request.Cookie(token.AccessTokenName(env))
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get access token", slog.Any("error", err))
+		return &apiError.Error{
+			Code:    apiError.InvalidAccessToken,
+			Status:  apiError.InvalidAccessToken.StatusCode(),
+			Message: "invalid access token",
+			ErrorID: requestID,
+		}
+	}
+
+	secret := env.Get("APP_SECRET")
+	if secret == "" {
+		env.Logger.ErrorContext(ctx, "APP_SECRET not set")
+		return &apiError.Error{
+			Code:    apiError.InternalServerError,
+			Status:  apiError.InternalServerError.StatusCode(),
+			Message: "internal server error",
+			ErrorID: requestID,
+		}
+	}
+	secretVersion := env.Get("APP_SECRET_VERSION")
+	if secretVersion == "" {
+		env.Logger.DebugContext(ctx, "APP_SECRET_VERSION not set, using default version")
+		secretVersion = wcJwt.DefaultKID
+	}
+
+	accessJwt, err := wcJwt.ValidateJWT(accessToken.Value, secretVersion, []byte(secret))
+	if errors.Is(err, jwt.ErrTokenExpired) {
+		env.Logger.ErrorContext(ctx, "jwt expired", slog.Any("error", err))
+		return &apiError.Error{
+			Code:    apiError.ExpiredAccessToken,
+			Status:  apiError.ExpiredAccessToken.StatusCode(),
+			Message: "access token expired",
+			ErrorID: requestID,
+		}
+	} else if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to validate jwt", slog.Any("error", err))
+		return &apiError.Error{
+			Code:    apiError.InvalidAccessToken,
+			Status:  apiError.InvalidAccessToken.StatusCode(),
+			Message: "invalid access token",
+			ErrorID: requestID,
+		}
+	}
+
+	sub, err := accessJwt.Claims.GetSubject()
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get subject", slog.Any("errro", err))
+		return &apiError.Error{
+			Code:    apiError.InternalServerError,
+			Status:  apiError.InternalServerError.StatusCode(),
+			Message: "internal server error",
+			ErrorID: requestID,
+		}
+	}
+	userID, err := strconv.ParseInt(sub, 10, 64)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to parse userID", slog.Any("error", err))
+		return &apiError.Error{
+			Code:    apiError.InternalServerError,
+			Status:  apiError.InternalServerError.StatusCode(),
+			Message: "internal server error",
+			ErrorID: requestID,
+		}
+	}
+
+	roleClaim := accessJwt.Claims.(jwt.MapClaims)["role"].(string)
+	userRole := role.ToRole(roleClaim)
+	if userRole < requiredRole {
+		env.Logger.ErrorContext(ctx, "user does not have required role",
+			slog.String("user-role", userRole.String()),
+			slog.String("required-role", requiredRole.String()))
+		return &apiError.Error{
+			Code:    apiError.InsufficientPermissions,
+			Status:  apiError.InsufficientPermissions.StatusCode(),
+			Message: "insufficient permissions",
+			ErrorID: requestID,
+		}
+	}
+
+	// Store user info in context
+	r := input.RequestValidationInput.Request
+	r = r.WithContext(log.AppendCtx(r.Context(), slog.Int64("user-id", userID)))
+	r = r.WithContext(token.UserIDWithCtx(r.Context(), userID))
+	r = r.WithContext(token.AccessTokenWithCtx(r.Context(), accessJwt))
+	*input.RequestValidationInput.Request = *r
+
+	return nil
+}
+
+// OAPIErrorHandler handles errors from oapi-codegen middleware and formats them
+// according to your error schema.
+func OAPIErrorHandler(
+	ctx context.Context,
+	err error,
+	w http.ResponseWriter,
+	r *http.Request,
+	opts oapimw.ErrorHandlerOpts,
+) {
+	// Several scenarios where we are handling an error:
+	//   1. An error was returned as an apiError in auth middleware
+	//   2. There was an internal server error
+
+	// 1. Error was returned from middleware
+	var errBody *apiError.Error
+	if errors.As(err, &errBody) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(opts.StatusCode)
+		_ = json.NewEncoder(w).Encode(errBody)
+		return
+	}
+
+	fmt.Printf("There is an error: %s", err.Error())
+	// 2. An internal server error was surfaced
+	requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(r.Context()))
+	_ = apiError.EncodeInternalError(w, requestID)
 }

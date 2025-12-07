@@ -5,25 +5,27 @@ import "net/http"
 type ErrorCode string
 
 const (
-	InternalServerError     = "internal_server_error"
-	BadRequest              = "bad_request"
-	UnprocessibleEntity     = "unprocessible_entity"
-	InvalidCredentials      = "invalid_credentials"
-	InvalidAccessToken      = "invalid_access_token"
-	ExpiredAccessToken      = "expired_access_token"
-	InvalidRefreshToken     = "invalid_refresh_token"
-	ExpiredRefreshToken     = "expired_refresh_token"
-	InsufficientPermissions = "insufficient_permissions"
-	WeakPassword            = "weak_password"
-	EmailConflict           = "email_conflict"
-	AdminAlreadySetup       = "admin_already_setup"
-	RecipeNotFound          = "recipe_not_found"
-	RecipeNotOwned          = "recipe_not_owned"
-	IngredientNotFound      = "ingredient_not_found"
-	StepNotFound            = "step_not_found"
+	UnknownError            ErrorCode = "unknown_error"
+	InternalServerError     ErrorCode = "internal_server_error"
+	BadRequest              ErrorCode = "bad_request"
+	UnprocessibleEntity     ErrorCode = "unprocessible_entity"
+	InvalidCredentials      ErrorCode = "invalid_credentials"
+	InvalidAccessToken      ErrorCode = "invalid_access_token"
+	ExpiredAccessToken      ErrorCode = "expired_access_token"
+	InvalidRefreshToken     ErrorCode = "invalid_refresh_token"
+	ExpiredRefreshToken     ErrorCode = "expired_refresh_token"
+	InsufficientPermissions ErrorCode = "insufficient_permissions"
+	WeakPassword            ErrorCode = "weak_password"
+	EmailConflict           ErrorCode = "email_conflict"
+	AdminAlreadySetup       ErrorCode = "admin_already_setup"
+	RecipeNotFound          ErrorCode = "recipe_not_found"
+	RecipeNotOwned          ErrorCode = "recipe_not_owned"
+	IngredientNotFound      ErrorCode = "ingredient_not_found"
+	StepNotFound            ErrorCode = "step_not_found"
 )
 
 var errorCodeToStatusCode = map[ErrorCode]int{
+	UnknownError:            0, // No explicit error code because we it is unknown
 	InternalServerError:     http.StatusInternalServerError,
 	BadRequest:              http.StatusBadRequest,
 	UnprocessibleEntity:     http.StatusUnprocessableEntity,
@@ -40,4 +42,12 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	InvalidRefreshToken:     http.StatusUnauthorized,
 	ExpiredRefreshToken:     http.StatusUnauthorized,
 	InvalidCredentials:      http.StatusUnauthorized,
+}
+
+func (ec ErrorCode) StatusCode() int {
+	return errorCodeToStatusCode[ec]
+}
+
+func (ec ErrorCode) String() string {
+	return string(ec)
 }
