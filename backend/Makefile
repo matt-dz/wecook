@@ -58,6 +58,18 @@ clean:
 	@echo "🧹 Cleaning $(BIN_DIR)"
 	rm $(BIN_DIR)/*
 
+.PHONY: dbmock
+dbmock:
+	@echo "🤖 Generating mock..."
+	mockgen -source=internal/database/querier.go \
+		-destination internal/dbmock/dbmock.go \
+		-package dbmoc
+
+.PHONY: test
+test:
+	@echo "🧪 Running tests..."
+	go test -v ./...
+
 .PHONY: help
 help:
 	@cat Makefile

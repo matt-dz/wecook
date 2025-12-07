@@ -50,11 +50,12 @@ func initDB(ctx context.Context, logger *slog.Logger) (*database.Database, error
 	if err != nil {
 		return nil, fmt.Errorf("creating database pool: %w", err)
 	}
+
 	db := database.NewDatabase(pool)
 
 	// Ensuring database exists
 	logger.Info("Ensuring database exists")
-	if err := database.EnsureSchema(db, ctx); err != nil {
+	if err := db.EnsureSchema(ctx); err != nil {
 		return nil, fmt.Errorf("initializing database: %w", err)
 	}
 

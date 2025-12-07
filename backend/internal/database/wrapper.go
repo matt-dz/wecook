@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/matt-dz/wecook/internal/sql"
 )
 
@@ -15,22 +14,22 @@ type Pool interface {
 }
 
 type Database struct {
-	*Queries
+	Querier
 
-	Pool Pool
+	db DBTX
 }
 
-func NewDatabase(pool *pgxpool.Pool) *Database {
+func NewDatabase(db DBTX) *Database {
 	return &Database{
-		Queries: New(pool),
-		Pool:    pool,
+		Querier: New(db),
+		db:      db,
 	}
 }
 
 // EnsureSchema ensures the database schema is applied to the
 // Postgres database. The schema is applied to the database
 // if the schema is not detected.
-func EnsureSchema(db *Database, ctx context.Context) error {
+func (db *Database) EnsureSchema(ctx context.Context) error {
 	exists, err := db.CheckUsersTableExists(ctx)
 	if err != nil {
 		return fmt.Errorf("ensuring schema exists: %w", err)

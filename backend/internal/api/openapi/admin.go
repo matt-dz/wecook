@@ -54,8 +54,8 @@ func (Server) PostApiAdmin(ctx context.Context, request PostApiAdminRequestObjec
 		FirstName:    request.Body.FirstName,
 		LastName:     request.Body.LastName,
 	})
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ColumnName == "email" {
-		env.Logger.ErrorContext(ctx, "Admin with email already exists", slog.Any("error", err))
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == "users_unique_email" {
+		env.Logger.ErrorContext(ctx, "email aready in use", slog.Any("error", err))
 		return PostApiAdmin409JSONResponse{
 			Status:  apiError.WeakPassword.StatusCode(),
 			Code:    apiError.WeakPassword.String(),
