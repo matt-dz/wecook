@@ -13,7 +13,8 @@ WeCook is a recipe management application with a Go backend API and SvelteKit fr
 - **Database**: PostgreSQL with pgx driver
 - **Auth**: JWT tokens with golang-jwt
 - **Password Hashing**: Argon2id
-- **API Documentation**: Swagger/OpenAPI
+- **API Documentation**: OpenAPI 3.0 with oapi-codegen
+- **Code Generation**: oapi-codegen for type-safe API models and server stubs
 - **Database Queries**: SQLC for type-safe SQL
 - **Development**: Air for hot reloading
 
@@ -47,7 +48,7 @@ backend/
 - `github.com/go-chi/httplog/v3` - HTTP logging middleware
 - `github.com/jackc/pgx/v5` - PostgreSQL driver
 - `github.com/golang-jwt/jwt/v5` - JWT implementation
-- `github.com/swaggo/swag` - Swagger documentation generator
+- `github.com/oapi-codegen/oapi-codegen` - OpenAPI code generator
 - `github.com/oklog/ulid/v2` - ULID generation
 - `golang.org/x/crypto` - Argon2 password hashing
 
@@ -70,11 +71,11 @@ backend/
 ### Common Commands
 
 ```bash
-make build      # Build the application (fmt, lint, swagger, compile)
-make run        # Run the application with swagger generation
-make fmt        # Format Go code, swagger docs, and SQL
+make build      # Build the application (fmt, lint, docs, compile)
+make run        # Run the application with code generation
+make fmt        # Format Go code and SQL
 make lint       # Run linter
-make swagger    # Generate swagger documentation
+make docs       # Generate OpenAPI client, models, and server code
 make sqlc       # Generate SQLC code from SQL files
 make keys       # Generate JWT signing keys
 ```
@@ -105,8 +106,8 @@ See `.env.example` for required environment variables. Key variables include:
 
 1. **Internal Packages**: All application code lives in `internal/` to prevent external imports
 2. **SQLC**: Database queries are written in SQL and type-safe Go code is generated
-3. **Swagger**: API documentation is generated from code comments using swag
-4. **Validation**: Use go-playground/validator for input validation
+3. **OpenAPI-First**: API is defined in `docs/api.yaml` and code is generated from the specification
+4. **Request Validation**: oapi-codegen middleware validates requests against OpenAPI spec
 5. **Logging**: Use httplog for structured HTTP logging
 
 ## Testing
@@ -125,9 +126,38 @@ See `.env.example` for required environment variables. Key variables include:
 
 ## API Documentation
 
-- Swagger docs available at `/swagger/index.html` when running
-- Generated from code comments using swag
-- Run `make swagger` to regenerate after API changes
+The project uses an **OpenAPI-first** approach where the API specification is the source of truth:
+
+### OpenAPI Specification
+
+- Location: `docs/api.yaml`
+- Version: OpenAPI 3.0.3
+- Defines all endpoints, request/response schemas, and security requirements
+
+### Code Generation
+
+The project uses `oapi-codegen` to generate type-safe Go code from the OpenAPI specification:
+
+- **Configuration**: `docs/cfg.yaml`
+- **Generated code**: `internal/api/openapi/client.gen.go`
+- **Generates**:
+  - Request/response models (type-safe structs)
+  - Chi server interface and router stubs
+  - Client code for API consumption
+  - Strict server handlers
+
+### Workflow
+
+1. Define or update endpoints in `docs/api.yaml`
+2. Run `make docs` to generate Go code
+3. Implement handler functions matching the generated interfaces
+4. Register routes in `internal/api/api.go`
+
+### Request Validation
+
+- Automatic validation via `oapi-codegen/nethttp-middleware`
+- Validates request bodies, query params, and path params against OpenAPI spec
+- Returns 400 Bad Request for invalid requests
 
 ## Working with the Frontend
 
@@ -149,12 +179,59 @@ Based on git history:
 
 ### Adding a New API Endpoint
 
-1. Add handler function in `internal/api/`
-2. Add route in API router
-3. Add Swagger comments above handler
-4. Run `make swagger` to update docs
-5. Add SQL queries if needed in `internal/sql/query.sql`
-6. Run `make sqlc` to generate Go code
+The project follows an OpenAPI-first workflow. When adding a new endpoint:
+
+1. **Define the endpoint in OpenAPI spec** (`docs/api.yaml`):
+   ```yaml
+   paths:
+     /api/your-endpoint:
+       post:
+         summary: Your endpoint description
+         tags: [YourTag]
+         requestBody:
+           required: true
+           content:
+             application/json:
+               schema:
+                 $ref: "#/components/schemas/YourRequestSchema"
+         responses:
+           "200":
+             description: Success
+             content:
+               application/json:
+                 schema:
+                   $ref: "#/components/schemas/YourResponseSchema"
+   ```
+
+2. **Define schemas in components section**:
+   ```yaml
+   components:
+     schemas:
+       YourRequestSchema:
+         type: object
+         required: [field1]
+         properties:
+           field1:
+             type: string
+   ```
+
+3. **Generate code**: Run `make docs` to generate models and server stubs
+
+4. **Implement the handler** in `internal/api/routes/yourfeature/`:
+   - Use generated request/response types from `internal/api/openapi/client.gen.go`
+   - Handle business logic
+   - Return appropriate status codes
+
+5. **Register the route** in `internal/api/api.go`:
+   ```go
+   r.Post("/your-endpoint", yourfeature.HandleYourEndpoint)
+   ```
+
+6. **Add database queries** if needed:
+   - Update `internal/sql/query.sql`
+   - Run `make sqlc` to generate Go code
+
+7. **Test the endpoint**: The oapi-codegen middleware will automatically validate requests
 
 ### Database Schema Changes
 
@@ -166,17 +243,38 @@ Based on git history:
 
 ### Adding Validation
 
-1. Add validator tags to struct fields
-2. Use validator instance in handlers
-3. Return appropriate error responses
+Validation is handled automatically by the OpenAPI middleware:
+
+1. **Schema-level validation**: Define constraints in `docs/api.yaml`:
+   ```yaml
+   properties:
+     age:
+       type: integer
+       minimum: 0
+       maximum: 150
+     email:
+       type: string
+       format: email
+   ```
+
+2. **Required fields**: Mark fields as required in the schema:
+   ```yaml
+   required: [field1, field2]
+   ```
+
+3. **Request validation**: The `oapimw.OapiRequestValidatorWithOptions` middleware automatically validates all requests against the OpenAPI spec
+
+4. **Custom validation**: For business logic validation beyond OpenAPI constraints, implement checks in your handlers
 
 ## Notes for Claude Code
 
 - Always read existing code before making changes
 - Use `make build` to verify changes compile and pass linting
-- Update Swagger docs when modifying API endpoints
+- **IMPORTANT**: Update `docs/api.yaml` FIRST when adding/modifying API endpoints
+- Run `make docs` after OpenAPI spec changes to regenerate code
 - Run `make sqlc` after SQL changes
 - Keep security in mind (especially auth, password handling, SQL)
 - Follow existing patterns in the codebase
 - Don't add unnecessary comments or documentation
 - Test changes by running `make run` and checking the API
+- The OpenAPI spec is the source of truth for the API - always keep it in sync with implementation
