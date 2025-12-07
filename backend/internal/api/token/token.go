@@ -27,22 +27,26 @@ var (
 )
 
 const (
+	AuthorizationHeader = "Authorization"
+)
+
+const (
 	accessTokenBytes     = 32
-	accessTokenLifetime  = 60 * 30           // 30 minutes
+	AccessTokenLifetime  = 60 * 30           // 30 minutes
 	refreshTokenLifetime = 60 * 60 * 24 * 14 // 14 days
 )
 
 var ErrMalformedRefreshToken = errors.New("malformed refresh token")
 
 func AccessTokenName(env *env.Env) string {
-	if env.Get("ENV") == "production" {
+	if env.IsProd() {
 		return "__Host-Http-access"
 	}
 	return "access"
 }
 
 func RefreshTokenName(env *env.Env) string {
-	if env.Get("ENV") == "production" {
+	if env.IsProd() {
 		return "__Host-Http-refresh"
 	}
 	return "refresh"
@@ -82,13 +86,9 @@ func NewAccessTokenCookie(token string, env *env.Env) *http.Cookie {
 		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:   accessTokenLifetime,
+		MaxAge:   AccessTokenLifetime,
+		Secure:   env.IsProd(),
 		SameSite: http.SameSiteLaxMode,
-		Secure:   false,
-	}
-
-	if env.IsProd() {
-		cookie.Secure = true
 	}
 
 	return cookie
@@ -101,12 +101,8 @@ func NewRefreshTokenCookie(token string, env *env.Env) *http.Cookie {
 		Path:     "/",
 		HttpOnly: true,
 		MaxAge:   refreshTokenLifetime,
+		Secure:   env.IsProd(),
 		SameSite: http.SameSiteLaxMode,
-		Secure:   false,
-	}
-
-	if env.IsProd() {
-		cookie.Secure = true
 	}
 
 	return cookie
@@ -146,4 +142,13 @@ func UserIDFromCtx(ctx context.Context) (int64, error) {
 		return 0, errors.New("invalid user id type")
 	}
 	return userID, nil
+}
+
+func ParseBearerToken(value string) (string, error) {
+	token, found := strings.CutPrefix(value, "Bearer ")
+	if !found {
+		return "", errors.New("token should be in format \"Bearer ...\"")
+	}
+
+	return token, nil
 }

@@ -102,79 +102,14 @@ func AddCors(next http.Handler) http.Handler {
 	})
 }
 
-// AuthorizeRequest creates a middleware that validates JWT tokens and checks user roles.
-func AuthorizeRequest(requiredRole role.Role) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			env := env.EnvFromCtx(r.Context())
-			requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(r.Context()))
-
-			accessToken, err := r.Cookie(token.AccessTokenName(env))
-			if err != nil {
-				env.Logger.ErrorContext(r.Context(), "unable to get access token", slog.Any("error", err))
-				_ = apiError.EncodeError(w, apiError.InvalidAccessToken, "invalid access token", requestID)
-				return
-			}
-
-			secret := env.Get("APP_SECRET")
-			if secret == "" {
-				env.Logger.ErrorContext(r.Context(), "environment variable APP_SECRET not set")
-				_ = apiError.EncodeInternalError(w, requestID)
-				return
-			}
-			secretVersion := env.Get("APP_SECRET_VERSION")
-			if secretVersion == "" {
-				secretVersion = wcJwt.DefaultKID
-			}
-
-			accessJwt, err := wcJwt.ValidateJWT(accessToken.Value, secretVersion, []byte(secret))
-			if errors.Is(err, jwt.ErrTokenExpired) {
-				env.Logger.ErrorContext(r.Context(), "access token expired", slog.Any("err", err))
-				_ = apiError.EncodeError(w, apiError.ExpiredAccessToken, "access token expired", requestID)
-				return
-			} else if err != nil {
-				env.Logger.ErrorContext(r.Context(), "invalid access token", slog.Any("error", err))
-				_ = apiError.EncodeError(w, apiError.InvalidAccessToken, "invalid access token", requestID)
-				return
-			}
-
-			sub, err := accessJwt.Claims.GetSubject()
-			if err != nil {
-				env.Logger.ErrorContext(r.Context(), "failed to extract subject from jwt", slog.Any("error", err))
-				_ = apiError.EncodeInternalError(w, requestID)
-				return
-			}
-			userID, err := strconv.ParseInt(sub, 10, 64)
-			if err != nil {
-				env.Logger.ErrorContext(r.Context(), "failed to parse user id", slog.Any("error", err))
-				_ = apiError.EncodeInternalError(w, requestID)
-				return
-			}
-			r = r.WithContext(log.AppendCtx(r.Context(), slog.Int64("user-id", userID)))
-			r = r.WithContext(token.UserIDWithCtx(r.Context(), userID))
-			env.Logger.DebugContext(r.Context(), "validating user role")
-
-			roleClaim := accessJwt.Claims.(jwt.MapClaims)["role"].(string)
-			userRole := role.ToRole(roleClaim)
-			if userRole < requiredRole {
-				_ = apiError.EncodeError(w, apiError.InsufficientPermissions, "insufficient permissions", requestID)
-				return
-			}
-			r = r.WithContext(token.AccessTokenWithCtx(r.Context(), accessJwt))
-
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
 // OAPIAuthFunc is the authentication function for oapi-codegen middleware.
 func OAPIAuthFunc(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 	// Extract security scheme name to determine required role
 	var requiredRole role.Role
 	switch input.SecuritySchemeName {
-	case "AccessTokenAdmin":
+	case "AccessTokenUserBearer":
 		requiredRole = role.RoleAdmin
-	case "AccessTokenUser":
+	case "AccessTokenAdminBearer":
 		requiredRole = role.RoleUser
 	default:
 		// No authentication required
@@ -184,15 +119,24 @@ func OAPIAuthFunc(ctx context.Context, input *openapi3filter.AuthenticationInput
 	env := env.EnvFromCtx(ctx)
 	requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(ctx))
 
-	accessToken, err := input.RequestValidationInput.Request.Cookie(token.AccessTokenName(env))
+	var accessToken string
+	cookie, err := input.RequestValidationInput.Request.Cookie(token.AccessTokenName(env))
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get access token", slog.Any("error", err))
-		return &apiError.Error{
-			Code:    apiError.InvalidAccessToken,
-			Status:  apiError.InvalidAccessToken.StatusCode(),
-			Message: "invalid access token",
-			ErrorID: requestID,
+		env.Logger.DebugContext(ctx, "failed to get access token, searching for Bearer token next",
+			slog.Any("error", err))
+		authHeader := input.RequestValidationInput.Request.Header.Get(token.AuthorizationHeader)
+		accessToken, err = token.ParseBearerToken(authHeader)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to parse authorization header", slog.Any("error", err))
+			return &apiError.Error{
+				Code:    apiError.InvalidCredentials,
+				Status:  apiError.InvalidAccessToken.StatusCode(),
+				Message: "access token invalid or missing",
+				ErrorID: requestID,
+			}
 		}
+	} else {
+		accessToken = cookie.Value
 	}
 
 	secret := env.Get("APP_SECRET")
@@ -211,7 +155,7 @@ func OAPIAuthFunc(ctx context.Context, input *openapi3filter.AuthenticationInput
 		secretVersion = wcJwt.DefaultKID
 	}
 
-	accessJwt, err := wcJwt.ValidateJWT(accessToken.Value, secretVersion, []byte(secret))
+	accessJwt, err := wcJwt.ValidateJWT(accessToken, secretVersion, []byte(secret))
 	if errors.Is(err, jwt.ErrTokenExpired) {
 		env.Logger.ErrorContext(ctx, "jwt expired", slog.Any("error", err))
 		return &apiError.Error{
@@ -293,7 +237,7 @@ func OAPIErrorHandler(
 	if errors.As(err, &errBody) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(opts.StatusCode)
-		_ = json.NewEncoder(w).Encode(errBody)
+		_ = json.NewEncoder(w).Encode(errBody) //nolint:errchkjson
 		return
 	}
 

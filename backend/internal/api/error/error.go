@@ -18,7 +18,7 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
-	data, _ := json.Marshal(e)
+	data, _ := json.Marshal(e) //nolint:errchkjson
 	return string(data)
 }
 

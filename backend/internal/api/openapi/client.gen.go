@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	AccessTokenAdminScopes = "AccessTokenAdmin.Scopes"
+	AccessTokenAdminBearerScopes = "AccessTokenAdminBearer.Scopes"
 )
 
 // CreateAdminRequest defines model for CreateAdminRequest.
@@ -58,11 +58,30 @@ type Error struct {
 	Status  int    `json:"status"`
 }
 
+// LoginResponse defines model for LoginResponse.
+type LoginResponse struct {
+	// AccessToken JWT access token to use in the Authorization: Bearer header.
+	AccessToken string `json:"access_token"`
+
+	// ExpiresIn Access token lifetime in seconds.
+	ExpiresIn *int64  `json:"expires_in,omitempty"`
+	TokenType *string `json:"token_type,omitempty"`
+}
+
+// UserLoginRequest defines model for UserLoginRequest.
+type UserLoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 // PostApiAdminJSONRequestBody defines body for PostApiAdmin for application/json ContentType.
 type PostApiAdminJSONRequestBody = CreateAdminRequest
 
 // PostApiAdminUserJSONRequestBody defines body for PostApiAdminUser for application/json ContentType.
 type PostApiAdminUserJSONRequestBody = CreateUserRequest
+
+// PostApiLoginJSONRequestBody defines body for PostApiLogin for application/json ContentType.
+type PostApiLoginJSONRequestBody = UserLoginRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -147,6 +166,11 @@ type ClientInterface interface {
 
 	PostApiAdminUser(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostApiLoginWithBody request with any body
+	PostApiLoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiLogin(ctx context.Context, body PostApiLoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetApiOpenapiYaml request
 	GetApiOpenapiYaml(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -192,6 +216,30 @@ func (c *Client) PostApiAdminUserWithBody(ctx context.Context, contentType strin
 
 func (c *Client) PostApiAdminUser(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiAdminUserRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiLoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiLoginRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiLogin(ctx context.Context, body PostApiLoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiLoginRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -287,6 +335,46 @@ func NewPostApiAdminUserRequestWithBody(server string, contentType string, body 
 	}
 
 	operationPath := fmt.Sprintf("/api/admin/user")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiLoginRequest calls the generic PostApiLogin builder with application/json body
+func NewPostApiLoginRequest(server string, body PostApiLoginJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiLoginRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiLoginRequestWithBody generates requests for PostApiLogin with any type of body
+func NewPostApiLoginRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/login")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -413,6 +501,11 @@ type ClientWithResponsesInterface interface {
 
 	PostApiAdminUserWithResponse(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error)
 
+	// PostApiLoginWithBodyWithResponse request with any body
+	PostApiLoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiLoginResponse, error)
+
+	PostApiLoginWithResponse(ctx context.Context, body PostApiLoginJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiLoginResponse, error)
+
 	// GetApiOpenapiYamlWithResponse request
 	GetApiOpenapiYamlWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiOpenapiYamlResponse, error)
 
@@ -470,10 +563,35 @@ func (r PostApiAdminUserResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiLoginResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *LoginResponse
+	JSON401      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiLoginResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiLoginResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetApiOpenapiYamlResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	YAML200      *string
+	JSON500      *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -546,6 +664,23 @@ func (c *ClientWithResponses) PostApiAdminUserWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParsePostApiAdminUserResponse(rsp)
+}
+
+// PostApiLoginWithBodyWithResponse request with arbitrary body returning *PostApiLoginResponse
+func (c *ClientWithResponses) PostApiLoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiLoginResponse, error) {
+	rsp, err := c.PostApiLoginWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiLoginResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiLoginWithResponse(ctx context.Context, body PostApiLoginJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiLoginResponse, error) {
+	rsp, err := c.PostApiLogin(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiLoginResponse(rsp)
 }
 
 // GetApiOpenapiYamlWithResponse request returning *GetApiOpenapiYamlResponse
@@ -660,6 +795,46 @@ func ParsePostApiAdminUserResponse(rsp *http.Response) (*PostApiAdminUserRespons
 	return response, nil
 }
 
+// ParsePostApiLoginResponse parses an HTTP response from a PostApiLoginWithResponse call
+func ParsePostApiLoginResponse(rsp *http.Response) (*PostApiLoginResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiLoginResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LoginResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetApiOpenapiYamlResponse parses an HTTP response from a GetApiOpenapiYamlWithResponse call
 func ParseGetApiOpenapiYamlResponse(rsp *http.Response) (*GetApiOpenapiYamlResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -674,6 +849,13 @@ func ParseGetApiOpenapiYamlResponse(rsp *http.Response) (*GetApiOpenapiYamlRespo
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "yaml") && rsp.StatusCode == 200:
 		var dest string
 		if err := yaml.Unmarshal(bodyBytes, &dest); err != nil {
@@ -720,6 +902,9 @@ type ServerInterface interface {
 	// Create a user.
 	// (POST /api/admin/user)
 	PostApiAdminUser(w http.ResponseWriter, r *http.Request)
+	// User login.
+	// (POST /api/login)
+	PostApiLogin(w http.ResponseWriter, r *http.Request)
 	// Get OpenAPI specification.
 	// (GET /api/openapi.yaml)
 	GetApiOpenapiYaml(w http.ResponseWriter, r *http.Request)
@@ -741,6 +926,12 @@ func (_ Unimplemented) PostApiAdmin(w http.ResponseWriter, r *http.Request) {
 // Create a user.
 // (POST /api/admin/user)
 func (_ Unimplemented) PostApiAdminUser(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// User login.
+// (POST /api/login)
+func (_ Unimplemented) PostApiLogin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -770,7 +961,7 @@ func (siw *ServerInterfaceWrapper) PostApiAdmin(w http.ResponseWriter, r *http.R
 
 	ctx := r.Context()
 
-	ctx = context.WithValue(ctx, AccessTokenAdminScopes, []string{})
+	ctx = context.WithValue(ctx, AccessTokenAdminBearerScopes, []string{})
 
 	r = r.WithContext(ctx)
 
@@ -790,12 +981,26 @@ func (siw *ServerInterfaceWrapper) PostApiAdminUser(w http.ResponseWriter, r *ht
 
 	ctx := r.Context()
 
-	ctx = context.WithValue(ctx, AccessTokenAdminScopes, []string{})
+	ctx = context.WithValue(ctx, AccessTokenAdminBearerScopes, []string{})
 
 	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostApiAdminUser(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostApiLogin operation middleware
+func (siw *ServerInterfaceWrapper) PostApiLogin(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostApiLogin(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -953,6 +1158,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/api/admin/user", wrapper.PostApiAdminUser)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/login", wrapper.PostApiLogin)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/openapi.yaml", wrapper.GetApiOpenapiYaml)
 	})
 	r.Group(func(r chi.Router) {
@@ -1050,6 +1258,49 @@ func (response PostApiAdminUser500JSONResponse) VisitPostApiAdminUserResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PostApiLoginRequestObject struct {
+	Body *PostApiLoginJSONRequestBody
+}
+
+type PostApiLoginResponseObject interface {
+	VisitPostApiLoginResponse(w http.ResponseWriter) error
+}
+
+type PostApiLogin200ResponseHeaders struct {
+	SetCookie string
+}
+
+type PostApiLogin200JSONResponse struct {
+	Body    LoginResponse
+	Headers PostApiLogin200ResponseHeaders
+}
+
+func (response PostApiLogin200JSONResponse) VisitPostApiLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Set-Cookie", fmt.Sprint(response.Headers.SetCookie))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type PostApiLogin401JSONResponse Error
+
+func (response PostApiLogin401JSONResponse) VisitPostApiLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiLogin500JSONResponse Error
+
+func (response PostApiLogin500JSONResponse) VisitPostApiLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetApiOpenapiYamlRequestObject struct {
 }
 
@@ -1074,6 +1325,15 @@ func (response GetApiOpenapiYaml200ApplicationxYamlResponse) VisitGetApiOpenapiY
 	}
 	_, err := io.Copy(w, response.Body)
 	return err
+}
+
+type GetApiOpenapiYaml500JSONResponse Error
+
+func (response GetApiOpenapiYaml500JSONResponse) VisitGetApiOpenapiYamlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type GetApiPingRequestObject struct {
@@ -1108,6 +1368,9 @@ type StrictServerInterface interface {
 	// Create a user.
 	// (POST /api/admin/user)
 	PostApiAdminUser(ctx context.Context, request PostApiAdminUserRequestObject) (PostApiAdminUserResponseObject, error)
+	// User login.
+	// (POST /api/login)
+	PostApiLogin(ctx context.Context, request PostApiLoginRequestObject) (PostApiLoginResponseObject, error)
 	// Get OpenAPI specification.
 	// (GET /api/openapi.yaml)
 	GetApiOpenapiYaml(ctx context.Context, request GetApiOpenapiYamlRequestObject) (GetApiOpenapiYamlResponseObject, error)
@@ -1200,6 +1463,37 @@ func (sh *strictHandler) PostApiAdminUser(w http.ResponseWriter, r *http.Request
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiAdminUserResponseObject); ok {
 		if err := validResponse.VisitPostApiAdminUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostApiLogin operation middleware
+func (sh *strictHandler) PostApiLogin(w http.ResponseWriter, r *http.Request) {
+	var request PostApiLoginRequestObject
+
+	var body PostApiLoginJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PostApiLogin(ctx, request.(PostApiLoginRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostApiLogin")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PostApiLoginResponseObject); ok {
+		if err := validResponse.VisitPostApiLoginResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

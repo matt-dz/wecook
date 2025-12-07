@@ -37,7 +37,12 @@ func (Server) PostApiAdmin(ctx context.Context, request PostApiAdminRequestObjec
 	hash, err := argon2id.EncodeHash(request.Body.Password, argon2id.DefaultParams)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "Failed to hash password", slog.Any("error", err))
-		return nil, err
+		return PostApiAdmin500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
 	}
 
 	// Create admin
@@ -59,7 +64,12 @@ func (Server) PostApiAdmin(ctx context.Context, request PostApiAdminRequestObjec
 		}, nil
 	} else if err != nil {
 		env.Logger.ErrorContext(ctx, "Failed to create admin", slog.Any("error", err))
-		return nil, err
+		return PostApiAdmin500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
 	}
 
 	return PostApiAdmin204JSONResponse{}, nil
@@ -88,7 +98,12 @@ func (Server) PostApiAdminUser(ctx context.Context,
 	passwordHash, err := argon2id.EncodeHash(request.Body.Password, argon2id.DefaultParams)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "Failed to hash password", slog.Any("error", err))
-		return nil, err
+		return PostApiAdminUser500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
 	}
 
 	// Create admin
@@ -100,8 +115,8 @@ func (Server) PostApiAdminUser(ctx context.Context,
 		FirstName:    request.Body.FirstName,
 		LastName:     request.Body.LastName,
 	})
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ColumnName == "email" {
-		env.Logger.ErrorContext(ctx, "Admin with email already exists", slog.Any("error", err))
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == "users_unique_email" {
+		env.Logger.ErrorContext(ctx, "email already in use", slog.Any("error", err))
 		return PostApiAdminUser422JSONResponse{
 			Code:    apiError.EmailConflict.String(),
 			Status:  apiError.EmailConflict.StatusCode(),
@@ -110,7 +125,12 @@ func (Server) PostApiAdminUser(ctx context.Context,
 		}, nil
 	} else if err != nil {
 		env.Logger.ErrorContext(ctx, "Failed to create admin", slog.Any("error", err))
-		return nil, err
+		return PostApiAdminUser500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
 	}
 
 	return PostApiAdminUser204JSONResponse{}, nil
