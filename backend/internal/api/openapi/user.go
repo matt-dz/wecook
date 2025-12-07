@@ -39,6 +39,16 @@ func (r loginSuccessResponse) VisitPostApiLoginResponse(w http.ResponseWriter) e
 	return encoder.Encode(r.body)
 }
 
+func (r loginSuccessResponse) VisitPostApiAuthRefreshResponse(w http.ResponseWriter) error {
+	http.SetCookie(w, r.accessCookie)
+	http.SetCookie(w, r.refreshCookie)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	encoder := json.NewEncoder(w)
+	return encoder.Encode(r.body)
+}
+
 func (Server) PostApiLogin(ctx context.Context, request PostApiLoginRequestObject) (PostApiLoginResponseObject, error) {
 	env := env.EnvFromCtx(ctx)
 	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)

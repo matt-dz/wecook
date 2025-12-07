@@ -63,7 +63,7 @@ dbmock:
 	@echo "🤖 Generating mock..."
 	mockgen -source=internal/database/querier.go \
 		-destination internal/dbmock/dbmock.go \
-		-package dbmoc
+		-package dbmock
 
 .PHONY: test
 test: dbmock

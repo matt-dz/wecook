@@ -1,0 +1,356 @@
+package client
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/mock/gomock"
+
+	apiError "github.com/matt-dz/wecook/internal/api/error"
+	"github.com/matt-dz/wecook/internal/api/requestid"
+	"github.com/matt-dz/wecook/internal/api/token"
+	"github.com/matt-dz/wecook/internal/argon2id"
+	"github.com/matt-dz/wecook/internal/database"
+	"github.com/matt-dz/wecook/internal/dbmock"
+	"github.com/matt-dz/wecook/internal/env"
+	"github.com/matt-dz/wecook/internal/log"
+)
+
+func TestPostApiAuthRefresh(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := dbmock.NewMockQuerier(ctrl)
+	server := NewServer()
+
+	userID := int64(123)
+	validRefreshToken, err := token.NewRefreshToken(userID)
+	if err != nil {
+		t.Fatalf("failed to create test refresh token: %v", err)
+	}
+
+	validRefreshTokenHash, err := argon2id.EncodeHash(validRefreshToken, argon2id.DefaultParams)
+	if err != nil {
+		t.Fatalf("failed to hash test refresh token: %v", err)
+	}
+
+	newRefreshToken, err := token.NewRefreshToken(userID)
+	if err != nil {
+		t.Fatalf("failed to create new test refresh token: %v", err)
+	}
+
+	tests := []struct {
+		name       string
+		request    PostApiAuthRefreshRequestObject
+		setup      func()
+		wantStatus int
+		wantCode   string
+		wantError  bool
+	}{
+		{
+			name: "successful token refresh via body",
+			request: PostApiAuthRefreshRequestObject{
+				Body: &PostApiAuthRefreshJSONRequestBody{
+					RefreshToken: &validRefreshToken,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRefreshTokenHash(gomock.Any(), userID).
+					Return(database.GetUserRefreshTokenHashRow{
+						RefreshTokenHash: pgtype.Text{
+							String: validRefreshTokenHash,
+							Valid:  true,
+						},
+						RefreshTokenExpiresAt: pgtype.Timestamptz{
+							Time:  time.Now().Add(24 * time.Hour),
+							Valid: true,
+						},
+					}, nil)
+
+				mockDB.EXPECT().
+					UpdateUserRefreshTokenHash(gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				mockDB.EXPECT().
+					GetUserRole(gomock.Any(), userID).
+					Return(database.RoleUser, nil)
+			},
+			wantStatus: 200,
+			wantCode:   "",
+			wantError:  false,
+		},
+		{
+			name: "successful token refresh via query param",
+			request: PostApiAuthRefreshRequestObject{
+				Params: PostApiAuthRefreshParams{
+					Refresh: &validRefreshToken,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRefreshTokenHash(gomock.Any(), userID).
+					Return(database.GetUserRefreshTokenHashRow{
+						RefreshTokenHash: pgtype.Text{
+							String: validRefreshTokenHash,
+							Valid:  true,
+						},
+						RefreshTokenExpiresAt: pgtype.Timestamptz{
+							Time:  time.Now().Add(24 * time.Hour),
+							Valid: true,
+						},
+					}, nil)
+
+				mockDB.EXPECT().
+					UpdateUserRefreshTokenHash(gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				mockDB.EXPECT().
+					GetUserRole(gomock.Any(), userID).
+					Return(database.RoleUser, nil)
+			},
+			wantStatus: 200,
+			wantCode:   "",
+			wantError:  false,
+		},
+		{
+			name: "missing refresh token",
+			request: PostApiAuthRefreshRequestObject{
+				Body: &PostApiAuthRefreshJSONRequestBody{},
+			},
+			setup:      func() {},
+			wantStatus: 401,
+			wantCode:   apiError.InvalidRefreshToken.String(),
+			wantError:  false,
+		},
+		{
+			name: "malformed refresh token - no dot separator",
+			request: PostApiAuthRefreshRequestObject{
+				Body: &PostApiAuthRefreshJSONRequestBody{
+					RefreshToken: stringPtr("invalidtoken"),
+				},
+			},
+			setup:      func() {},
+			wantStatus: 401,
+			wantCode:   apiError.InvalidRefreshToken.String(),
+			wantError:  false,
+		},
+		{
+			name: "malformed refresh token - invalid user ID",
+			request: PostApiAuthRefreshRequestObject{
+				Body: &PostApiAuthRefreshJSONRequestBody{
+					RefreshToken: stringPtr("notanumber.randomdata"),
+				},
+			},
+			setup:      func() {},
+			wantStatus: 401,
+			wantCode:   apiError.InvalidRefreshToken.String(),
+			wantError:  false,
+		},
+		{
+			name: "user not found",
+			request: PostApiAuthRefreshRequestObject{
+				Body: &PostApiAuthRefreshJSONRequestBody{
+					RefreshToken: &validRefreshToken,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRefreshTokenHash(gomock.Any(), userID).
+					Return(database.GetUserRefreshTokenHashRow{}, pgx.ErrNoRows)
+			},
+			wantStatus: 401,
+			wantCode:   apiError.InvalidRefreshToken.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error on get refresh token",
+			request: PostApiAuthRefreshRequestObject{
+				Body: &PostApiAuthRefreshJSONRequestBody{
+					RefreshToken: &validRefreshToken,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRefreshTokenHash(gomock.Any(), userID).
+					Return(database.GetUserRefreshTokenHashRow{}, errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "refresh token mismatch",
+			request: PostApiAuthRefreshRequestObject{
+				Body: &PostApiAuthRefreshJSONRequestBody{
+					RefreshToken: &newRefreshToken,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRefreshTokenHash(gomock.Any(), userID).
+					Return(database.GetUserRefreshTokenHashRow{
+						RefreshTokenHash: pgtype.Text{
+							String: validRefreshTokenHash,
+							Valid:  true,
+						},
+						RefreshTokenExpiresAt: pgtype.Timestamptz{
+							Time:  time.Now().Add(24 * time.Hour),
+							Valid: true,
+						},
+					}, nil)
+			},
+			wantStatus: 401,
+			wantCode:   apiError.InvalidRefreshToken.String(),
+			wantError:  false,
+		},
+		{
+			name: "expired refresh token",
+			request: PostApiAuthRefreshRequestObject{
+				Body: &PostApiAuthRefreshJSONRequestBody{
+					RefreshToken: &validRefreshToken,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRefreshTokenHash(gomock.Any(), userID).
+					Return(database.GetUserRefreshTokenHashRow{
+						RefreshTokenHash: pgtype.Text{
+							String: validRefreshTokenHash,
+							Valid:  true,
+						},
+						RefreshTokenExpiresAt: pgtype.Timestamptz{
+							Time:  time.Now().Add(-24 * time.Hour),
+							Valid: true,
+						},
+					}, nil)
+			},
+			wantStatus: 401,
+			wantCode:   apiError.InvalidRefreshToken.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error on update refresh token",
+			request: PostApiAuthRefreshRequestObject{
+				Body: &PostApiAuthRefreshJSONRequestBody{
+					RefreshToken: &validRefreshToken,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRefreshTokenHash(gomock.Any(), userID).
+					Return(database.GetUserRefreshTokenHashRow{
+						RefreshTokenHash: pgtype.Text{
+							String: validRefreshTokenHash,
+							Valid:  true,
+						},
+						RefreshTokenExpiresAt: pgtype.Timestamptz{
+							Time:  time.Now().Add(24 * time.Hour),
+							Valid: true,
+						},
+					}, nil)
+
+				mockDB.EXPECT().
+					UpdateUserRefreshTokenHash(gomock.Any(), gomock.Any()).
+					Return(errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error on get user role",
+			request: PostApiAuthRefreshRequestObject{
+				Body: &PostApiAuthRefreshJSONRequestBody{
+					RefreshToken: &validRefreshToken,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRefreshTokenHash(gomock.Any(), userID).
+					Return(database.GetUserRefreshTokenHashRow{
+						RefreshTokenHash: pgtype.Text{
+							String: validRefreshTokenHash,
+							Valid:  true,
+						},
+						RefreshTokenExpiresAt: pgtype.Timestamptz{
+							Time:  time.Now().Add(24 * time.Hour),
+							Valid: true,
+						},
+					}, nil)
+
+				mockDB.EXPECT().
+					UpdateUserRefreshTokenHash(gomock.Any(), gomock.Any()).
+					Return(nil)
+
+				mockDB.EXPECT().
+					GetUserRole(gomock.Any(), userID).
+					Return(database.Role(""), errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+
+			ctx := context.Background()
+			ctx = requestid.InjectRequestID(ctx, 12345)
+			ctx = env.WithCtx(ctx, &env.Env{
+				Logger: log.NullLogger(),
+				Database: &database.Database{
+					Querier: mockDB,
+				},
+			})
+
+			resp, err := server.PostApiAuthRefresh(ctx, tt.request)
+			if (err != nil) != tt.wantError {
+				t.Errorf("PostApiAuthRefresh() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			switch v := resp.(type) {
+			case loginSuccessResponse:
+				if tt.wantStatus != 200 {
+					t.Errorf("expected status %d, got 200", tt.wantStatus)
+				}
+				if v.body.AccessToken == "" {
+					t.Error("expected access token, got empty string")
+				}
+				if v.accessCookie == nil {
+					t.Error("expected access cookie, got nil")
+				}
+				if v.refreshCookie == nil {
+					t.Error("expected refresh cookie, got nil")
+				}
+			case PostApiAuthRefresh401JSONResponse:
+				if tt.wantStatus != 401 {
+					t.Errorf("expected status %d, got 401", tt.wantStatus)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			case PostApiAuthRefresh500JSONResponse:
+				if tt.wantStatus != 500 {
+					t.Errorf("expected status %d, got 500", tt.wantStatus)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			default:
+				t.Errorf("unexpected response type: %T", v)
+			}
+		})
+	}
+}
+
+func stringPtr(s string) *string {
+	return &s
+}

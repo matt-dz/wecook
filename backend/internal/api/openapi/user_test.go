@@ -12,7 +12,7 @@ import (
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/argon2id"
 	"github.com/matt-dz/wecook/internal/database"
-	dbmoc "github.com/matt-dz/wecook/internal/dbmock"
+	"github.com/matt-dz/wecook/internal/dbmock"
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/log"
 )
@@ -21,7 +21,7 @@ func TestPostApiLogin(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmoc.NewMockQuerier(ctrl)
+	mockDB := dbmock.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	testPassword := "TestP@ssw0rd123!"
@@ -229,7 +229,7 @@ func TestPostApiLogin_AdminRole(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmoc.NewMockQuerier(ctrl)
+	mockDB := dbmock.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	testPassword := "AdminP@ssw0rd123!"
