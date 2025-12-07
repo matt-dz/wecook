@@ -235,6 +235,7 @@ paths:
       summary: User login.
       tags:
         - User
+        - Auth
       security: []
       requestBody:
         description: User Login Request
