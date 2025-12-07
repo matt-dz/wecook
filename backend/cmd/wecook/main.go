@@ -109,7 +109,7 @@ func setupAdmin(env *env.Env, ctx context.Context) error {
 }
 
 func main() {
-	env := env.New(log.New(nil), nil, http.New(), nil)
+	env := env.New(log.New(nil), nil, http.New(), nil, nil)
 	env.HTTP.Logger = env.Logger
 
 	fileserverVolume := env.Get("FILESERVER_VOLUME")

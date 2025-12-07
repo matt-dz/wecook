@@ -21,9 +21,13 @@ type Env struct {
 	Database   *database.Database
 	HTTP       *http.HTTP
 	FileServer *fileserver.FileServer
+	vars       map[string]string
 }
 
 func (e *Env) Get(key string) string {
+	if v, found := e.vars[key]; found {
+		return v
+	}
 	return os.Getenv(key)
 }
 
@@ -33,6 +37,7 @@ func (e *Env) IsProd() bool {
 
 func New(logger *slog.Logger, database *database.Database,
 	http *http.HTTP, fileserver *fileserver.FileServer,
+	vars map[string]string,
 ) *Env {
 	if logger == nil {
 		logger = log.NullLogger()
@@ -43,6 +48,7 @@ func New(logger *slog.Logger, database *database.Database,
 		Database:   database,
 		HTTP:       http,
 		FileServer: fileserver,
+		vars:       vars,
 	}
 }
 
@@ -52,6 +58,7 @@ func Null() *Env {
 		Database:   nil,
 		HTTP:       nil,
 		FileServer: nil,
+		vars:       make(map[string]string),
 	}
 }
 
