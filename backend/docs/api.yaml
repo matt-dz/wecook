@@ -303,46 +303,49 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  # /api/recipes/{recipeID}:
-  #   get:
-  #     summary: Get a recipe and its owner information
-  #     tags:
-  #       - Recipes
-  #     description: >
-  #       Retrieves a recipe by ID, including recipe details and the owner's basic information.
-  #     parameters:
-  #       - name: recipeID
-  #         in: path
-  #         required: true
-  #         description: ID of the recipe to retrieve
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Recipe found
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/GetRecipeResponse"
-  #       "400":
-  #         description: Bad request (invalid recipe ID)
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "404":
-  #         description: Recipe not found
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
+  /api/recipes/{recipeID}:
+    get:
+      summary: Get a public recipe and its owner's information
+      tags:
+        - Recipes
+      description: >
+        Retrieves a recipe by ID, including recipe details and the owner's basic information.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe to retrieve
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      security: []
+      responses:
+        "200":
+          description: Recipe found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRecipeResponse"
+        "400":
+          description: Bad request (invalid recipe ID)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   #   delete:
   #     summary: Delete a recipe
   #     tags:
@@ -1114,46 +1117,73 @@ components:
       properties:
         cook_time_amount:
           type: integer
+          format: int32
+          minimum: 0
         cook_time_unit:
-          type: string
+          $ref: "#/components/schemas/TimeUnit"
         created_at:
           type: string
+          format: date-time
         description:
           type: string
         id:
           type: integer
+          format: int64
+          minimum: 0
         image_url:
           type: string
         prep_time_amount:
           type: integer
+          format: int32
+          minimum: 0
         prep_time_unit:
-          type: string
+          $ref: "#/components/schemas/TimeUnit"
         published:
           type: boolean
         servings:
           type: number
+          minimum: 0
+          exclusiveMinimum: true
         title:
           type: string
         updated_at:
           type: string
+          format: date-time
         user_id:
           type: integer
+          format: int64
+          minimum: 0
+      required:
+        - id
+        - user_id
+        - published
+        - title
+        - created_at
+        - updated_at
 
     RecipeOwner:
       type: object
       properties:
         first_name:
           type: string
-        id:
-          type: integer
         last_name:
           type: string
+        id:
+          type: integer
+          format: int64
+          minimum: 0
+      required:
+        - first_name
+        - last_name
+        - id
 
     RecipeIngredient:
       type: object
       properties:
         id:
           type: integer
+          format: int64
+          minimum: 0
         image_url:
           type: string
         name:
@@ -1162,26 +1192,37 @@ components:
           type: number
         recipe_id:
           type: integer
+          format: int64
+          minimum: 0
         unit:
           type: string
+      required:
+        - id
+        - recipe_id
 
     RecipeStep:
       type: object
       properties:
-        created_at:
-          type: string
         id:
           type: integer
+          format: int64
+          minimum: 0
         image_url:
           type: string
         instruction:
           type: string
         recipe_id:
           type: integer
+          format: int64
+          minimum: 0
         step_number:
           type: integer
-        updated_at:
-          type: string
+          format: int32
+          minimum: 0
+      required:
+        - id
+        - recipe_id
+        - step_number
 
     RecipeAndOwner:
       type: object
@@ -1192,42 +1233,21 @@ components:
           $ref: "#/components/schemas/Recipe"
 
     RecipeWithIngredientsAndSteps:
-      type: object
-      properties:
-        cook_time_amount:
-          type: integer
-        cook_time_unit:
-          type: string
-        created_at:
-          type: string
-        description:
-          type: string
-        id:
-          type: integer
-        image_url:
-          type: string
-        ingredients:
-          type: array
-          items:
-            $ref: "#/components/schemas/RecipeIngredient"
-        prep_time_amount:
-          type: integer
-        prep_time_unit:
-          type: string
-        published:
-          type: boolean
-        servings:
-          type: number
-        steps:
-          type: array
-          items:
-            $ref: "#/components/schemas/RecipeStep"
-        title:
-          type: string
-        updated_at:
-          type: string
-        user_id:
-          type: integer
+      allOf:
+        - $ref: "#/components/schemas/Recipe"
+        - type: object
+          properties:
+            ingredients:
+              type: array
+              items:
+                $ref: "#/components/schemas/RecipeIngredient"
+            steps:
+              type: array
+              items:
+                $ref: "#/components/schemas/RecipeStep"
+          required:
+            - ingredients
+            - steps
 
     CreateAdminRequest:
       type: object
@@ -1279,6 +1299,9 @@ components:
           $ref: "#/components/schemas/RecipeOwner"
         recipe:
           $ref: "#/components/schemas/RecipeWithIngredientsAndSteps"
+      required:
+        - owner
+        - recipe
 
     CreateUserRequest:
       type: object

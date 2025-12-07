@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -24,6 +25,13 @@ import (
 const (
 	AccessTokenAdminBearerScopes = "AccessTokenAdminBearer.Scopes"
 	AccessTokenUserBearerScopes  = "AccessTokenUserBearer.Scopes"
+)
+
+// Defines values for TimeUnit.
+const (
+	Days    TimeUnit = "days"
+	Hours   TimeUnit = "hours"
+	Minutes TimeUnit = "minutes"
 )
 
 // CreateAdminRequest defines model for CreateAdminRequest.
@@ -66,6 +74,12 @@ type Error struct {
 	Status  int    `json:"status"`
 }
 
+// GetRecipeResponse defines model for GetRecipeResponse.
+type GetRecipeResponse struct {
+	Owner  RecipeOwner                   `json:"owner"`
+	Recipe RecipeWithIngredientsAndSteps `json:"recipe"`
+}
+
 // LoginResponse defines model for LoginResponse.
 type LoginResponse struct {
 	// AccessToken JWT access token to use in the Authorization: Bearer header.
@@ -76,11 +90,76 @@ type LoginResponse struct {
 	TokenType *string `json:"token_type,omitempty"`
 }
 
+// Recipe defines model for Recipe.
+type Recipe struct {
+	CookTimeAmount *int32    `json:"cook_time_amount,omitempty"`
+	CookTimeUnit   *TimeUnit `json:"cook_time_unit,omitempty"`
+	CreatedAt      time.Time `json:"created_at"`
+	Description    *string   `json:"description,omitempty"`
+	Id             int64     `json:"id"`
+	ImageUrl       *string   `json:"image_url,omitempty"`
+	PrepTimeAmount *int32    `json:"prep_time_amount,omitempty"`
+	PrepTimeUnit   *TimeUnit `json:"prep_time_unit,omitempty"`
+	Published      bool      `json:"published"`
+	Servings       *float32  `json:"servings,omitempty"`
+	Title          string    `json:"title"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	UserId         int64     `json:"user_id"`
+}
+
+// RecipeIngredient defines model for RecipeIngredient.
+type RecipeIngredient struct {
+	Id       int64    `json:"id"`
+	ImageUrl *string  `json:"image_url,omitempty"`
+	Name     *string  `json:"name,omitempty"`
+	Quantity *float32 `json:"quantity,omitempty"`
+	RecipeId int64    `json:"recipe_id"`
+	Unit     *string  `json:"unit,omitempty"`
+}
+
+// RecipeOwner defines model for RecipeOwner.
+type RecipeOwner struct {
+	FirstName string `json:"first_name"`
+	Id        int64  `json:"id"`
+	LastName  string `json:"last_name"`
+}
+
+// RecipeStep defines model for RecipeStep.
+type RecipeStep struct {
+	Id          int64   `json:"id"`
+	ImageUrl    *string `json:"image_url,omitempty"`
+	Instruction *string `json:"instruction,omitempty"`
+	RecipeId    int64   `json:"recipe_id"`
+	StepNumber  int32   `json:"step_number"`
+}
+
+// RecipeWithIngredientsAndSteps defines model for RecipeWithIngredientsAndSteps.
+type RecipeWithIngredientsAndSteps struct {
+	CookTimeAmount *int32             `json:"cook_time_amount,omitempty"`
+	CookTimeUnit   *TimeUnit          `json:"cook_time_unit,omitempty"`
+	CreatedAt      time.Time          `json:"created_at"`
+	Description    *string            `json:"description,omitempty"`
+	Id             int64              `json:"id"`
+	ImageUrl       *string            `json:"image_url,omitempty"`
+	Ingredients    []RecipeIngredient `json:"ingredients"`
+	PrepTimeAmount *int32             `json:"prep_time_amount,omitempty"`
+	PrepTimeUnit   *TimeUnit          `json:"prep_time_unit,omitempty"`
+	Published      bool               `json:"published"`
+	Servings       *float32           `json:"servings,omitempty"`
+	Steps          []RecipeStep       `json:"steps"`
+	Title          string             `json:"title"`
+	UpdatedAt      time.Time          `json:"updated_at"`
+	UserId         int64              `json:"user_id"`
+}
+
 // RefreshToken defines model for RefreshToken.
 type RefreshToken struct {
 	// RefreshToken Refresh token
 	RefreshToken *string `json:"refresh_token,omitempty"`
 }
+
+// TimeUnit defines model for TimeUnit.
+type TimeUnit string
 
 // UserLoginRequest defines model for UserLoginRequest.
 type UserLoginRequest struct {
@@ -216,6 +295,9 @@ type ClientInterface interface {
 
 	// PostApiRecipes request
 	PostApiRecipes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetApiRecipesRecipeID request
+	GetApiRecipesRecipeID(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) PostApiAdminWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -352,6 +434,18 @@ func (c *Client) GetApiPing(ctx context.Context, reqEditors ...RequestEditorFn) 
 
 func (c *Client) PostApiRecipes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiRecipesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetApiRecipesRecipeID(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiRecipesRecipeIDRequest(c.Server, recipeID)
 	if err != nil {
 		return nil, err
 	}
@@ -664,6 +758,40 @@ func NewPostApiRecipesRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewGetApiRecipesRecipeIDRequest generates requests for GetApiRecipesRecipeID
+func NewGetApiRecipesRecipeIDRequest(server string, recipeID int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "recipeID", runtime.ParamLocationPath, recipeID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/recipes/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -738,6 +866,9 @@ type ClientWithResponsesInterface interface {
 
 	// PostApiRecipesWithResponse request
 	PostApiRecipesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostApiRecipesResponse, error)
+
+	// GetApiRecipesRecipeIDWithResponse request
+	GetApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*GetApiRecipesRecipeIDResponse, error)
 }
 
 type PostApiAdminResponse struct {
@@ -932,6 +1063,31 @@ func (r PostApiRecipesResponse) StatusCode() int {
 	return 0
 }
 
+type GetApiRecipesRecipeIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetRecipeResponse
+	JSON400      *Error
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiRecipesRecipeIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiRecipesRecipeIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // PostApiAdminWithBodyWithResponse request with arbitrary body returning *PostApiAdminResponse
 func (c *ClientWithResponses) PostApiAdminWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error) {
 	rsp, err := c.PostApiAdminWithBody(ctx, contentType, body, reqEditors...)
@@ -1034,6 +1190,15 @@ func (c *ClientWithResponses) PostApiRecipesWithResponse(ctx context.Context, re
 		return nil, err
 	}
 	return ParsePostApiRecipesResponse(rsp)
+}
+
+// GetApiRecipesRecipeIDWithResponse request returning *GetApiRecipesRecipeIDResponse
+func (c *ClientWithResponses) GetApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*GetApiRecipesRecipeIDResponse, error) {
+	rsp, err := c.GetApiRecipesRecipeID(ctx, recipeID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiRecipesRecipeIDResponse(rsp)
 }
 
 // ParsePostApiAdminResponse parses an HTTP response from a PostApiAdminWithResponse call
@@ -1356,6 +1521,53 @@ func ParsePostApiRecipesResponse(rsp *http.Response) (*PostApiRecipesResponse, e
 	return response, nil
 }
 
+// ParseGetApiRecipesRecipeIDResponse parses an HTTP response from a GetApiRecipesRecipeIDWithResponse call
+func ParseGetApiRecipesRecipeIDResponse(rsp *http.Response) (*GetApiRecipesRecipeIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiRecipesRecipeIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetRecipeResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Create an admin.
@@ -1382,6 +1594,9 @@ type ServerInterface interface {
 	// Create a new recipe
 	// (POST /api/recipes)
 	PostApiRecipes(w http.ResponseWriter, r *http.Request)
+	// Get a public recipe and its owner's information
+	// (GET /api/recipes/{recipeID})
+	GetApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -1433,6 +1648,12 @@ func (_ Unimplemented) GetApiPing(w http.ResponseWriter, r *http.Request) {
 // Create a new recipe
 // (POST /api/recipes)
 func (_ Unimplemented) PostApiRecipes(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get a public recipe and its owner's information
+// (GET /api/recipes/{recipeID})
+func (_ Unimplemented) GetApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1621,6 +1842,31 @@ func (siw *ServerInterfaceWrapper) PostApiRecipes(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// GetApiRecipesRecipeID operation middleware
+func (siw *ServerInterfaceWrapper) GetApiRecipesRecipeID(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "recipeID" -------------
+	var recipeID int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "recipeID", chi.URLParam(r, "recipeID"), &recipeID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipeID", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetApiRecipesRecipeID(w, r, recipeID)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -1757,6 +2003,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/recipes", wrapper.PostApiRecipes)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/recipes/{recipeID}", wrapper.GetApiRecipesRecipeID)
 	})
 
 	return r
@@ -2082,6 +2331,50 @@ func (response PostApiRecipes500JSONResponse) VisitPostApiRecipesResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetApiRecipesRecipeIDRequestObject struct {
+	RecipeID int64 `json:"recipeID"`
+}
+
+type GetApiRecipesRecipeIDResponseObject interface {
+	VisitGetApiRecipesRecipeIDResponse(w http.ResponseWriter) error
+}
+
+type GetApiRecipesRecipeID200JSONResponse GetRecipeResponse
+
+func (response GetApiRecipesRecipeID200JSONResponse) VisitGetApiRecipesRecipeIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiRecipesRecipeID400JSONResponse Error
+
+func (response GetApiRecipesRecipeID400JSONResponse) VisitGetApiRecipesRecipeIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiRecipesRecipeID404JSONResponse Error
+
+func (response GetApiRecipesRecipeID404JSONResponse) VisitGetApiRecipesRecipeIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiRecipesRecipeID500JSONResponse Error
+
+func (response GetApiRecipesRecipeID500JSONResponse) VisitGetApiRecipesRecipeIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Create an admin.
@@ -2108,6 +2401,9 @@ type StrictServerInterface interface {
 	// Create a new recipe
 	// (POST /api/recipes)
 	PostApiRecipes(ctx context.Context, request PostApiRecipesRequestObject) (PostApiRecipesResponseObject, error)
+	// Get a public recipe and its owner's information
+	// (GET /api/recipes/{recipeID})
+	GetApiRecipesRecipeID(ctx context.Context, request GetApiRecipesRecipeIDRequestObject) (GetApiRecipesRecipeIDResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -2356,6 +2652,32 @@ func (sh *strictHandler) PostApiRecipes(w http.ResponseWriter, r *http.Request) 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiRecipesResponseObject); ok {
 		if err := validResponse.VisitPostApiRecipesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetApiRecipesRecipeID operation middleware
+func (sh *strictHandler) GetApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64) {
+	var request GetApiRecipesRecipeIDRequestObject
+
+	request.RecipeID = recipeID
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetApiRecipesRecipeID(ctx, request.(GetApiRecipesRecipeIDRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetApiRecipesRecipeID")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetApiRecipesRecipeIDResponseObject); ok {
+		if err := validResponse.VisitGetApiRecipesRecipeIDResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -37,9 +37,9 @@ type BulkUpdateRecipeIngredientsBatchResults struct {
 
 type BulkUpdateRecipeIngredientsParams struct {
 	ID       int64
-	Quantity float32
+	Quantity pgtype.Float4
 	Unit     pgtype.Text
-	Name     string
+	Name     pgtype.Text
 	ImageUrl pgtype.Text
 }
 
@@ -98,7 +98,7 @@ type BulkUpdateRecipeStepsBatchResults struct {
 
 type BulkUpdateRecipeStepsParams struct {
 	ID          int64
-	Instruction string
+	Instruction pgtype.Text
 	ImageUrl    pgtype.Text
 }
 

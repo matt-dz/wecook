@@ -13,15 +13,15 @@ import (
 
 type BulkInsertRecipeIngredientsParams struct {
 	RecipeID int64
-	Quantity float32
+	Quantity pgtype.Float4
 	Unit     pgtype.Text
-	Name     string
+	Name     pgtype.Text
 	ImageUrl pgtype.Text
 }
 
 type BulkInsertRecipeStepsParams struct {
 	RecipeID    int64
-	Instruction string
+	Instruction pgtype.Text
 	ImageUrl    pgtype.Text
 	StepNumber  int32
 }
@@ -123,9 +123,9 @@ RETURNING
 
 type CreateRecipeIngredientParams struct {
 	RecipeID int64
-	Quantity float32
+	Quantity pgtype.Float4
 	Unit     pgtype.Text
-	Name     string
+	Name     pgtype.Text
 	ImageUrl pgtype.Text
 }
 
@@ -151,7 +151,7 @@ RETURNING
 
 type CreateRecipeStepParams struct {
 	RecipeID    int64
-	Instruction string
+	Instruction pgtype.Text
 }
 
 func (q *Queries) CreateRecipeStep(ctx context.Context, arg CreateRecipeStepParams) (int64, error) {

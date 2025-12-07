@@ -115,9 +115,9 @@ type Recipe struct {
 type RecipeIngredient struct {
 	ID        int64
 	RecipeID  int64
-	Quantity  float32
+	Quantity  pgtype.Float4
 	Unit      pgtype.Text
-	Name      string
+	Name      pgtype.Text
 	ImageUrl  pgtype.Text
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
@@ -127,7 +127,7 @@ type RecipeStep struct {
 	ID          int64
 	RecipeID    int64
 	StepNumber  int32
-	Instruction string
+	Instruction pgtype.Text
 	ImageUrl    pgtype.Text
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
