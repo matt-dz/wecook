@@ -147,11 +147,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                refresh_token:
-                  type: string
-                  description: The refresh token to exchange
+              $ref: "#/components/schemas/RefreshToken"
       responses:
         "200":
           description: >
@@ -175,14 +171,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginResponse"
-        "400":
-          description: Missing or malformed refresh token cookie
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         "401":
-          description: Invalid refresh token
+          description: Expired, invalid, or missing refresh token
           content:
             application/json:
               schema:
@@ -194,42 +184,42 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  # /api/auth/session/verify:
-  #   get:
-  #     summary: Verify user session
-  #     tags:
-  #       - Auth
-  #     description: |
-  #       Validates the user's access token cookie, checks expiration,
-  #       and ensures the user has the required role.
-  #     responses:
-  #       "204":
-  #         description: Session is valid
-  #       "400":
-  #         description: Invalid token or malformed cookie
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Expired or invalid access token
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "403":
-  #         description: Insufficient permissions
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
+  /api/auth/verify:
+    get:
+      summary: Verify user session
+      tags:
+        - Auth
+      description: |
+        Validates the user's access token cookie, checks expiration,
+        and ensures the user has the required role.
+      parameters:
+        - name: access
+          in: cookie
+          schema:
+            type: string
+          description: Access token
+      responses:
+        "204":
+          description: Session is valid
+        "401":
+          description: Expired, invalid, or missing access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/login:
     post:
       summary: User login.
@@ -1401,6 +1391,13 @@ components:
           description: Access token lifetime in seconds.
       required:
         - access_token
+
+    RefreshToken:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          description: Refresh token
 
   securitySchemes:
     AccessTokenUserBearer:

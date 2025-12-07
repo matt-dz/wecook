@@ -23,6 +23,7 @@ import (
 
 const (
 	AccessTokenAdminBearerScopes = "AccessTokenAdminBearer.Scopes"
+	AccessTokenUserBearerScopes  = "AccessTokenUserBearer.Scopes"
 )
 
 // CreateAdminRequest defines model for CreateAdminRequest.
@@ -69,22 +70,28 @@ type LoginResponse struct {
 	TokenType *string `json:"token_type,omitempty"`
 }
 
+// RefreshToken defines model for RefreshToken.
+type RefreshToken struct {
+	// RefreshToken Refresh token
+	RefreshToken *string `json:"refresh_token,omitempty"`
+}
+
 // UserLoginRequest defines model for UserLoginRequest.
 type UserLoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-// PostApiAuthRefreshJSONBody defines parameters for PostApiAuthRefresh.
-type PostApiAuthRefreshJSONBody struct {
-	// RefreshToken The refresh token to exchange
-	RefreshToken *string `json:"refresh_token,omitempty"`
-}
-
 // PostApiAuthRefreshParams defines parameters for PostApiAuthRefresh.
 type PostApiAuthRefreshParams struct {
 	// Refresh Refresh token
 	Refresh *string `form:"refresh,omitempty" json:"refresh,omitempty"`
+}
+
+// GetApiAuthVerifyParams defines parameters for GetApiAuthVerify.
+type GetApiAuthVerifyParams struct {
+	// Access Access token
+	Access *string `form:"access,omitempty" json:"access,omitempty"`
 }
 
 // PostApiAdminJSONRequestBody defines body for PostApiAdmin for application/json ContentType.
@@ -94,7 +101,7 @@ type PostApiAdminJSONRequestBody = CreateAdminRequest
 type PostApiAdminUserJSONRequestBody = CreateUserRequest
 
 // PostApiAuthRefreshJSONRequestBody defines body for PostApiAuthRefresh for application/json ContentType.
-type PostApiAuthRefreshJSONRequestBody PostApiAuthRefreshJSONBody
+type PostApiAuthRefreshJSONRequestBody = RefreshToken
 
 // PostApiLoginJSONRequestBody defines body for PostApiLogin for application/json ContentType.
 type PostApiLoginJSONRequestBody = UserLoginRequest
@@ -187,6 +194,9 @@ type ClientInterface interface {
 
 	PostApiAuthRefresh(ctx context.Context, params *PostApiAuthRefreshParams, body PostApiAuthRefreshJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetApiAuthVerify request
+	GetApiAuthVerify(ctx context.Context, params *GetApiAuthVerifyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostApiLoginWithBody request with any body
 	PostApiLoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -261,6 +271,18 @@ func (c *Client) PostApiAuthRefreshWithBody(ctx context.Context, params *PostApi
 
 func (c *Client) PostApiAuthRefresh(ctx context.Context, params *PostApiAuthRefreshParams, body PostApiAuthRefreshJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiAuthRefreshRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetApiAuthVerify(ctx context.Context, params *GetApiAuthVerifyParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiAuthVerifyRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -456,6 +478,50 @@ func NewPostApiAuthRefreshRequestWithBody(server string, params *PostApiAuthRefr
 	return req, nil
 }
 
+// NewGetApiAuthVerifyRequest generates requests for GetApiAuthVerify
+func NewGetApiAuthVerifyRequest(server string, params *GetApiAuthVerifyParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/auth/verify")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.Access != nil {
+			var cookieParam0 string
+
+			cookieParam0, err = runtime.StyleParamWithLocation("simple", true, "access", runtime.ParamLocationCookie, *params.Access)
+			if err != nil {
+				return nil, err
+			}
+
+			cookie0 := &http.Cookie{
+				Name:  "access",
+				Value: cookieParam0,
+			}
+			req.AddCookie(cookie0)
+		}
+	}
+	return req, nil
+}
+
 // NewPostApiLoginRequest calls the generic PostApiLogin builder with application/json body
 func NewPostApiLoginRequest(server string, body PostApiLoginJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -608,6 +674,9 @@ type ClientWithResponsesInterface interface {
 
 	PostApiAuthRefreshWithResponse(ctx context.Context, params *PostApiAuthRefreshParams, body PostApiAuthRefreshJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAuthRefreshResponse, error)
 
+	// GetApiAuthVerifyWithResponse request
+	GetApiAuthVerifyWithResponse(ctx context.Context, params *GetApiAuthVerifyParams, reqEditors ...RequestEditorFn) (*GetApiAuthVerifyResponse, error)
+
 	// PostApiLoginWithBodyWithResponse request with any body
 	PostApiLoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiLoginResponse, error)
 
@@ -674,7 +743,6 @@ type PostApiAuthRefreshResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *LoginResponse
-	JSON400      *Error
 	JSON401      *Error
 	JSON500      *Error
 }
@@ -689,6 +757,30 @@ func (r PostApiAuthRefreshResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostApiAuthRefreshResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetApiAuthVerifyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON401      *Error
+	JSON403      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiAuthVerifyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiAuthVerifyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -813,6 +905,15 @@ func (c *ClientWithResponses) PostApiAuthRefreshWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParsePostApiAuthRefreshResponse(rsp)
+}
+
+// GetApiAuthVerifyWithResponse request returning *GetApiAuthVerifyResponse
+func (c *ClientWithResponses) GetApiAuthVerifyWithResponse(ctx context.Context, params *GetApiAuthVerifyParams, reqEditors ...RequestEditorFn) (*GetApiAuthVerifyResponse, error) {
+	rsp, err := c.GetApiAuthVerify(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiAuthVerifyResponse(rsp)
 }
 
 // PostApiLoginWithBodyWithResponse request with arbitrary body returning *PostApiLoginResponse
@@ -965,19 +1066,52 @@ func ParsePostApiAuthRefreshResponse(rsp *http.Response) (*PostApiAuthRefreshRes
 		}
 		response.JSON200 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiAuthVerifyResponse parses an HTTP response from a GetApiAuthVerifyWithResponse call
+func ParseGetApiAuthVerifyResponse(rsp *http.Response) (*GetApiAuthVerifyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiAuthVerifyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest Error
@@ -1101,6 +1235,9 @@ type ServerInterface interface {
 	// Refresh session tokens
 	// (POST /api/auth/refresh)
 	PostApiAuthRefresh(w http.ResponseWriter, r *http.Request, params PostApiAuthRefreshParams)
+	// Verify user session
+	// (GET /api/auth/verify)
+	GetApiAuthVerify(w http.ResponseWriter, r *http.Request, params GetApiAuthVerifyParams)
 	// User login.
 	// (POST /api/login)
 	PostApiLogin(w http.ResponseWriter, r *http.Request)
@@ -1131,6 +1268,12 @@ func (_ Unimplemented) PostApiAdminUser(w http.ResponseWriter, r *http.Request) 
 // Refresh session tokens
 // (POST /api/auth/refresh)
 func (_ Unimplemented) PostApiAuthRefresh(w http.ResponseWriter, r *http.Request, params PostApiAuthRefreshParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Verify user session
+// (GET /api/auth/verify)
+func (_ Unimplemented) GetApiAuthVerify(w http.ResponseWriter, r *http.Request, params GetApiAuthVerifyParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1226,6 +1369,46 @@ func (siw *ServerInterfaceWrapper) PostApiAuthRefresh(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostApiAuthRefresh(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetApiAuthVerify operation middleware
+func (siw *ServerInterfaceWrapper) GetApiAuthVerify(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetApiAuthVerifyParams
+
+	{
+		var cookie *http.Cookie
+
+		if cookie, err = r.Cookie("access"); err == nil {
+			var value string
+			err = runtime.BindStyledParameterWithOptions("simple", "access", cookie.Value, &value, runtime.BindStyledParameterOptions{Explode: true, Required: false})
+			if err != nil {
+				siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "access", Err: err})
+				return
+			}
+			params.Access = &value
+
+		}
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetApiAuthVerify(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1400,6 +1583,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/api/auth/refresh", wrapper.PostApiAuthRefresh)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/auth/verify", wrapper.GetApiAuthVerify)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/login", wrapper.PostApiLogin)
 	})
 	r.Group(func(r chi.Router) {
@@ -1526,15 +1712,6 @@ func (response PostApiAuthRefresh200JSONResponse) VisitPostApiAuthRefreshRespons
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
-type PostApiAuthRefresh400JSONResponse Error
-
-func (response PostApiAuthRefresh400JSONResponse) VisitPostApiAuthRefreshResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
 type PostApiAuthRefresh401JSONResponse Error
 
 func (response PostApiAuthRefresh401JSONResponse) VisitPostApiAuthRefreshResponse(w http.ResponseWriter) error {
@@ -1547,6 +1724,49 @@ func (response PostApiAuthRefresh401JSONResponse) VisitPostApiAuthRefreshRespons
 type PostApiAuthRefresh500JSONResponse Error
 
 func (response PostApiAuthRefresh500JSONResponse) VisitPostApiAuthRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiAuthVerifyRequestObject struct {
+	Params GetApiAuthVerifyParams
+}
+
+type GetApiAuthVerifyResponseObject interface {
+	VisitGetApiAuthVerifyResponse(w http.ResponseWriter) error
+}
+
+type GetApiAuthVerify204Response struct {
+}
+
+func (response GetApiAuthVerify204Response) VisitGetApiAuthVerifyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type GetApiAuthVerify401JSONResponse Error
+
+func (response GetApiAuthVerify401JSONResponse) VisitGetApiAuthVerifyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiAuthVerify403JSONResponse Error
+
+func (response GetApiAuthVerify403JSONResponse) VisitGetApiAuthVerifyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiAuthVerify500JSONResponse Error
+
+func (response GetApiAuthVerify500JSONResponse) VisitGetApiAuthVerifyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1666,6 +1886,9 @@ type StrictServerInterface interface {
 	// Refresh session tokens
 	// (POST /api/auth/refresh)
 	PostApiAuthRefresh(ctx context.Context, request PostApiAuthRefreshRequestObject) (PostApiAuthRefreshResponseObject, error)
+	// Verify user session
+	// (GET /api/auth/verify)
+	GetApiAuthVerify(ctx context.Context, request GetApiAuthVerifyRequestObject) (GetApiAuthVerifyResponseObject, error)
 	// User login.
 	// (POST /api/login)
 	PostApiLogin(ctx context.Context, request PostApiLoginRequestObject) (PostApiLoginResponseObject, error)
@@ -1794,6 +2017,32 @@ func (sh *strictHandler) PostApiAuthRefresh(w http.ResponseWriter, r *http.Reque
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiAuthRefreshResponseObject); ok {
 		if err := validResponse.VisitPostApiAuthRefreshResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetApiAuthVerify operation middleware
+func (sh *strictHandler) GetApiAuthVerify(w http.ResponseWriter, r *http.Request, params GetApiAuthVerifyParams) {
+	var request GetApiAuthVerifyRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetApiAuthVerify(ctx, request.(GetApiAuthVerifyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetApiAuthVerify")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetApiAuthVerifyResponseObject); ok {
+		if err := validResponse.VisitGetApiAuthVerifyResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

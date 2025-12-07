@@ -643,6 +643,27 @@ func TestPostApiAuthRefresh(t *testing.T) {
 	}
 }
 
+func TestGetApiAuthVerify(t *testing.T) {
+	server := NewServer()
+
+	ctx := context.Background()
+	ctx = requestid.InjectRequestID(ctx, 12345)
+	ctx = env.WithCtx(ctx, &env.Env{
+		Logger: log.NullLogger(),
+	})
+
+	request := GetApiAuthVerifyRequestObject{}
+
+	resp, err := server.GetApiAuthVerify(ctx, request)
+	if err != nil {
+		t.Errorf("GetApiAuthVerify() error = %v, expected nil", err)
+	}
+
+	if _, ok := resp.(GetApiAuthVerify204Response); !ok {
+		t.Errorf("expected GetApiAuthVerify204Response, got %T", resp)
+	}
+}
+
 func stringPtr(s string) *string {
 	return &s
 }

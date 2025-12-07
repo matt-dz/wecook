@@ -360,3 +360,9 @@ func (Server) PostApiAuthRefresh(ctx context.Context,
 		},
 	}, nil
 }
+
+func (Server) GetApiAuthVerify(ctx context.Context,
+	request GetApiAuthVerifyRequestObject,
+) (GetApiAuthVerifyResponseObject, error) {
+	return GetApiAuthVerify204Response{}, nil
+}
