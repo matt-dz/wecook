@@ -66,7 +66,7 @@ dbmock:
 		-package dbmoc
 
 .PHONY: test
-test:
+test: dbmock
 	@echo "🧪 Running tests..."
 	go test -v ./...
 

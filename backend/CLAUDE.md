@@ -26,6 +26,7 @@ backend/
 ├── internal/            # Internal packages
 │   ├── api/            # API routes and handlers
 │   ├── database/       # Database connection and queries
+│   ├── dbmock/         # Generated database mocks for testing
 │   ├── sql/            # SQL schema and queries
 │   ├── jwt/            # JWT token handling
 │   ├── password/       # Password validation
@@ -51,6 +52,7 @@ backend/
 - `github.com/oapi-codegen/oapi-codegen` - OpenAPI code generator
 - `github.com/oklog/ulid/v2` - ULID generation
 - `golang.org/x/crypto` - Argon2 password hashing
+- `go.uber.org/mock/gomock` - Mock generation for testing
 
 ## Database Schema
 
@@ -73,10 +75,12 @@ backend/
 ```bash
 make build      # Build the application (fmt, lint, docs, compile)
 make run        # Run the application with code generation
+make test       # Run all tests
 make fmt        # Format Go code and SQL
 make lint       # Run linter
 make docs       # Generate OpenAPI client, models, and server code
 make sqlc       # Generate SQLC code from SQL files
+make dbmock     # Generate database mocks for testing
 make keys       # Generate JWT signing keys
 ```
 
@@ -112,9 +116,182 @@ See `.env.example` for required environment variables. Key variables include:
 
 ## Testing
 
-- Focus on testing business logic in internal packages
-- Use table-driven tests where appropriate
-- Mock database interactions when needed
+### Overview
+
+The project uses Go's built-in testing framework with a focus on unit testing business logic and API handlers.
+
+### Test Files
+
+Tests are located alongside the code they test with the `_test.go` suffix:
+- `internal/api/openapi/admin_test.go` - API handler tests
+- `internal/fileserver/fileserver_test.go` - File server tests
+
+### Running Tests
+
+```bash
+make test       # Run all tests
+go test ./...   # Run tests directly
+```
+
+### Database Mocking
+
+The project uses **GoMock** to generate mocks of the database interface for testing without a real database.
+
+#### Mock Generation
+
+Database mocks are generated from the SQLC-generated `Querier` interface:
+
+```bash
+make dbmock     # Generate database mocks
+```
+
+This runs:
+```bash
+mockgen -source=internal/database/querier.go \
+    -destination internal/dbmock/dbmock.go \
+    -package dbmoc
+```
+
+- **Source**: `internal/database/querier.go` - SQLC-generated interface
+- **Destination**: `internal/dbmock/dbmock.go` - Generated mock
+- **Package**: `dbmoc` - Mock package name
+
+#### Using Mocks in Tests
+
+1. **Import the mock package**:
+   ```go
+   import (
+       dbmoc "github.com/matt-dz/wecook/internal/dbmock"
+       "go.uber.org/mock/gomock"
+   )
+   ```
+
+2. **Create a mock controller**:
+   ```go
+   ctrl := gomock.NewController(t)
+   defer ctrl.Finish()
+   mockDB := dbmoc.NewMockQuerier(ctrl)
+   ```
+
+3. **Set expectations**:
+   ```go
+   mockDB.EXPECT().
+       CreateAdmin(gomock.Any(), gomock.Any()).
+       Return(int64(1), nil)
+   ```
+
+4. **Inject mock into context**:
+   ```go
+   ctx := env.WithCtx(ctx, &env.Env{
+       Logger: log.NullLogger(),
+       Database: &database.Database{
+           Querier: mockDB,
+       },
+   })
+   ```
+
+### Testing Patterns
+
+#### Table-Driven Tests
+
+Use table-driven tests for multiple scenarios:
+
+```go
+tests := []struct {
+    name       string
+    request    PostApiAdminRequestObject
+    setup      func()
+    wantStatus int
+    wantCode   string
+    wantError  bool
+}{
+    {
+        name: "successful creation",
+        request: PostApiAdminRequestObject{...},
+        setup: func() {
+            mockDB.EXPECT().CreateAdmin(...).Return(1, nil)
+        },
+        wantStatus: 204,
+    },
+    // More test cases...
+}
+
+for _, tt := range tests {
+    t.Run(tt.name, func(t *testing.T) {
+        tt.setup()
+        // Run test...
+    })
+}
+```
+
+#### API Handler Tests
+
+When testing API handlers:
+
+1. Create a mock database
+2. Set up expectations for database calls
+3. Create a context with request ID and environment
+4. Call the handler function
+5. Assert response type and values
+
+Example:
+```go
+func TestPostApiAdmin(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockDB := dbmoc.NewMockQuerier(ctrl)
+    mockDB.EXPECT().CreateAdmin(gomock.Any(), gomock.Any()).Return(int64(1), nil)
+
+    ctx := requestid.InjectRequestID(context.Background(), 12345)
+    ctx = env.WithCtx(ctx, &env.Env{
+        Logger: log.NullLogger(),
+        Database: &database.Database{Querier: mockDB},
+    })
+
+    server := NewServer()
+    resp, err := server.PostApiAdmin(ctx, request)
+
+    // Assert response...
+}
+```
+
+#### Testing Error Cases
+
+Test various error scenarios:
+- Weak passwords
+- Duplicate emails (PostgreSQL unique constraint violations)
+- Database connection errors
+- Invalid input
+
+Use PostgreSQL error codes for constraint violations:
+```go
+pgErr := &pgconn.PgError{
+    Code:           "23505",  // unique_violation
+    ConstraintName: "users_unique_email",
+}
+mockDB.EXPECT().CreateAdmin(...).Return(int64(0), pgErr)
+```
+
+#### Helper Functions
+
+Create test helpers to reduce boilerplate:
+```go
+func newTestFileServer(t *testing.T) (*FileServer, string) {
+    t.Helper()
+    base := t.TempDir()
+    return &FileServer{baseDir: base}, base
+}
+```
+
+### Testing Best Practices
+
+1. **Parallel Tests**: Use `t.Parallel()` for independent tests
+2. **Cleanup**: Use `defer ctrl.Finish()` for mock controllers
+3. **Temp Directories**: Use `t.TempDir()` for file system tests
+4. **Test Isolation**: Each test should be independent
+5. **Clear Names**: Use descriptive test case names
+6. **Null Logger**: Use `log.NullLogger()` to suppress log output in tests
 
 ## Security Considerations
 
@@ -273,8 +450,11 @@ Validation is handled automatically by the OpenAPI middleware:
 - **IMPORTANT**: Update `docs/api.yaml` FIRST when adding/modifying API endpoints
 - Run `make docs` after OpenAPI spec changes to regenerate code
 - Run `make sqlc` after SQL changes
+- Run `make dbmock` after modifying the `Querier` interface (happens automatically with SQLC changes)
 - Keep security in mind (especially auth, password handling, SQL)
 - Follow existing patterns in the codebase
 - Don't add unnecessary comments or documentation
 - Test changes by running `make run` and checking the API
+- Run `make test` to verify all tests pass
+- Write tests for new features using table-driven patterns with database mocks
 - The OpenAPI spec is the source of truth for the API - always keep it in sync with implementation
