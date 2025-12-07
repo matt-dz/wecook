@@ -109,8 +109,8 @@ func (Server) GetApiRecipesRecipeID(ctx context.Context,
 	}
 
 	// Write response
-	cookTimeUnit := TimeUnit(TimeUnit(row.CookTimeUnit.TimeUnit))
-	prepTimeUnit := TimeUnit(TimeUnit(row.PrepTimeUnit.TimeUnit))
+	cookTimeUnit := TimeUnit(row.CookTimeUnit.TimeUnit)
+	prepTimeUnit := TimeUnit(row.PrepTimeUnit.TimeUnit)
 	res := GetApiRecipesRecipeID200JSONResponse{
 		Owner: RecipeOwner{
 			FirstName: row.FirstName,
@@ -172,10 +172,137 @@ func (Server) GetApiRecipesRecipeID(ctx context.Context,
 			newIngredient.Unit = &unit
 		}
 		if ingredient.ImageUrl.Valid {
-			imageUrl := ingredient.ImageUrl.String
+			imageUrl := env.FileServer.FileURL(ingredient.ImageUrl.String)
 			newIngredient.ImageUrl = &imageUrl
 		}
 		res.Recipe.Ingredients = append(res.Recipe.Ingredients, newIngredient)
 	}
 	return res, nil
+}
+
+func (Server) DeleteApiRecipesRecipeID(
+	ctx context.Context,
+	request DeleteApiRecipesRecipeIDRequestObject,
+) (DeleteApiRecipesRecipeIDResponseObject, error) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		return DeleteApiRecipesRecipeID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Check ownership & existence
+	env.Logger.DebugContext(ctx, "checking user ownership")
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: request.RecipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check recipe ownership", slog.Any("error", err))
+		return DeleteApiRecipesRecipeID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	if !ownsRecipe {
+		env.Logger.ErrorContext(ctx, "user does not own recipe")
+		return DeleteApiRecipesRecipeID404JSONResponse{
+			Status:  apiError.RecipeNotFound.StatusCode(),
+			Code:    apiError.RecipeNotFound.String(),
+			Message: "recipe does not exist or user does not own it",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Get recipe to retrieve image URLs
+	env.Logger.DebugContext(ctx, "getting recipe details")
+	recipe, err := env.Database.GetRecipeAndOwner(ctx, request.RecipeID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe", slog.Any("error", err))
+		return DeleteApiRecipesRecipeID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Get all steps to retrieve their image URLs
+	env.Logger.DebugContext(ctx, "getting recipe steps")
+	steps, err := env.Database.GetRecipeSteps(ctx, request.RecipeID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe steps", slog.Any("error", err))
+		return DeleteApiRecipesRecipeID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Get all ingredients to retrieve their image URLs
+	env.Logger.DebugContext(ctx, "getting recipe ingredients")
+	ingredients, err := env.Database.GetRecipeIngredients(ctx, request.RecipeID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe ingredients", slog.Any("error", err))
+		return DeleteApiRecipesRecipeID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Delete recipe image from file server
+	if recipe.ImageUrl.Valid && recipe.ImageUrl.String != "" {
+		env.Logger.DebugContext(ctx, "deleting recipe image", slog.String("path", recipe.ImageUrl.String))
+		if err := env.FileServer.Delete(recipe.ImageUrl.String); err != nil {
+			env.Logger.WarnContext(ctx, "failed to delete recipe image", slog.Any("error", err))
+		}
+	}
+
+	// Delete step images from file server
+	for _, step := range steps {
+		if step.ImageUrl.Valid && step.ImageUrl.String != "" {
+			env.Logger.DebugContext(ctx, "deleting step image", slog.String("path", step.ImageUrl.String))
+			if err := env.FileServer.Delete(step.ImageUrl.String); err != nil {
+				env.Logger.WarnContext(ctx, "failed to delete step image", slog.Any("error", err))
+			}
+		}
+	}
+
+	// Delete ingredient images from file server
+	for _, ingredient := range ingredients {
+		if ingredient.ImageUrl.Valid && ingredient.ImageUrl.String != "" {
+			env.Logger.DebugContext(ctx, "deleting ingredient image", slog.String("path", ingredient.ImageUrl.String))
+			if err := env.FileServer.Delete(ingredient.ImageUrl.String); err != nil {
+				env.Logger.WarnContext(ctx, "failed to delete ingredient image", slog.Any("error", err))
+			}
+		}
+	}
+
+	// Delete recipe from database
+	env.Logger.DebugContext(ctx, "deleting recipe from database")
+	if err := env.Database.DeleteRecipe(ctx, request.RecipeID); err != nil {
+		env.Logger.ErrorContext(ctx, "failed to delete recipe", slog.Any("error", err))
+		return DeleteApiRecipesRecipeID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	return DeleteApiRecipesRecipeID204Response{}, nil
 }

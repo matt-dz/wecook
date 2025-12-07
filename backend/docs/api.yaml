@@ -346,52 +346,51 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  #   delete:
-  #     summary: Delete a recipe
-  #     tags:
-  #       - Recipes
-  #     description: |
-  #       Deletes a recipe owned by the authenticated user.
-  #       This operation is idempotent — deleting an already deleted or non-owned recipe results in a 404.
-  #     parameters:
-  #       - name: recipeID
-  #         in: path
-  #         required: true
-  #         description: ID of the recipe to delete
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "204":
-  #         description: Recipe deleted successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: string
-  #       "400":
-  #         description: Bad request (invalid recipe ID)
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "404":
-  #         description: Recipe not found or not owned by user
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
+    delete:
+      summary: Delete a recipe
+      tags:
+        - Recipes
+      description: >
+        Deletes a recipe owned by the authenticated user.
+        This operation is idempotent — deleting an already deleted 
+        or non-owned recipe results in a 404.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe to retrieve
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        "204":
+          description: Recipe deleted successfully
+        "400":
+          description: Bad request (invalid recipe ID)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   #   patch:
   #     summary: Update a recipe
   #     tags:

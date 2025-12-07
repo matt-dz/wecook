@@ -20,7 +20,7 @@ type Env struct {
 	Logger     *slog.Logger
 	Database   *database.Database
 	HTTP       *http.HTTP
-	FileServer *fileserver.FileServer
+	FileServer fileserver.FileServerInterface
 	vars       map[string]string
 }
 
@@ -36,7 +36,7 @@ func (e *Env) IsProd() bool {
 }
 
 func New(logger *slog.Logger, database *database.Database,
-	http *http.HTTP, fileserver *fileserver.FileServer,
+	http *http.HTTP, fileserver fileserver.FileServerInterface,
 	vars map[string]string,
 ) *Env {
 	if logger == nil {

@@ -60,13 +60,23 @@ clean:
 
 .PHONY: dbmock
 dbmock:
-	@echo "🤖 Generating mock..."
+	@echo "🤖 Generating database mock..."
 	mockgen -source=internal/database/querier.go \
 		-destination internal/dbmock/dbmock.go \
 		-package dbmock
 
+.PHONY: fileservermock
+fileservermock:
+	@echo "🤖 Generating fileserver mock..."
+	mockgen -source=internal/fileserver/fileserver.go \
+		-destination internal/fileservermock/fileservermock.go \
+		-package fileservermock
+
+.PHONY: mocks
+mocks: dbmock fileservermock
+
 .PHONY: test
-test: dbmock
+test: mocks
 	@echo "🧪 Running tests..."
 	go test -v ./...
 

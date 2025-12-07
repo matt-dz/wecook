@@ -29,6 +29,14 @@ var (
 	ErrInvalidPath = errors.New("invalid path")
 )
 
+// FileServerInterface defines the operations for file server management.
+type FileServerInterface interface {
+	Write(path string, data []byte) (location string, n int, err error)
+	Exists(path string) (bool, error)
+	Delete(path string) error
+	FileURL(path string) string
+}
+
 type FileServer struct {
 	baseDir   string
 	serverURL string

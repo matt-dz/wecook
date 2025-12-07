@@ -16,7 +16,7 @@ import (
 	"github.com/matt-dz/wecook/internal/database"
 	dbmoc "github.com/matt-dz/wecook/internal/dbmock"
 	"github.com/matt-dz/wecook/internal/env"
-	"github.com/matt-dz/wecook/internal/fileserver"
+	fileservermoc "github.com/matt-dz/wecook/internal/fileservermock"
 	"github.com/matt-dz/wecook/internal/log"
 )
 
@@ -125,10 +125,6 @@ func TestPostApiRecipes(t *testing.T) {
 }
 
 func TestGetApiRecipesRecipeID(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockDB := dbmoc.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	now := time.Now()
@@ -138,7 +134,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 	tests := []struct {
 		name       string
 		request    GetApiRecipesRecipeIDRequestObject
-		setup      func()
+		setup      func(mockDB *dbmoc.MockQuerier, mockFS *fileservermoc.MockFileServerInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -149,7 +145,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 			},
-			setup: func() {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *fileservermoc.MockFileServerInterface) {
 				mockDB.EXPECT().
 					GetPublishedRecipeAndOwner(gomock.Any(), int64(123)).
 					Return(database.GetPublishedRecipeAndOwnerRow{
@@ -210,6 +206,11 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 							ImageUrl: pgtype.Text{String: "", Valid: false},
 						},
 					}, nil)
+
+				// Expect FileURL calls for recipe and step images
+				mockFS.EXPECT().FileURL("recipe.jpg").Return("http://localhost:8080/recipe.jpg")
+				mockFS.EXPECT().FileURL("step1.jpg").Return("http://localhost:8080/step1.jpg")
+				mockFS.EXPECT().FileURL("flour.jpg").Return("http://localhost:8080/flour.jpg")
 			},
 			wantStatus: 200,
 			wantError:  false,
@@ -253,7 +254,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 999,
 			},
-			setup: func() {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *fileservermoc.MockFileServerInterface) {
 				mockDB.EXPECT().
 					GetPublishedRecipeAndOwner(gomock.Any(), int64(999)).
 					Return(database.GetPublishedRecipeAndOwnerRow{}, pgx.ErrNoRows)
@@ -277,7 +278,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 			},
-			setup: func() {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *fileservermoc.MockFileServerInterface) {
 				mockDB.EXPECT().
 					GetPublishedRecipeAndOwner(gomock.Any(), int64(123)).
 					Return(database.GetPublishedRecipeAndOwnerRow{}, errors.New("database connection failed"))
@@ -301,7 +302,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 			},
-			setup: func() {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *fileservermoc.MockFileServerInterface) {
 				mockDB.EXPECT().
 					GetPublishedRecipeAndOwner(gomock.Any(), int64(123)).
 					Return(database.GetPublishedRecipeAndOwnerRow{
@@ -339,7 +340,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 			},
-			setup: func() {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *fileservermoc.MockFileServerInterface) {
 				mockDB.EXPECT().
 					GetPublishedRecipeAndOwner(gomock.Any(), int64(123)).
 					Return(database.GetPublishedRecipeAndOwnerRow{
@@ -381,7 +382,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 			},
-			setup: func() {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *fileservermoc.MockFileServerInterface) {
 				mockDB.EXPECT().
 					GetPublishedRecipeAndOwner(gomock.Any(), int64(123)).
 					Return(database.GetPublishedRecipeAndOwnerRow{
@@ -424,7 +425,13 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockFS := fileservermoc.NewMockFileServerInterface(ctrl)
+
+			tt.setup(mockDB, mockFS)
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
@@ -433,7 +440,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 				Database: &database.Database{
 					Querier: mockDB,
 				},
-				FileServer: fileserver.New("", "http://localhost:8080"),
+				FileServer: mockFS,
 			})
 
 			resp, err := server.GetApiRecipesRecipeID(ctx, tt.request)
@@ -444,6 +451,357 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 
 			if tt.validate != nil {
 				tt.validate(t, resp)
+			}
+		})
+	}
+}
+
+func TestDeleteApiRecipesRecipeID(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := dbmoc.NewMockQuerier(ctrl)
+	mockFS := fileservermoc.NewMockFileServerInterface(ctrl)
+	server := NewServer()
+
+	tests := []struct {
+		name       string
+		request    DeleteApiRecipesRecipeIDRequestObject
+		userID     int64
+		injectUser bool
+		setup      func()
+		wantStatus int
+		wantCode   string
+		wantError  bool
+	}{
+		{
+			name: "successful deletion",
+			request: DeleteApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func() {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{}, nil)
+
+				mockDB.EXPECT().
+					GetRecipeSteps(gomock.Any(), int64(123)).
+					Return([]database.RecipeStep{}, nil)
+
+				mockDB.EXPECT().
+					GetRecipeIngredients(gomock.Any(), int64(123)).
+					Return([]database.RecipeIngredient{}, nil)
+
+				mockDB.EXPECT().
+					DeleteRecipe(gomock.Any(), int64(123)).
+					Return(nil)
+			},
+			wantStatus: 204,
+			wantError:  false,
+		},
+		{
+			name: "successful deletion with images",
+			request: DeleteApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func() {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{
+						ImageUrl: pgtype.Text{String: "files/covers/123.jpg", Valid: true},
+					}, nil)
+
+				mockDB.EXPECT().
+					GetRecipeSteps(gomock.Any(), int64(123)).
+					Return([]database.RecipeStep{
+						{
+							ID:       1,
+							RecipeID: 123,
+							ImageUrl: pgtype.Text{String: "files/steps/123/1.jpg", Valid: true},
+						},
+						{
+							ID:       2,
+							RecipeID: 123,
+							ImageUrl: pgtype.Text{String: "files/steps/123/2.jpg", Valid: true},
+						},
+					}, nil)
+
+				mockDB.EXPECT().
+					GetRecipeIngredients(gomock.Any(), int64(123)).
+					Return([]database.RecipeIngredient{
+						{
+							ID:       1,
+							RecipeID: 123,
+							ImageUrl: pgtype.Text{String: "files/ingredients/123/1.jpg", Valid: true},
+						},
+					}, nil)
+
+				// Expect Delete calls for all images
+				mockFS.EXPECT().Delete("files/covers/123.jpg").Return(nil)
+				mockFS.EXPECT().Delete("files/steps/123/1.jpg").Return(nil)
+				mockFS.EXPECT().Delete("files/steps/123/2.jpg").Return(nil)
+				mockFS.EXPECT().Delete("files/ingredients/123/1.jpg").Return(nil)
+
+				mockDB.EXPECT().
+					DeleteRecipe(gomock.Any(), int64(123)).
+					Return(nil)
+			},
+			wantStatus: 204,
+			wantError:  false,
+		},
+		{
+			name: "missing user id in context",
+			request: DeleteApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			injectUser: false,
+			setup:      func() {},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error on ownership check",
+			request: DeleteApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func() {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(false, errors.New("database connection failed"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "user does not own recipe",
+			request: DeleteApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func() {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(false, nil)
+			},
+			wantStatus: 404,
+			wantCode:   apiError.RecipeNotFound.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error on get recipe",
+			request: DeleteApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func() {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{}, errors.New("database connection failed"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error on get steps",
+			request: DeleteApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func() {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{}, nil)
+
+				mockDB.EXPECT().
+					GetRecipeSteps(gomock.Any(), int64(123)).
+					Return(nil, errors.New("database connection failed"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error on get ingredients",
+			request: DeleteApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func() {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{}, nil)
+
+				mockDB.EXPECT().
+					GetRecipeSteps(gomock.Any(), int64(123)).
+					Return([]database.RecipeStep{}, nil)
+
+				mockDB.EXPECT().
+					GetRecipeIngredients(gomock.Any(), int64(123)).
+					Return(nil, errors.New("database connection failed"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error on deletion",
+			request: DeleteApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func() {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{}, nil)
+
+				mockDB.EXPECT().
+					GetRecipeSteps(gomock.Any(), int64(123)).
+					Return([]database.RecipeStep{}, nil)
+
+				mockDB.EXPECT().
+					GetRecipeIngredients(gomock.Any(), int64(123)).
+					Return([]database.RecipeIngredient{}, nil)
+
+				mockDB.EXPECT().
+					DeleteRecipe(gomock.Any(), int64(123)).
+					Return(errors.New("failed to delete recipe"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+
+			ctx := context.Background()
+			ctx = requestid.InjectRequestID(ctx, 12345)
+			if tt.injectUser {
+				ctx = token.UserIDWithCtx(ctx, tt.userID)
+			}
+			ctx = env.WithCtx(ctx, &env.Env{
+				Logger: log.NullLogger(),
+				Database: &database.Database{
+					Querier: mockDB,
+				},
+				FileServer: mockFS,
+			})
+
+			resp, err := server.DeleteApiRecipesRecipeID(ctx, tt.request)
+			if (err != nil) != tt.wantError {
+				t.Errorf("DeleteApiRecipesRecipeID() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			switch v := resp.(type) {
+			case DeleteApiRecipesRecipeID204Response:
+				if tt.wantStatus != 204 {
+					t.Errorf("expected status %d, got 204", tt.wantStatus)
+				}
+			case DeleteApiRecipesRecipeID404JSONResponse:
+				if tt.wantStatus != 404 {
+					t.Errorf("expected status %d, got 404", tt.wantStatus)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			case DeleteApiRecipesRecipeID500JSONResponse:
+				if tt.wantStatus != 500 {
+					t.Errorf("expected status %d, got 500", tt.wantStatus)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			default:
+				t.Errorf("unexpected response type: %T", v)
 			}
 		})
 	}
