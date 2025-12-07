@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 
 	"github.com/getkin/kin-openapi/openapi3filter"
@@ -97,6 +98,38 @@ func AddCors(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Recoverer recovers from panics and returns a standardized error response.
+func Recoverer(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rvr := recover(); rvr != nil {
+				if err, ok := rvr.(error); ok && errors.Is(err, http.ErrAbortHandler) {
+					panic(rvr)
+				}
+
+				e := env.EnvFromCtx(r.Context())
+				requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(r.Context()))
+
+				e.Logger.ErrorContext(r.Context(),
+					"panic recovered",
+					slog.Any("panic", rvr),
+					slog.String("stack", string(debug.Stack())))
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_ = json.NewEncoder(w).Encode(&apiError.Error{
+					Code:    apiError.InternalServerError,
+					Status:  http.StatusInternalServerError,
+					Message: "internal server error",
+					ErrorID: requestID,
+				})
+			}
+		}()
 
 		next.ServeHTTP(w, r)
 	})

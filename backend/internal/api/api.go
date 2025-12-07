@@ -54,6 +54,7 @@ func Start(env *env.Env) error {
 	router.Use(middleware.AddRequestID)
 	router.Use(middleware.LogRequest(env.Logger))
 	router.Use(middleware.InjectEnv(env))
+	router.Use(middleware.Recoverer)
 	router.Use(middleware.AddCors)
 	router.Use(oapimw.OapiRequestValidatorWithOptions(swagger, &oapimw.Options{
 		Options: openapi3filter.Options{
