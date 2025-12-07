@@ -9,13 +9,7 @@ import (
 	"github.com/matt-dz/wecook/docs"
 	"github.com/matt-dz/wecook/internal/api/middleware"
 	api "github.com/matt-dz/wecook/internal/api/openapi"
-	"github.com/matt-dz/wecook/internal/api/routes/admin"
-	"github.com/matt-dz/wecook/internal/api/routes/auth"
-	"github.com/matt-dz/wecook/internal/api/routes/ping"
-	"github.com/matt-dz/wecook/internal/api/routes/recipes"
-	"github.com/matt-dz/wecook/internal/api/routes/users"
 	"github.com/matt-dz/wecook/internal/env"
-	"github.com/matt-dz/wecook/internal/role"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
@@ -26,42 +20,6 @@ import (
 const (
 	defaultPort = "8080"
 )
-
-func addRoutes(router *chi.Mux) {
-	router.Route("/api", func(r chi.Router) {
-		r.Get("/ping", ping.HandlePing)
-		r.Post("/login", users.HandleUserLogin)
-		r.Post("/auth/session/refresh", auth.HandleRefreshSession)
-		r.With(middleware.AuthorizeRequest(role.RoleUser)).
-			Get("/auth/session/verify", auth.HandleVerifySession)
-
-		r.Post("/setup/admin", admin.HandleAdminSetup)
-		r.Route("/admin", func(r chi.Router) {
-			r.Use(middleware.AuthorizeRequest(role.RoleAdmin))
-
-			r.Post("/user", users.HandleCreateUser)
-			r.Post("/", admin.HandleCreateAdmin)
-		})
-
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.AuthorizeRequest(role.RoleUser))
-			r.Post("/recipes", recipes.CreateRecipe)
-			r.Post("/recipes/ingredients", recipes.CreateRecipeIngredient)
-			r.Post("/recipes/steps", recipes.CreateRecipeStep)
-			r.Get("/recipes/personal", recipes.GetPersonalRecipes)
-			r.Get("/recipes/personal/{recipeID}", recipes.GetPersonalRecipe)
-			r.Post("/recipes/{recipeID}/cover", recipes.UpdateRecipeCover)
-			r.Delete("/recipes/{recipeID}", recipes.DeleteRecipe)
-			r.Delete("/recipes/{recipeID}/ingredients/{ingredientID}", recipes.DeleteRecipeIngredient)
-			r.Delete("/recipes/{recipeID}/steps/{stepID}", recipes.DeleteRecipeStep)
-			r.Patch("/recipes/{recipeID}/steps/{stepID}", recipes.UpdateRecipeStep)
-			r.Patch("/recipes/{recipeID}/ingredients/{ingredientID}", recipes.UpdateRecipeIngredient)
-			r.Patch("/recipes/{recipeID}", recipes.UpdateRecipe)
-			r.Put("/recipes/{recipeID}", recipes.UpdateRecipeFull)
-		})
-		r.Get("/recipes/{recipeID}", recipes.GetRecipe)
-	})
-}
 
 // Start godoc
 //

@@ -79,44 +79,46 @@ paths:
       security:
         - AccessTokenAdmin: []
 
-  # /api/admin/user:
-  #   post:
-  #     summary: Create a user.
-  #     tags:
-  #       - User
-  #     requestBody:
-  #       description: Create User Request
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             $ref: "#/components/schemas/CreateUserRequest"
-  #     responses:
-  #       "200":
-  #         description: OK
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/CreateUserResponse"
-  #       "409":
-  #         description: Status Conflict
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "422":
-  #         description: Unprocessible Entity
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal Server Error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
+  /api/admin/user:
+    post:
+      summary: Create a user.
+      tags:
+        - User
+      requestBody:
+        description: Create User Request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "204":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateUserResponse"
+        "409":
+          description: Status Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Unprocessible Entity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - AccessTokenAdmin: []
+
   # /api/auth/session/refresh:
   #   post:
   #     summary: Refresh session tokens

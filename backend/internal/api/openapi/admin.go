@@ -64,3 +64,54 @@ func (Server) PostApiAdmin(ctx context.Context, request PostApiAdminRequestObjec
 
 	return PostApiAdmin204JSONResponse{}, nil
 }
+
+func (Server) PostApiAdminUser(ctx context.Context,
+	request PostApiAdminUserRequestObject,
+) (PostApiAdminUserResponseObject, error) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+
+	// Ensure password strength
+	env.Logger.DebugContext(ctx, "Validating password")
+	if err := password.ValidatePassword(request.Body.Password); err != nil {
+		env.Logger.ErrorContext(ctx, "Failed to validate password", slog.Any("error", err))
+		return PostApiAdminUser409JSONResponse{
+			Status:  apiError.WeakPassword.StatusCode(),
+			Code:    apiError.WeakPassword.String(),
+			Message: "weak password",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Hash password
+	env.Logger.DebugContext(ctx, "Hashing password")
+	passwordHash, err := argon2id.EncodeHash(request.Body.Password, argon2id.DefaultParams)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "Failed to hash password", slog.Any("error", err))
+		return nil, err
+	}
+
+	// Create admin
+	var pgErr *pgconn.PgError
+	env.Logger.DebugContext(ctx, "Creating admin")
+	_, err = env.Database.CreateAdmin(ctx, database.CreateAdminParams{
+		Email:        string(request.Body.Email),
+		PasswordHash: passwordHash,
+		FirstName:    request.Body.FirstName,
+		LastName:     request.Body.LastName,
+	})
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ColumnName == "email" {
+		env.Logger.ErrorContext(ctx, "Admin with email already exists", slog.Any("error", err))
+		return PostApiAdminUser422JSONResponse{
+			Code:    apiError.EmailConflict.String(),
+			Status:  apiError.EmailConflict.StatusCode(),
+			Message: "email already in use",
+			ErrorId: requestID,
+		}, nil
+	} else if err != nil {
+		env.Logger.ErrorContext(ctx, "Failed to create admin", slog.Any("error", err))
+		return nil, err
+	}
+
+	return PostApiAdminUser204JSONResponse{}, nil
+}

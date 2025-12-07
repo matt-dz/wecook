@@ -37,6 +37,19 @@ type CreateAdminResponse struct {
 	UserId *int `json:"user_id,omitempty"`
 }
 
+// CreateUserRequest defines model for CreateUserRequest.
+type CreateUserRequest struct {
+	Email     openapi_types.Email `json:"email"`
+	FirstName string              `json:"first_name"`
+	LastName  string              `json:"last_name"`
+	Password  string              `json:"password"`
+}
+
+// CreateUserResponse defines model for CreateUserResponse.
+type CreateUserResponse struct {
+	UserId *int `json:"user_id,omitempty"`
+}
+
 // Error Standard error response
 type Error struct {
 	Code    string `json:"code"`
@@ -47,6 +60,9 @@ type Error struct {
 
 // PostApiAdminJSONRequestBody defines body for PostApiAdmin for application/json ContentType.
 type PostApiAdminJSONRequestBody = CreateAdminRequest
+
+// PostApiAdminUserJSONRequestBody defines body for PostApiAdminUser for application/json ContentType.
+type PostApiAdminUserJSONRequestBody = CreateUserRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -126,6 +142,11 @@ type ClientInterface interface {
 
 	PostApiAdmin(ctx context.Context, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostApiAdminUserWithBody request with any body
+	PostApiAdminUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiAdminUser(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetApiOpenapiYaml request
 	GetApiOpenapiYaml(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -147,6 +168,30 @@ func (c *Client) PostApiAdminWithBody(ctx context.Context, contentType string, b
 
 func (c *Client) PostApiAdmin(ctx context.Context, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiAdminRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiAdminUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiAdminUserRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiAdminUser(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiAdminUserRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -202,6 +247,46 @@ func NewPostApiAdminRequestWithBody(server string, contentType string, body io.R
 	}
 
 	operationPath := fmt.Sprintf("/api/admin")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiAdminUserRequest calls the generic PostApiAdminUser builder with application/json body
+func NewPostApiAdminUserRequest(server string, body PostApiAdminUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiAdminUserRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiAdminUserRequestWithBody generates requests for PostApiAdminUser with any type of body
+func NewPostApiAdminUserRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/admin/user")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -323,6 +408,11 @@ type ClientWithResponsesInterface interface {
 
 	PostApiAdminWithResponse(ctx context.Context, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error)
 
+	// PostApiAdminUserWithBodyWithResponse request with any body
+	PostApiAdminUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error)
+
+	PostApiAdminUserWithResponse(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error)
+
 	// GetApiOpenapiYamlWithResponse request
 	GetApiOpenapiYamlWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiOpenapiYamlResponse, error)
 
@@ -349,6 +439,31 @@ func (r PostApiAdminResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostApiAdminResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiAdminUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON204      *CreateUserResponse
+	JSON409      *Error
+	JSON422      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiAdminUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiAdminUserResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -416,6 +531,23 @@ func (c *ClientWithResponses) PostApiAdminWithResponse(ctx context.Context, body
 	return ParsePostApiAdminResponse(rsp)
 }
 
+// PostApiAdminUserWithBodyWithResponse request with arbitrary body returning *PostApiAdminUserResponse
+func (c *ClientWithResponses) PostApiAdminUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error) {
+	rsp, err := c.PostApiAdminUserWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiAdminUserResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiAdminUserWithResponse(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error) {
+	rsp, err := c.PostApiAdminUser(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiAdminUserResponse(rsp)
+}
+
 // GetApiOpenapiYamlWithResponse request returning *GetApiOpenapiYamlResponse
 func (c *ClientWithResponses) GetApiOpenapiYamlWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiOpenapiYamlResponse, error) {
 	rsp, err := c.GetApiOpenapiYaml(ctx, reqEditors...)
@@ -450,6 +582,53 @@ func ParsePostApiAdminResponse(rsp *http.Response) (*PostApiAdminResponse, error
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 204:
 		var dest CreateAdminResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON204 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiAdminUserResponse parses an HTTP response from a PostApiAdminUserWithResponse call
+func ParsePostApiAdminUserResponse(rsp *http.Response) (*PostApiAdminUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiAdminUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 204:
+		var dest CreateUserResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -538,6 +717,9 @@ type ServerInterface interface {
 	// Create an admin.
 	// (POST /api/admin)
 	PostApiAdmin(w http.ResponseWriter, r *http.Request)
+	// Create a user.
+	// (POST /api/admin/user)
+	PostApiAdminUser(w http.ResponseWriter, r *http.Request)
 	// Get OpenAPI specification.
 	// (GET /api/openapi.yaml)
 	GetApiOpenapiYaml(w http.ResponseWriter, r *http.Request)
@@ -553,6 +735,12 @@ type Unimplemented struct{}
 // Create an admin.
 // (POST /api/admin)
 func (_ Unimplemented) PostApiAdmin(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create a user.
+// (POST /api/admin/user)
+func (_ Unimplemented) PostApiAdminUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -588,6 +776,26 @@ func (siw *ServerInterfaceWrapper) PostApiAdmin(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostApiAdmin(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostApiAdminUser operation middleware
+func (siw *ServerInterfaceWrapper) PostApiAdminUser(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenAdminScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostApiAdminUser(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -742,6 +950,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/api/admin", wrapper.PostApiAdmin)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/user", wrapper.PostApiAdminUser)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/openapi.yaml", wrapper.GetApiOpenapiYaml)
 	})
 	r.Group(func(r chi.Router) {
@@ -789,6 +1000,50 @@ func (response PostApiAdmin422JSONResponse) VisitPostApiAdminResponse(w http.Res
 type PostApiAdmin500JSONResponse Error
 
 func (response PostApiAdmin500JSONResponse) VisitPostApiAdminResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiAdminUserRequestObject struct {
+	Body *PostApiAdminUserJSONRequestBody
+}
+
+type PostApiAdminUserResponseObject interface {
+	VisitPostApiAdminUserResponse(w http.ResponseWriter) error
+}
+
+type PostApiAdminUser204JSONResponse CreateUserResponse
+
+func (response PostApiAdminUser204JSONResponse) VisitPostApiAdminUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(204)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiAdminUser409JSONResponse Error
+
+func (response PostApiAdminUser409JSONResponse) VisitPostApiAdminUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiAdminUser422JSONResponse Error
+
+func (response PostApiAdminUser422JSONResponse) VisitPostApiAdminUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiAdminUser500JSONResponse Error
+
+func (response PostApiAdminUser500JSONResponse) VisitPostApiAdminUserResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -850,6 +1105,9 @@ type StrictServerInterface interface {
 	// Create an admin.
 	// (POST /api/admin)
 	PostApiAdmin(ctx context.Context, request PostApiAdminRequestObject) (PostApiAdminResponseObject, error)
+	// Create a user.
+	// (POST /api/admin/user)
+	PostApiAdminUser(ctx context.Context, request PostApiAdminUserRequestObject) (PostApiAdminUserResponseObject, error)
 	// Get OpenAPI specification.
 	// (GET /api/openapi.yaml)
 	GetApiOpenapiYaml(ctx context.Context, request GetApiOpenapiYamlRequestObject) (GetApiOpenapiYamlResponseObject, error)
@@ -911,6 +1169,37 @@ func (sh *strictHandler) PostApiAdmin(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiAdminResponseObject); ok {
 		if err := validResponse.VisitPostApiAdminResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostApiAdminUser operation middleware
+func (sh *strictHandler) PostApiAdminUser(w http.ResponseWriter, r *http.Request) {
+	var request PostApiAdminUserRequestObject
+
+	var body PostApiAdminUserJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PostApiAdminUser(ctx, request.(PostApiAdminUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostApiAdminUser")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PostApiAdminUserResponseObject); ok {
+		if err := validResponse.VisitPostApiAdminUserResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
