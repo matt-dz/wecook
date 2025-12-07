@@ -29,61 +29,6 @@ const (
 	maxUploadSize      = 20 << 20 // ~ 20 MB
 )
 
-// CreateRecipe godoc
-//
-//	@Summary		Create a new recipe
-//	@Description	Creates a new (empty) recipe for the authenticated user.
-//	@Tags			Recipes
-//	@Accept			json
-//	@Produce		json
-//
-//	@Success		200	{object}	CreateRecipeResponse	"Recipe successfully created"
-//	@Failure		400	{object}	apiError.Error			"Bad request"
-//	@Failure		401	{object}	apiError.Error			"Unauthorized — missing or invalid access token cookie"
-//	@Failure		500	{object}	apiError.Error			"Internal server error"
-//
-//	@Router			/api/recipes [post]
-func CreateRecipe(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	env := env.EnvFromCtx(ctx)
-	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
-	userID, err := token.UserIDFromCtx(ctx)
-	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
-		_ = apiError.EncodeInternalError(w, requestID)
-		return
-	}
-
-	// Create recipe
-	env.Logger.DebugContext(ctx, "creating recipe")
-	recipeID, err := env.Database.CreateRecipe(ctx, database.CreateRecipeParams{
-		UserID: pgtype.Int8{
-			Int64: userID,
-			Valid: true,
-		},
-		Title: defaultRecipeTitle,
-	})
-	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to create recipe", slog.Any("error", err))
-		_ = apiError.EncodeInternalError(w, requestID)
-		return
-	}
-
-	// Write response
-	env.Logger.ErrorContext(ctx, "Writing response")
-	resp, err := json.Marshal(CreateRecipeResponse{RecipeID: recipeID})
-	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to marshal response", slog.Any("error", err))
-		_ = apiError.EncodeInternalError(w, requestID)
-		return
-	}
-	w.Header().Add("Content-Type", "application/json")
-	if _, err := w.Write(resp); err != nil {
-		env.Logger.ErrorContext(ctx, "failed to write response", slog.Any("error", err))
-		return
-	}
-}
-
 // CreateRecipeIngredient godoc
 //
 //	@Summary		Create a recipe ingredient

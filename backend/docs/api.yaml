@@ -269,39 +269,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  # /api/recipes:
-  #   post:
-  #     summary: Create a new recipe
-  #     tags:
-  #       - Recipes
-  #     description: >
-  #       Creates a new (empty) recipe for the authenticated user.
-  #     responses:
-  #       "200":
-  #         description: Recipe successfully created
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/CreateRecipeResponse"
-  #       "400":
-  #         description: Bad request
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized — missing or invalid access token cookie
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
+
+  /api/recipes:
+    post:
+      summary: Create a new recipe
+      tags:
+        - Recipes
+      description: >
+        Creates a new (empty) recipe for the authenticated user.
+      responses:
+        "201":
+          description: Recipe successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateRecipeResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized — missing or invalid access token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   # /api/recipes/{recipeID}:
   #   get:
   #     summary: Get a recipe and its owner information
@@ -1257,6 +1258,11 @@ components:
       properties:
         recipe_id:
           type: integer
+          format: int64
+          minimum: 0
+          description: Recipe ID
+      required:
+        - recipe_id
 
     GetPersonalRecipesResponse:
       type: object
