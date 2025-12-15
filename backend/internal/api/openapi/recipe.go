@@ -14,6 +14,7 @@ import (
 	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/env"
+	"github.com/matt-dz/wecook/internal/form"
 )
 
 const (
@@ -461,4 +462,148 @@ func (Server) PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context
 		res.ImageUrl = &row.ImageUrl.String
 	}
 	return res, nil
+}
+
+func (Server) PostApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Context,
+	request PostApiRecipesRecipeIDIngredientsIngredientIDImageRequestObject,
+) (PostApiRecipesRecipeIDIngredientsIngredientIDImageResponseObject, error) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsIngredientIDImage400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "missing user id",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Check ownership
+	env.Logger.DebugContext(ctx, "checking user ownership")
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: request.RecipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check recipe ownership", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsIngredientIDImage500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	if !ownsRecipe {
+		env.Logger.ErrorContext(ctx, "user does not own recipe or ingredient")
+		return PostApiRecipesRecipeIDIngredientsIngredientIDImage404JSONResponse{
+			Status:  apiError.RecipeNotFound.StatusCode(),
+			Code:    apiError.RecipeNotFound.String(),
+			Message: "recipe/ingredient does not exist or user does not own recipe",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Read image
+	env.Logger.DebugContext(ctx, "reading recipe image")
+	requestForm, err := request.Body.ReadForm(form.MaximumUploadSize)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to read form", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsIngredientIDImage400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "invalid form",
+			ErrorId: requestID,
+		}, nil
+	}
+	imageFile, err := requestForm.File["image"][0].Open()
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to open image", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsIngredientIDImage400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "invalid image",
+			ErrorId: requestID,
+		}, nil
+	}
+	defer func() { _ = imageFile.Close() }()
+	file, err := form.ReadFile(imageFile)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to read image", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsIngredientIDImage400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "invalid image",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Get current image
+	env.Logger.DebugContext(ctx, "getting current image url")
+	oldImage, err := env.Database.GetRecipeIngredientImageURL(ctx, request.IngredientID)
+	if err != nil {
+		return PostApiRecipesRecipeIDIngredientsIngredientIDImage500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Deleting old image
+	if oldImage.Valid {
+		env.Logger.DebugContext(ctx, "deleting current image")
+		err = env.FileStore.DeleteURLPath(oldImage.String)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to delete old image")
+			return PostApiRecipesRecipeIDIngredientsIngredientIDImage500JSONResponse{
+				Status:  apiError.InternalServerError.StatusCode(),
+				Code:    apiError.InternalServerError.String(),
+				Message: "Internal Server Error",
+				ErrorId: requestID,
+			}, nil
+		}
+	}
+
+	// Write new image
+	env.Logger.DebugContext(ctx, "writing new image")
+	urlpath, _, err := env.FileStore.WriteIngredientImage(request.RecipeID,
+		request.IngredientID, file.Suffix, file.Data)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to write ingredient image", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsIngredientIDImage500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Update image url in database
+	env.Logger.DebugContext(ctx, "update image in database")
+	ingredient, err := env.Database.UpdateRecipeIngredient(ctx, database.UpdateRecipeIngredientParams{
+		ID: request.IngredientID,
+		ImageUrl: pgtype.Text{
+			String: urlpath,
+			Valid:  true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to update recipe ingredient", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsIngredientIDImage500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	return PostApiRecipesRecipeIDIngredientsIngredientIDImage200JSONResponse{
+		Id:       ingredient.ID,
+		ImageUrl: ingredient.ImageUrl.String,
+	}, nil
 }

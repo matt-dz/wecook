@@ -487,6 +487,64 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /api/recipes/{recipeID}/ingredients/{ingredientID}/image:
+    post:
+      summary: Upload an image for a recipe ingredient
+      tags:
+        - Recipes
+        - Ingredients
+      description: >
+        Uploads an image for a recipe ingredient. The recipe must be
+        owned by the user.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: Recipe ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: ingredientID
+          in: path
+          required: true
+          description: Ingredient ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/UpdateIngredientImageForm"
+      responses:
+        "200":
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateIngredientImageResponse"
+        "400":
+          description: Invalid request or file format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe or ingredient not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   # /api/recipes/personal:
   #   get:
   #     summary: Get recipes owned by the authenticated user
@@ -976,14 +1034,14 @@ components:
         unit:
           type: string
 
-    UpdateIngredientForm:
+    UpdateIngredientImageForm:
       type: object
       properties:
-        data:
-          $ref: "#/components/schemas/UpdateIngredientBody"
         image:
           type: string
           format: binary
+      required:
+        - image
 
     UpdateIngredientResponse:
       type: object
@@ -1005,6 +1063,19 @@ components:
       required:
         - id
         - name
+
+    UpdateIngredientImageResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 0
+        image_url:
+          type: string
+      required:
+        - id
+        - image_url
 
     UpdateStepRequest:
       type: object

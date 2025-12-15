@@ -1,3 +1,4 @@
+// Package form contains utilities for handling with http forms.
 package form
 
 import (
@@ -8,7 +9,8 @@ import (
 )
 
 const (
-	magicNumberSeek = 512
+	magicNumberSeek   = 512
+	MaximumUploadSize = 20 << 20 // ~ 20 MB
 )
 
 // allowedImageTypes lists the simple MIME types we accept.
