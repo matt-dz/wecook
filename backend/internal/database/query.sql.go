@@ -26,6 +26,33 @@ type BulkInsertRecipeStepsParams struct {
 	StepNumber  int32
 }
 
+const checkIngredientOwnership = `-- name: CheckIngredientOwnership :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      recipe_ingredients ri
+      JOIN recipes r ON r.id = ri.recipe_id
+    WHERE
+      r.id = $2::bigint
+      AND ri.id = $3::bigint
+      AND r.user_id = $1)
+`
+
+type CheckIngredientOwnershipParams struct {
+	UserID       pgtype.Int8
+	RecipeID     int64
+	IngredientID int64
+}
+
+func (q *Queries) CheckIngredientOwnership(ctx context.Context, arg CheckIngredientOwnershipParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkIngredientOwnership, arg.UserID, arg.RecipeID, arg.IngredientID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const checkRecipeOwnership = `-- name: CheckRecipeOwnership :one
 SELECT
   EXISTS (
@@ -93,6 +120,29 @@ func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (int64
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const createEmptyRecipeIngredient = `-- name: CreateEmptyRecipeIngredient :one
+INSERT INTO recipe_ingredients (recipe_id)
+  VALUES ($1)
+RETURNING
+  id, recipe_id, quantity, unit, name, image_url, created_at, updated_at
+`
+
+func (q *Queries) CreateEmptyRecipeIngredient(ctx context.Context, recipeID int64) (RecipeIngredient, error) {
+	row := q.db.QueryRow(ctx, createEmptyRecipeIngredient, recipeID)
+	var i RecipeIngredient
+	err := row.Scan(
+		&i.ID,
+		&i.RecipeID,
+		&i.Quantity,
+		&i.Unit,
+		&i.Name,
+		&i.ImageUrl,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const createRecipe = `-- name: CreateRecipe :one
@@ -215,11 +265,11 @@ WHERE recipe_id = $1
 
 type DeleteRecipeIngredientsByIDsParams struct {
 	RecipeID int64
-	Column2  []int64
+	Ids      []int64
 }
 
 func (q *Queries) DeleteRecipeIngredientsByIDs(ctx context.Context, arg DeleteRecipeIngredientsByIDsParams) error {
-	_, err := q.db.Exec(ctx, deleteRecipeIngredientsByIDs, arg.RecipeID, arg.Column2)
+	_, err := q.db.Exec(ctx, deleteRecipeIngredientsByIDs, arg.RecipeID, arg.Ids)
 	return err
 }
 
@@ -241,11 +291,11 @@ WHERE recipe_id = $1
 
 type DeleteRecipeStepsByIDsParams struct {
 	RecipeID int64
-	Column2  []int64
+	Ids      []int64
 }
 
 func (q *Queries) DeleteRecipeStepsByIDs(ctx context.Context, arg DeleteRecipeStepsByIDsParams) error {
-	_, err := q.db.Exec(ctx, deleteRecipeStepsByIDs, arg.RecipeID, arg.Column2)
+	_, err := q.db.Exec(ctx, deleteRecipeStepsByIDs, arg.RecipeID, arg.Ids)
 	return err
 }
 
@@ -833,7 +883,7 @@ func (q *Queries) UpdateRecipeCoverImage(ctx context.Context, arg UpdateRecipeCo
 	return err
 }
 
-const updateRecipeIngredient = `-- name: UpdateRecipeIngredient :exec
+const updateRecipeIngredient = `-- name: UpdateRecipeIngredient :one
 UPDATE
   recipe_ingredients
 SET
@@ -843,6 +893,8 @@ SET
   image_url = coalesce($5, image_url)
 WHERE
   id = $1
+RETURNING
+  id, recipe_id, quantity, unit, name, image_url, created_at, updated_at
 `
 
 type UpdateRecipeIngredientParams struct {
@@ -853,15 +905,26 @@ type UpdateRecipeIngredientParams struct {
 	ImageUrl pgtype.Text
 }
 
-func (q *Queries) UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) error {
-	_, err := q.db.Exec(ctx, updateRecipeIngredient,
+func (q *Queries) UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) (RecipeIngredient, error) {
+	row := q.db.QueryRow(ctx, updateRecipeIngredient,
 		arg.ID,
 		arg.Quantity,
 		arg.Unit,
 		arg.Name,
 		arg.ImageUrl,
 	)
-	return err
+	var i RecipeIngredient
+	err := row.Scan(
+		&i.ID,
+		&i.RecipeID,
+		&i.Quantity,
+		&i.Unit,
+		&i.Name,
+		&i.ImageUrl,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateRecipeIngredientImage = `-- name: UpdateRecipeIngredientImage :exec

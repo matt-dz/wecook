@@ -59,7 +59,7 @@ clean:
 	rm $(BIN_DIR)/*
 
 .PHONY: dbmock
-dbmock:
+dbmock: sqlc
 	@echo "🤖 Generating database mock..."
 	mockgen -source=internal/database/querier.go \
 		-destination internal/dbmock/dbmock.go \
@@ -69,11 +69,18 @@ dbmock:
 fileservermock:
 	@echo "🤖 Generating fileserver mock..."
 	mockgen -source=internal/fileserver/fileserver.go \
-		-destination internal/fileservermock/fileservermock.go \
-		-package fileservermock
+		-destination internal/fileserver/fileservermock.go \
+		-package fileserver
+
+.PHONY: filestoremock
+filestoremock:
+	@echo "🤖 Generating filestore mock..."
+	mockgen -source=internal/filestore/filestore.go \
+		-destination internal/filestore/filestoremock.go \
+		-package filestore
 
 .PHONY: mocks
-mocks: dbmock fileservermock
+mocks: dbmock fileservermock filestoremock
 
 .PHONY: test
 test: mocks

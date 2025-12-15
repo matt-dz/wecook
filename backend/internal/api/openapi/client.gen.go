@@ -47,6 +47,15 @@ type CreateAdminResponse struct {
 	UserId *int `json:"user_id,omitempty"`
 }
 
+// CreateIngredientResponse defines model for CreateIngredientResponse.
+type CreateIngredientResponse struct {
+	Id       int64    `json:"id"`
+	ImageUrl *string  `json:"image_url,omitempty"`
+	Name     *string  `json:"name,omitempty"`
+	Quantity *float32 `json:"quantity,omitempty"`
+	Unit     *string  `json:"unit,omitempty"`
+}
+
 // CreateRecipeResponse defines model for CreateRecipeResponse.
 type CreateRecipeResponse struct {
 	// RecipeId Recipe ID
@@ -161,6 +170,22 @@ type RefreshToken struct {
 // TimeUnit defines model for TimeUnit.
 type TimeUnit string
 
+// UpdateIngredientBody defines model for UpdateIngredientBody.
+type UpdateIngredientBody struct {
+	Name     *string  `json:"name,omitempty"`
+	Quantity *float32 `json:"quantity,omitempty"`
+	Unit     *string  `json:"unit,omitempty"`
+}
+
+// UpdateIngredientResponse defines model for UpdateIngredientResponse.
+type UpdateIngredientResponse struct {
+	Id       int64    `json:"id"`
+	ImageUrl *string  `json:"image_url,omitempty"`
+	Name     string   `json:"name"`
+	Quantity *float32 `json:"quantity,omitempty"`
+	Unit     *string  `json:"unit,omitempty"`
+}
+
 // UserLoginRequest defines model for UserLoginRequest.
 type UserLoginRequest struct {
 	Email    string `json:"email"`
@@ -190,6 +215,9 @@ type PostApiAuthRefreshJSONRequestBody = RefreshToken
 
 // PostApiLoginJSONRequestBody defines body for PostApiLogin for application/json ContentType.
 type PostApiLoginJSONRequestBody = UserLoginRequest
+
+// PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody defines body for PatchApiRecipesRecipeIDIngredientsIngredientID for application/json ContentType.
+type PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody = UpdateIngredientBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -301,6 +329,14 @@ type ClientInterface interface {
 
 	// GetApiRecipesRecipeID request
 	GetApiRecipesRecipeID(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiRecipesRecipeIDIngredients request
+	PostApiRecipesRecipeIDIngredients(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody request with any body
+	PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, recipeID int64, ingredientID int64, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) PostApiAdminWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -461,6 +497,42 @@ func (c *Client) DeleteApiRecipesRecipeID(ctx context.Context, recipeID int64, r
 
 func (c *Client) GetApiRecipesRecipeID(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiRecipesRecipeIDRequest(c.Server, recipeID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiRecipesRecipeIDIngredients(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiRecipesRecipeIDIngredientsRequest(c.Server, recipeID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody(c.Server, recipeID, ingredientID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, recipeID int64, ingredientID int64, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequest(c.Server, recipeID, ingredientID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -841,6 +913,94 @@ func NewGetApiRecipesRecipeIDRequest(server string, recipeID int64) (*http.Reque
 	return req, nil
 }
 
+// NewPostApiRecipesRecipeIDIngredientsRequest generates requests for PostApiRecipesRecipeIDIngredients
+func NewPostApiRecipesRecipeIDIngredientsRequest(server string, recipeID int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "recipeID", runtime.ParamLocationPath, recipeID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/recipes/%s/ingredients", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequest calls the generic PatchApiRecipesRecipeIDIngredientsIngredientID builder with application/json body
+func NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequest(server string, recipeID int64, ingredientID int64, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody(server, recipeID, ingredientID, "application/json", bodyReader)
+}
+
+// NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody generates requests for PatchApiRecipesRecipeIDIngredientsIngredientID with any type of body
+func NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody(server string, recipeID int64, ingredientID int64, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "recipeID", runtime.ParamLocationPath, recipeID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "ingredientID", runtime.ParamLocationPath, ingredientID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/recipes/%s/ingredients/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -921,6 +1081,14 @@ type ClientWithResponsesInterface interface {
 
 	// GetApiRecipesRecipeIDWithResponse request
 	GetApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*GetApiRecipesRecipeIDResponse, error)
+
+	// PostApiRecipesRecipeIDIngredientsWithResponse request
+	PostApiRecipesRecipeIDIngredientsWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsResponse, error)
+
+	// PatchApiRecipesRecipeIDIngredientsIngredientIDWithBodyWithResponse request with any body
+	PatchApiRecipesRecipeIDIngredientsIngredientIDWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error)
+
+	PatchApiRecipesRecipeIDIngredientsIngredientIDWithResponse(ctx context.Context, recipeID int64, ingredientID int64, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error)
 }
 
 type PostApiAdminResponse struct {
@@ -1165,6 +1333,55 @@ func (r GetApiRecipesRecipeIDResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiRecipesRecipeIDIngredientsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CreateIngredientResponse
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiRecipesRecipeIDIngredientsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiRecipesRecipeIDIngredientsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchApiRecipesRecipeIDIngredientsIngredientIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UpdateIngredientResponse
+	JSON400      *Error
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchApiRecipesRecipeIDIngredientsIngredientIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchApiRecipesRecipeIDIngredientsIngredientIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // PostApiAdminWithBodyWithResponse request with arbitrary body returning *PostApiAdminResponse
 func (c *ClientWithResponses) PostApiAdminWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error) {
 	rsp, err := c.PostApiAdminWithBody(ctx, contentType, body, reqEditors...)
@@ -1285,6 +1502,32 @@ func (c *ClientWithResponses) GetApiRecipesRecipeIDWithResponse(ctx context.Cont
 		return nil, err
 	}
 	return ParseGetApiRecipesRecipeIDResponse(rsp)
+}
+
+// PostApiRecipesRecipeIDIngredientsWithResponse request returning *PostApiRecipesRecipeIDIngredientsResponse
+func (c *ClientWithResponses) PostApiRecipesRecipeIDIngredientsWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsResponse, error) {
+	rsp, err := c.PostApiRecipesRecipeIDIngredients(ctx, recipeID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiRecipesRecipeIDIngredientsResponse(rsp)
+}
+
+// PatchApiRecipesRecipeIDIngredientsIngredientIDWithBodyWithResponse request with arbitrary body returning *PatchApiRecipesRecipeIDIngredientsIngredientIDResponse
+func (c *ClientWithResponses) PatchApiRecipesRecipeIDIngredientsIngredientIDWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error) {
+	rsp, err := c.PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody(ctx, recipeID, ingredientID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiRecipesRecipeIDIngredientsIngredientIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchApiRecipesRecipeIDIngredientsIngredientIDWithResponse(ctx context.Context, recipeID int64, ingredientID int64, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error) {
+	rsp, err := c.PatchApiRecipesRecipeIDIngredientsIngredientID(ctx, recipeID, ingredientID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiRecipesRecipeIDIngredientsIngredientIDResponse(rsp)
 }
 
 // ParsePostApiAdminResponse parses an HTTP response from a PostApiAdminWithResponse call
@@ -1701,6 +1944,93 @@ func ParseGetApiRecipesRecipeIDResponse(rsp *http.Response) (*GetApiRecipesRecip
 	return response, nil
 }
 
+// ParsePostApiRecipesRecipeIDIngredientsResponse parses an HTTP response from a PostApiRecipesRecipeIDIngredientsWithResponse call
+func ParsePostApiRecipesRecipeIDIngredientsResponse(rsp *http.Response) (*PostApiRecipesRecipeIDIngredientsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiRecipesRecipeIDIngredientsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CreateIngredientResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchApiRecipesRecipeIDIngredientsIngredientIDResponse parses an HTTP response from a PatchApiRecipesRecipeIDIngredientsIngredientIDWithResponse call
+func ParsePatchApiRecipesRecipeIDIngredientsIngredientIDResponse(rsp *http.Response) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchApiRecipesRecipeIDIngredientsIngredientIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UpdateIngredientResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Create an admin.
@@ -1733,6 +2063,12 @@ type ServerInterface interface {
 	// Get a public recipe and its owner's information
 	// (GET /api/recipes/{recipeID})
 	GetApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64)
+	// Create an ingredient for a recipe.
+	// (POST /api/recipes/{recipeID}/ingredients)
+	PostApiRecipesRecipeIDIngredients(w http.ResponseWriter, r *http.Request, recipeID int64)
+	// Update an ingredient for a recipe.
+	// (PATCH /api/recipes/{recipeID}/ingredients/{ingredientID})
+	PatchApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -1796,6 +2132,18 @@ func (_ Unimplemented) DeleteApiRecipesRecipeID(w http.ResponseWriter, r *http.R
 // Get a public recipe and its owner's information
 // (GET /api/recipes/{recipeID})
 func (_ Unimplemented) GetApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create an ingredient for a recipe.
+// (POST /api/recipes/{recipeID}/ingredients)
+func (_ Unimplemented) PostApiRecipesRecipeIDIngredients(w http.ResponseWriter, r *http.Request, recipeID int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update an ingredient for a recipe.
+// (PATCH /api/recipes/{recipeID}/ingredients/{ingredientID})
+func (_ Unimplemented) PatchApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2040,6 +2388,77 @@ func (siw *ServerInterfaceWrapper) GetApiRecipesRecipeID(w http.ResponseWriter, 
 	handler.ServeHTTP(w, r)
 }
 
+// PostApiRecipesRecipeIDIngredients operation middleware
+func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDIngredients(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "recipeID" -------------
+	var recipeID int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "recipeID", chi.URLParam(r, "recipeID"), &recipeID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipeID", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostApiRecipesRecipeIDIngredients(w, r, recipeID)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PatchApiRecipesRecipeIDIngredientsIngredientID operation middleware
+func (siw *ServerInterfaceWrapper) PatchApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "recipeID" -------------
+	var recipeID int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "recipeID", chi.URLParam(r, "recipeID"), &recipeID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipeID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "ingredientID" -------------
+	var ingredientID int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "ingredientID", chi.URLParam(r, "ingredientID"), &ingredientID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "ingredientID", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PatchApiRecipesRecipeIDIngredientsIngredientID(w, r, recipeID, ingredientID)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -2182,6 +2601,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/recipes/{recipeID}", wrapper.GetApiRecipesRecipeID)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/recipes/{recipeID}/ingredients", wrapper.PostApiRecipesRecipeIDIngredients)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/recipes/{recipeID}/ingredients/{ingredientID}", wrapper.PatchApiRecipesRecipeIDIngredientsIngredientID)
 	})
 
 	return r
@@ -2603,6 +3028,87 @@ func (response GetApiRecipesRecipeID500JSONResponse) VisitGetApiRecipesRecipeIDR
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PostApiRecipesRecipeIDIngredientsRequestObject struct {
+	RecipeID int64 `json:"recipeID"`
+}
+
+type PostApiRecipesRecipeIDIngredientsResponseObject interface {
+	VisitPostApiRecipesRecipeIDIngredientsResponse(w http.ResponseWriter) error
+}
+
+type PostApiRecipesRecipeIDIngredients200JSONResponse CreateIngredientResponse
+
+func (response PostApiRecipesRecipeIDIngredients200JSONResponse) VisitPostApiRecipesRecipeIDIngredientsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiRecipesRecipeIDIngredients404JSONResponse Error
+
+func (response PostApiRecipesRecipeIDIngredients404JSONResponse) VisitPostApiRecipesRecipeIDIngredientsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiRecipesRecipeIDIngredients500JSONResponse Error
+
+func (response PostApiRecipesRecipeIDIngredients500JSONResponse) VisitPostApiRecipesRecipeIDIngredientsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiRecipesRecipeIDIngredientsIngredientIDRequestObject struct {
+	RecipeID     int64 `json:"recipeID"`
+	IngredientID int64 `json:"ingredientID"`
+	Body         *PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody
+}
+
+type PatchApiRecipesRecipeIDIngredientsIngredientIDResponseObject interface {
+	VisitPatchApiRecipesRecipeIDIngredientsIngredientIDResponse(w http.ResponseWriter) error
+}
+
+type PatchApiRecipesRecipeIDIngredientsIngredientID200JSONResponse UpdateIngredientResponse
+
+func (response PatchApiRecipesRecipeIDIngredientsIngredientID200JSONResponse) VisitPatchApiRecipesRecipeIDIngredientsIngredientIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiRecipesRecipeIDIngredientsIngredientID400JSONResponse Error
+
+func (response PatchApiRecipesRecipeIDIngredientsIngredientID400JSONResponse) VisitPatchApiRecipesRecipeIDIngredientsIngredientIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiRecipesRecipeIDIngredientsIngredientID404JSONResponse Error
+
+func (response PatchApiRecipesRecipeIDIngredientsIngredientID404JSONResponse) VisitPatchApiRecipesRecipeIDIngredientsIngredientIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiRecipesRecipeIDIngredientsIngredientID500JSONResponse Error
+
+func (response PatchApiRecipesRecipeIDIngredientsIngredientID500JSONResponse) VisitPatchApiRecipesRecipeIDIngredientsIngredientIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Create an admin.
@@ -2635,6 +3141,12 @@ type StrictServerInterface interface {
 	// Get a public recipe and its owner's information
 	// (GET /api/recipes/{recipeID})
 	GetApiRecipesRecipeID(ctx context.Context, request GetApiRecipesRecipeIDRequestObject) (GetApiRecipesRecipeIDResponseObject, error)
+	// Create an ingredient for a recipe.
+	// (POST /api/recipes/{recipeID}/ingredients)
+	PostApiRecipesRecipeIDIngredients(ctx context.Context, request PostApiRecipesRecipeIDIngredientsRequestObject) (PostApiRecipesRecipeIDIngredientsResponseObject, error)
+	// Update an ingredient for a recipe.
+	// (PATCH /api/recipes/{recipeID}/ingredients/{ingredientID})
+	PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, request PatchApiRecipesRecipeIDIngredientsIngredientIDRequestObject) (PatchApiRecipesRecipeIDIngredientsIngredientIDResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -2935,6 +3447,66 @@ func (sh *strictHandler) GetApiRecipesRecipeID(w http.ResponseWriter, r *http.Re
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetApiRecipesRecipeIDResponseObject); ok {
 		if err := validResponse.VisitGetApiRecipesRecipeIDResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostApiRecipesRecipeIDIngredients operation middleware
+func (sh *strictHandler) PostApiRecipesRecipeIDIngredients(w http.ResponseWriter, r *http.Request, recipeID int64) {
+	var request PostApiRecipesRecipeIDIngredientsRequestObject
+
+	request.RecipeID = recipeID
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PostApiRecipesRecipeIDIngredients(ctx, request.(PostApiRecipesRecipeIDIngredientsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostApiRecipesRecipeIDIngredients")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PostApiRecipesRecipeIDIngredientsResponseObject); ok {
+		if err := validResponse.VisitPostApiRecipesRecipeIDIngredientsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PatchApiRecipesRecipeIDIngredientsIngredientID operation middleware
+func (sh *strictHandler) PatchApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
+	var request PatchApiRecipesRecipeIDIngredientsIngredientIDRequestObject
+
+	request.RecipeID = recipeID
+	request.IngredientID = ingredientID
+
+	var body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PatchApiRecipesRecipeIDIngredientsIngredientID(ctx, request.(PatchApiRecipesRecipeIDIngredientsIngredientIDRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PatchApiRecipesRecipeIDIngredientsIngredientID")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PatchApiRecipesRecipeIDIngredientsIngredientIDResponseObject); ok {
+		if err := validResponse.VisitPatchApiRecipesRecipeIDIngredientsIngredientIDResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -11,13 +11,17 @@ import (
 )
 
 type Querier interface {
+	BatchUpdateRecipeIngredientImages(ctx context.Context, arg []BatchUpdateRecipeIngredientImagesParams) *BatchUpdateRecipeIngredientImagesBatchResults
+	BatchUpdateRecipeStepImages(ctx context.Context, arg []BatchUpdateRecipeStepImagesParams) *BatchUpdateRecipeStepImagesBatchResults
 	BulkInsertRecipeIngredients(ctx context.Context, arg []BulkInsertRecipeIngredientsParams) (int64, error)
 	BulkInsertRecipeSteps(ctx context.Context, arg []BulkInsertRecipeStepsParams) (int64, error)
 	BulkUpdateRecipeIngredients(ctx context.Context, arg []BulkUpdateRecipeIngredientsParams) *BulkUpdateRecipeIngredientsBatchResults
 	BulkUpdateRecipeSteps(ctx context.Context, arg []BulkUpdateRecipeStepsParams) *BulkUpdateRecipeStepsBatchResults
+	CheckIngredientOwnership(ctx context.Context, arg CheckIngredientOwnershipParams) (bool, error)
 	CheckRecipeOwnership(ctx context.Context, arg CheckRecipeOwnershipParams) (bool, error)
 	CheckUsersTableExists(ctx context.Context) (bool, error)
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (int64, error)
+	CreateEmptyRecipeIngredient(ctx context.Context, recipeID int64) (RecipeIngredient, error)
 	CreateRecipe(ctx context.Context, arg CreateRecipeParams) (int64, error)
 	CreateRecipeIngredient(ctx context.Context, arg CreateRecipeIngredientParams) (int64, error)
 	CreateRecipeStep(ctx context.Context, arg CreateRecipeStepParams) (int64, error)
@@ -45,7 +49,7 @@ type Querier interface {
 	GetUserRole(ctx context.Context, id int64) (Role, error)
 	UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) error
 	UpdateRecipeCoverImage(ctx context.Context, arg UpdateRecipeCoverImageParams) error
-	UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) error
+	UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) (RecipeIngredient, error)
 	UpdateRecipeIngredientImage(ctx context.Context, arg UpdateRecipeIngredientImageParams) error
 	UpdateRecipeStep(ctx context.Context, arg UpdateRecipeStepParams) error
 	UpdateRecipeStepImage(ctx context.Context, arg UpdateRecipeStepImageParams) error

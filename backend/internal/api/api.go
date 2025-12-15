@@ -7,8 +7,10 @@ import (
 	"net/http"
 
 	"github.com/matt-dz/wecook/docs"
+	apiError "github.com/matt-dz/wecook/internal/api/error"
 	"github.com/matt-dz/wecook/internal/api/middleware"
 	api "github.com/matt-dz/wecook/internal/api/openapi"
+	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/env"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -63,8 +65,22 @@ func Start(env *env.Env) error {
 		ErrorHandlerWithOpts: middleware.OAPIErrorHandler,
 	}))
 
+	// Customize strict handler to return errors in custom format
+	strictHandlerOptions := api.StrictHTTPServerOptions{
+		RequestErrorHandlerFunc: func(w http.ResponseWriter, r *http.Request, err error) {
+			requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(r.Context()))
+			// Request decoding errors are client errors (invalid JSON, etc.)
+			_ = apiError.EncodeError(w, apiError.BadRequest, err.Error(), requestID)
+		},
+		ResponseErrorHandlerFunc: func(w http.ResponseWriter, r *http.Request, err error) {
+			requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(r.Context()))
+			// Response encoding errors are server errors
+			_ = apiError.EncodeInternalError(w, requestID)
+		},
+	}
+
 	api.HandlerFromMux(
-		api.NewStrictHandler(server, nil),
+		api.NewStrictHandlerWithOptions(server, nil, strictHandlerOptions),
 		router)
 	s := &http.Server{
 		Handler: router,

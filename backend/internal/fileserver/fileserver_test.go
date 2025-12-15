@@ -12,8 +12,7 @@ import (
 func newTestFileServer(t *testing.T) (*FileServer, string) {
 	t.Helper()
 	base := t.TempDir()
-	// Minimal construction: assumes FileServer has a baseDir field
-	return &FileServer{baseDir: base}, base
+	return &FileServer{baseDirectory: base}, base
 }
 
 func TestCleanPath_Valid(t *testing.T) {
@@ -39,20 +38,9 @@ func TestCleanPath_Valid(t *testing.T) {
 			path:     "images/2025/../foo.png",
 			expected: filepath.Join("images", "foo.png"),
 		},
-		{
-			name:     "empty path resolves to base",
-			path:     "",
-			expected: ".",
-		},
-		{
-			name:     "dot path resolves to base",
-			path:     ".",
-			expected: ".",
-		},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -101,6 +89,14 @@ func TestCleanPath_Invalid(t *testing.T) {
 			name: "absolute path outside base",
 			path: absoluteBad,
 		},
+		{
+			name: "empty path (resolves to base)",
+			path: "",
+		},
+		{
+			name: "dot path (resolves to base)",
+			path: ".",
+		},
 	}
 
 	for _, tt := range tests {
@@ -132,24 +128,6 @@ func TestCleanPath_DoesNotEscapeBase(t *testing.T) {
 	}
 	if !errors.Is(err, ErrInvalidPath) {
 		t.Fatalf("expected ErrInvalidPath, got %v", err)
-	}
-}
-
-func TestCleanPath_AllowsBaseItself(t *testing.T) {
-	baseDir := filepath.Join("testdata", "base")
-
-	got, err := cleanPath(baseDir, ".")
-	if err != nil {
-		t.Fatalf("cleanPath() returned unexpected error: %v", err)
-	}
-
-	absBase, err := filepath.Abs(baseDir)
-	if err != nil {
-		t.Fatalf("failed to get abs base: %v", err)
-	}
-
-	if got != absBase {
-		t.Fatalf("cleanPath() for '.' = %q, want %q", got, absBase)
 	}
 }
 
@@ -315,8 +293,7 @@ func TestFileServerDelete_SuccessAndPruneEmptyDirs(t *testing.T) {
 		t.Fatalf("failed to write file: %v", err)
 	}
 
-	// Delete should remove the file and prune "recipe1" dir,
-	// but keep the "covers" top-level directory and baseDir.
+	// Delete should remove the file and prune all empty directories up to base
 	if err := fs.Delete(relPath); err != nil {
 		t.Fatalf("Delete() returned error: %v", err)
 	}
@@ -331,9 +308,9 @@ func TestFileServerDelete_SuccessAndPruneEmptyDirs(t *testing.T) {
 		t.Fatalf("expected recipe1 directory to be removed, got err=%v", err)
 	}
 
-	// "covers" directory should still exist (top-level)
-	if _, err := os.Stat(filepath.Join(base, "covers")); err != nil {
-		t.Fatalf("expected covers directory to remain, got err=%v", err)
+	// "covers" directory should also be gone (empty after pruning recipe1)
+	if _, err := os.Stat(filepath.Join(base, "covers")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected covers directory to be removed, got err=%v", err)
 	}
 
 	// base directory should still exist
@@ -342,14 +319,13 @@ func TestFileServerDelete_SuccessAndPruneEmptyDirs(t *testing.T) {
 	}
 }
 
-func TestFileServerDelete_InvalidTopLevelDir(t *testing.T) {
+func TestFileServerDelete_CannotDeleteBaseDirectory(t *testing.T) {
 	fs, _ := newTestFileServer(t)
 
-	// topLevelDirectories = []string{"covers", "steps"} from helper
-	// "other" should be rejected
-	err := fs.Delete(filepath.Join("other", "file.png"))
+	// Attempting to delete the base directory itself should be rejected
+	err := fs.Delete(".")
 	if err == nil {
-		t.Fatalf("expected error for invalid top-level directory, got nil")
+		t.Fatalf("expected error when trying to delete base directory, got nil")
 	}
 	if !errors.Is(err, ErrInvalidPath) {
 		t.Fatalf("expected ErrInvalidPath, got %v", err)
@@ -395,14 +371,18 @@ func TestFileServer_Write_Basic(t *testing.T) {
 		t.Fatalf("Write() wrote %d bytes, want %d", n, len(data))
 	}
 
-	// location should be urlBaseDir + path
-	expectedLocation := filepath.Join(urlBaseDir, path)
+	// File should exist on disk at baseDir + path
+	fullPath := filepath.Join(base, path)
+
+	// location should be the absolute path to the file
+	expectedLocation, err := filepath.Abs(fullPath)
+	if err != nil {
+		t.Fatalf("failed to get absolute path: %v", err)
+	}
 	if location != expectedLocation {
 		t.Fatalf("Write() location = %q, want %q", location, expectedLocation)
 	}
 
-	// File should exist on disk at baseDir + path
-	fullPath := filepath.Join(base, path)
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		t.Fatalf("failed to read written file: %v", err)

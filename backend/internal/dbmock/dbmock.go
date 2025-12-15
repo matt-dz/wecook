@@ -42,6 +42,34 @@ func (m *MockQuerier) EXPECT() *MockQuerierMockRecorder {
 	return m.recorder
 }
 
+// BatchUpdateRecipeIngredientImages mocks base method.
+func (m *MockQuerier) BatchUpdateRecipeIngredientImages(ctx context.Context, arg []database.BatchUpdateRecipeIngredientImagesParams) *database.BatchUpdateRecipeIngredientImagesBatchResults {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BatchUpdateRecipeIngredientImages", ctx, arg)
+	ret0, _ := ret[0].(*database.BatchUpdateRecipeIngredientImagesBatchResults)
+	return ret0
+}
+
+// BatchUpdateRecipeIngredientImages indicates an expected call of BatchUpdateRecipeIngredientImages.
+func (mr *MockQuerierMockRecorder) BatchUpdateRecipeIngredientImages(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchUpdateRecipeIngredientImages", reflect.TypeOf((*MockQuerier)(nil).BatchUpdateRecipeIngredientImages), ctx, arg)
+}
+
+// BatchUpdateRecipeStepImages mocks base method.
+func (m *MockQuerier) BatchUpdateRecipeStepImages(ctx context.Context, arg []database.BatchUpdateRecipeStepImagesParams) *database.BatchUpdateRecipeStepImagesBatchResults {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BatchUpdateRecipeStepImages", ctx, arg)
+	ret0, _ := ret[0].(*database.BatchUpdateRecipeStepImagesBatchResults)
+	return ret0
+}
+
+// BatchUpdateRecipeStepImages indicates an expected call of BatchUpdateRecipeStepImages.
+func (mr *MockQuerierMockRecorder) BatchUpdateRecipeStepImages(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchUpdateRecipeStepImages", reflect.TypeOf((*MockQuerier)(nil).BatchUpdateRecipeStepImages), ctx, arg)
+}
+
 // BulkInsertRecipeIngredients mocks base method.
 func (m *MockQuerier) BulkInsertRecipeIngredients(ctx context.Context, arg []database.BulkInsertRecipeIngredientsParams) (int64, error) {
 	m.ctrl.T.Helper()
@@ -100,6 +128,21 @@ func (mr *MockQuerierMockRecorder) BulkUpdateRecipeSteps(ctx, arg any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BulkUpdateRecipeSteps", reflect.TypeOf((*MockQuerier)(nil).BulkUpdateRecipeSteps), ctx, arg)
 }
 
+// CheckIngredientOwnership mocks base method.
+func (m *MockQuerier) CheckIngredientOwnership(ctx context.Context, arg database.CheckIngredientOwnershipParams) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckIngredientOwnership", ctx, arg)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckIngredientOwnership indicates an expected call of CheckIngredientOwnership.
+func (mr *MockQuerierMockRecorder) CheckIngredientOwnership(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckIngredientOwnership", reflect.TypeOf((*MockQuerier)(nil).CheckIngredientOwnership), ctx, arg)
+}
+
 // CheckRecipeOwnership mocks base method.
 func (m *MockQuerier) CheckRecipeOwnership(ctx context.Context, arg database.CheckRecipeOwnershipParams) (bool, error) {
 	m.ctrl.T.Helper()
@@ -143,6 +186,21 @@ func (m *MockQuerier) CreateAdmin(ctx context.Context, arg database.CreateAdminP
 func (mr *MockQuerierMockRecorder) CreateAdmin(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAdmin", reflect.TypeOf((*MockQuerier)(nil).CreateAdmin), ctx, arg)
+}
+
+// CreateEmptyRecipeIngredient mocks base method.
+func (m *MockQuerier) CreateEmptyRecipeIngredient(ctx context.Context, recipeID int64) (database.RecipeIngredient, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateEmptyRecipeIngredient", ctx, recipeID)
+	ret0, _ := ret[0].(database.RecipeIngredient)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateEmptyRecipeIngredient indicates an expected call of CreateEmptyRecipeIngredient.
+func (mr *MockQuerierMockRecorder) CreateEmptyRecipeIngredient(ctx, recipeID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEmptyRecipeIngredient", reflect.TypeOf((*MockQuerier)(nil).CreateEmptyRecipeIngredient), ctx, recipeID)
 }
 
 // CreateRecipe mocks base method.
@@ -544,11 +602,12 @@ func (mr *MockQuerierMockRecorder) UpdateRecipeCoverImage(ctx, arg any) *gomock.
 }
 
 // UpdateRecipeIngredient mocks base method.
-func (m *MockQuerier) UpdateRecipeIngredient(ctx context.Context, arg database.UpdateRecipeIngredientParams) error {
+func (m *MockQuerier) UpdateRecipeIngredient(ctx context.Context, arg database.UpdateRecipeIngredientParams) (database.RecipeIngredient, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateRecipeIngredient", ctx, arg)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(database.RecipeIngredient)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateRecipeIngredient indicates an expected call of UpdateRecipeIngredient.

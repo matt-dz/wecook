@@ -84,6 +84,12 @@ INSERT INTO recipe_ingredients (recipe_id, quantity, unit, name, image_url)
 RETURNING
   id;
 
+-- name: CreateEmptyRecipeIngredient :one
+INSERT INTO recipe_ingredients (recipe_id)
+  VALUES ($1)
+RETURNING
+  *;
+
 -- name: UpdateRecipeIngredientImage :exec
 UPDATE
   recipe_ingredients
@@ -116,6 +122,19 @@ SELECT
     WHERE
       id = $1
       AND user_id = $2);
+
+-- name: CheckIngredientOwnership :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      recipe_ingredients ri
+      JOIN recipes r ON r.id = ri.recipe_id
+    WHERE
+      r.id = @recipe_id::bigint
+      AND ri.id = @ingredient_id::bigint
+      AND r.user_id = $1);
 
 -- name: UpdateRecipeCoverImage :exec
 UPDATE
@@ -277,7 +296,7 @@ SET
 WHERE
   id = $1;
 
--- name: UpdateRecipeIngredient :exec
+-- name: UpdateRecipeIngredient :one
 UPDATE
   recipe_ingredients
 SET
@@ -286,7 +305,9 @@ SET
   name = coalesce(sqlc.narg ('name'), name),
   image_url = coalesce(sqlc.narg ('image_url'), image_url)
 WHERE
-  id = $1;
+  id = $1
+RETURNING
+  *;
 
 -- name: UpdateRecipe :exec
 UPDATE
@@ -323,12 +344,12 @@ WHERE
 -- name: DeleteRecipeIngredientsByIDs :exec
 DELETE FROM recipe_ingredients
 WHERE recipe_id = $1
-  AND id = ANY ($2::bigint[]);
+  AND id = ANY (@ids::bigint[]);
 
 -- name: DeleteRecipeStepsByIDs :exec
 DELETE FROM recipe_steps
 WHERE recipe_id = $1
-  AND id = ANY ($2::bigint[]);
+  AND id = ANY (@ids::bigint[]);
 
 -- name: BulkInsertRecipeIngredients :copyfrom
 INSERT INTO recipe_ingredients (recipe_id, quantity, unit, name, image_url)
@@ -355,5 +376,21 @@ UPDATE
 SET
   instruction = $2,
   image_url = $3
+WHERE
+  id = $1;
+
+-- name: BatchUpdateRecipeIngredientImages :batchexec
+UPDATE
+  recipe_ingredients
+SET
+  image_url = $2
+WHERE
+  id = $1;
+
+-- name: BatchUpdateRecipeStepImages :batchexec
+UPDATE
+  recipe_steps
+SET
+  image_url = $2
 WHERE
   id = $1;

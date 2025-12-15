@@ -263,7 +263,10 @@ func OAPIErrorHandler(
 ) {
 	// Several scenarios where we are handling an error:
 	//   1. An error was returned as an apiError in auth middleware
-	//   2. There was an internal server error
+	//   2. There was a validation error (400-level status)
+	//   3. There was an internal server error
+
+	requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(r.Context()))
 
 	// 1. Error was returned from middleware
 	var errBody *apiError.Error
@@ -274,8 +277,19 @@ func OAPIErrorHandler(
 		return
 	}
 
-	fmt.Printf("There is an error: %s", err.Error())
-	// 2. An internal server error was surfaced
-	requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(r.Context()))
+	// 2. Validation error (use the status code from opts)
+	if opts.StatusCode >= 400 && opts.StatusCode < 500 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(opts.StatusCode)
+		_ = json.NewEncoder(w).Encode(&apiError.Error{ //nolint:errchkjson
+			Code:    apiError.BadRequest,
+			Status:  opts.StatusCode,
+			Message: err.Error(),
+			ErrorID: requestID,
+		})
+		return
+	}
+
+	// 3. An internal server error was surfaced
 	_ = apiError.EncodeInternalError(w, requestID)
 }

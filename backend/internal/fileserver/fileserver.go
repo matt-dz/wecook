@@ -5,24 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
-	"slices"
 	"strings"
 )
 
 const (
 	directoryPerms = 0o755
-	urlBaseDir     = "files"
 )
-
-const (
-	ingredientsDir = "ingredients"
-	stepsDir       = "steps"
-	coverDir       = "covers"
-)
-
-var topLevelDirectories = []string{ingredientsDir, stepsDir, coverDir}
 
 var (
 	ErrNotExist    = os.ErrNotExist
@@ -31,30 +23,33 @@ var (
 
 // FileServerInterface defines the operations for file server management.
 type FileServerInterface interface {
-	Write(path string, data []byte) (location string, n int, err error)
-	Exists(path string) (bool, error)
 	Delete(path string) error
-	FileURL(path string) string
+	Write(path string, data []byte) (fullpath string, n int, err error)
+	BaseDirectory() string
 }
 
 type FileServer struct {
-	baseDir   string
-	serverURL string
+	baseDirectory string
 }
 
-func New(baseDir, serverURL string) *FileServer {
+var _ FileServerInterface = (*FileServer)(nil)
+
+func New(baseDirectory string) *FileServer {
 	return &FileServer{
-		baseDir:   baseDir,
-		serverURL: serverURL,
+		baseDirectory: filepath.Clean(baseDirectory),
 	}
 }
 
-func (f *FileServer) Write(path string, data []byte) (location string, n int, err error) {
+func (f *FileServer) Write(path string, data []byte) (fullpath string, n int, err error) {
 	if f == nil {
 		return "", 0, nil
 	}
 
-	fullpath := filepath.Join(f.baseDir, path)
+	// Clean path
+	fullpath, err = cleanPath(f.baseDirectory, path)
+	if err != nil {
+		return "", 0, err
+	}
 	if err := os.MkdirAll(filepath.Dir(fullpath), directoryPerms); err != nil {
 		return "", 0, fmt.Errorf("creating parent directories: %w", err)
 	}
@@ -70,21 +65,7 @@ func (f *FileServer) Write(path string, data []byte) (location string, n int, er
 		return "", 0, fmt.Errorf("writing file: %w", err)
 	}
 
-	return filepath.Join(urlBaseDir, path), n, nil
-}
-
-func (f *FileServer) Exists(path string) (bool, error) {
-	if f == nil {
-		return false, nil
-	}
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	} else if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-	}
-
-	return false, err
+	return fullpath, n, nil
 }
 
 func (f *FileServer) Delete(path string) error {
@@ -92,24 +73,31 @@ func (f *FileServer) Delete(path string) error {
 		return nil
 	}
 
-	// "files/steps/1/1.jpg" -> "steps/1/1.jpg"
-	path = filepath.Clean(path)
-	path = strings.TrimPrefix(path, string(filepath.Separator))
-	path = strings.TrimPrefix(path, urlBaseDir)
-	path = strings.TrimPrefix(path, string(filepath.Separator))
-
 	// Clean path
-	full, err := cleanPath(f.baseDir, path)
+	full, err := cleanPath(f.baseDirectory, path)
 	if err != nil {
 		return err
 	}
-	tld := topLevelDirectory(strings.TrimPrefix(full, f.baseDir))
-	if !slices.Contains(topLevelDirectories, tld) {
-		return errors.Join(fmt.Errorf("invalid top level directory %q", tld), ErrInvalidPath)
+
+	// Ensure it is not the base directory
+	base := filepath.Clean(f.baseDirectory)
+	if full == base {
+		return errors.Join(fmt.Errorf("cannot remove path %q", path), ErrInvalidPath)
+	}
+
+	exists := func(path string) (bool, error) {
+		_, err := os.Stat(path)
+		if err == nil {
+			return true, nil
+		} else if errors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+
+		return false, err
 	}
 
 	// Check existence
-	found, err := f.Exists(full)
+	found, err := exists(full)
 	if err != nil {
 		return fmt.Errorf("checking for existence: %w", err)
 	}
@@ -124,8 +112,7 @@ func (f *FileServer) Delete(path string) error {
 
 	// Prune empty directories
 	dir := filepath.Dir(full)
-	for dir != filepath.Join(f.baseDir, tld) &&
-		dir != f.baseDir && dir != "." && dir != string(filepath.Separator) {
+	for dir != base && dir != "." && dir != string(filepath.Separator) {
 		empty, err := isEmptyDirectory(dir)
 		if err != nil {
 			return fmt.Errorf("checking empty directory: %w", err)
@@ -143,30 +130,11 @@ func (f *FileServer) Delete(path string) error {
 	return nil
 }
 
-func (f *FileServer) FileURL(path string) string {
+func (f *FileServer) BaseDirectory() string {
 	if f == nil {
 		return ""
 	}
-	var scheme string
-	if strings.HasPrefix(f.serverURL, "http://") {
-		scheme = "http://"
-	} else if strings.HasPrefix(f.serverURL, "https://") {
-		scheme = "https://"
-	}
-	host, _ := strings.CutPrefix(f.serverURL, scheme)
-	return scheme + filepath.Join(host, path)
-}
-
-func NewStepsImage(recipeID, stepID, suffix string) string {
-	return filepath.Join(stepsDir, recipeID, fmt.Sprintf("%s%s", stepID, suffix))
-}
-
-func NewCoverImage(recipeID, suffix string) string {
-	return filepath.Join(coverDir, fmt.Sprintf("%s%s", recipeID, suffix))
-}
-
-func NewIngredientsImage(recipeID, ingredientsID, suffix string) string {
-	return filepath.Join(ingredientsDir, recipeID, fmt.Sprintf("%s%s", ingredientsID, suffix))
+	return f.baseDirectory
 }
 
 func cleanPath(baseDir, path string) (string, error) {
@@ -184,8 +152,7 @@ func cleanPath(baseDir, path string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("getting absolute representation of given directory: %w", err)
 	}
-	if !strings.HasPrefix(fullAbs, base+string(filepath.Separator)) &&
-		fullAbs != base {
+	if !strings.HasPrefix(fullAbs, base+string(filepath.Separator)) {
 		return "", errors.Join(fmt.Errorf("path escapes base directory"), ErrInvalidPath)
 	}
 
@@ -211,4 +178,43 @@ func isEmptyDirectory(path string) (bool, error) {
 		return true, nil
 	}
 	return false, err
+}
+
+// filePathToStaticURL turns an on-disk file path into a URL path under your static route.
+// Example:
+//
+//	root:   /data/images/
+//	file:   ./covers/1.png
+//	prefix: files
+//	=>      /files/covers/1.png
+func filePathToStaticURL(staticRoot, filePath, urlPrefix string) (string, error) {
+	rootAbs, err := filepath.Abs(staticRoot)
+	if err != nil {
+		return "", err
+	}
+	fileAbs, err := filepath.Abs(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	rel, err := filepath.Rel(rootAbs, fileAbs)
+	if err != nil {
+		return "", err
+	}
+
+	// Prevent escaping the static root (e.g. via ..)
+	if rel == "." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || rel == ".." {
+		return "", errors.New("filePath is outside staticRoot")
+	}
+
+	// OS path -> URL path
+	relURL := filepath.ToSlash(rel)
+	relURL = path.Clean("/" + relURL) // ensure leading slash & normalize
+
+	// Escape properly
+	escaped := (&url.URL{Path: relURL}).EscapedPath()
+
+	// Join with your static route prefix (e.g. "/static")
+	prefix := "/" + strings.Trim(urlPrefix, "/")
+	return prefix + escaped, nil
 }

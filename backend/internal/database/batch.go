@@ -17,6 +17,114 @@ var (
 	ErrBatchAlreadyClosed = errors.New("batch already closed")
 )
 
+const batchUpdateRecipeIngredientImages = `-- name: BatchUpdateRecipeIngredientImages :batchexec
+UPDATE
+  recipe_ingredients
+SET
+  image_url = $2
+WHERE
+  id = $1
+`
+
+type BatchUpdateRecipeIngredientImagesBatchResults struct {
+	br     pgx.BatchResults
+	tot    int
+	closed bool
+}
+
+type BatchUpdateRecipeIngredientImagesParams struct {
+	ID       int64
+	ImageUrl pgtype.Text
+}
+
+func (q *Queries) BatchUpdateRecipeIngredientImages(ctx context.Context, arg []BatchUpdateRecipeIngredientImagesParams) *BatchUpdateRecipeIngredientImagesBatchResults {
+	batch := &pgx.Batch{}
+	for _, a := range arg {
+		vals := []interface{}{
+			a.ID,
+			a.ImageUrl,
+		}
+		batch.Queue(batchUpdateRecipeIngredientImages, vals...)
+	}
+	br := q.db.SendBatch(ctx, batch)
+	return &BatchUpdateRecipeIngredientImagesBatchResults{br, len(arg), false}
+}
+
+func (b *BatchUpdateRecipeIngredientImagesBatchResults) Exec(f func(int, error)) {
+	defer b.br.Close()
+	for t := 0; t < b.tot; t++ {
+		if b.closed {
+			if f != nil {
+				f(t, ErrBatchAlreadyClosed)
+			}
+			continue
+		}
+		_, err := b.br.Exec()
+		if f != nil {
+			f(t, err)
+		}
+	}
+}
+
+func (b *BatchUpdateRecipeIngredientImagesBatchResults) Close() error {
+	b.closed = true
+	return b.br.Close()
+}
+
+const batchUpdateRecipeStepImages = `-- name: BatchUpdateRecipeStepImages :batchexec
+UPDATE
+  recipe_steps
+SET
+  image_url = $2
+WHERE
+  id = $1
+`
+
+type BatchUpdateRecipeStepImagesBatchResults struct {
+	br     pgx.BatchResults
+	tot    int
+	closed bool
+}
+
+type BatchUpdateRecipeStepImagesParams struct {
+	ID       int64
+	ImageUrl pgtype.Text
+}
+
+func (q *Queries) BatchUpdateRecipeStepImages(ctx context.Context, arg []BatchUpdateRecipeStepImagesParams) *BatchUpdateRecipeStepImagesBatchResults {
+	batch := &pgx.Batch{}
+	for _, a := range arg {
+		vals := []interface{}{
+			a.ID,
+			a.ImageUrl,
+		}
+		batch.Queue(batchUpdateRecipeStepImages, vals...)
+	}
+	br := q.db.SendBatch(ctx, batch)
+	return &BatchUpdateRecipeStepImagesBatchResults{br, len(arg), false}
+}
+
+func (b *BatchUpdateRecipeStepImagesBatchResults) Exec(f func(int, error)) {
+	defer b.br.Close()
+	for t := 0; t < b.tot; t++ {
+		if b.closed {
+			if f != nil {
+				f(t, ErrBatchAlreadyClosed)
+			}
+			continue
+		}
+		_, err := b.br.Exec()
+		if f != nil {
+			f(t, err)
+		}
+	}
+}
+
+func (b *BatchUpdateRecipeStepImagesBatchResults) Close() error {
+	b.closed = true
+	return b.br.Close()
+}
+
 const bulkUpdateRecipeIngredients = `-- name: BulkUpdateRecipeIngredients :batchexec
 UPDATE
   recipe_ingredients

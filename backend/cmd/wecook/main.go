@@ -13,7 +13,7 @@ import (
 	"github.com/matt-dz/wecook/internal/argon2id"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/env"
-	"github.com/matt-dz/wecook/internal/fileserver"
+	"github.com/matt-dz/wecook/internal/filestore"
 	"github.com/matt-dz/wecook/internal/http"
 	"github.com/matt-dz/wecook/internal/log"
 	"github.com/matt-dz/wecook/internal/password"
@@ -122,12 +122,16 @@ func main() {
 		env.Logger.Error("invalid FILESERVER_VOLUME value", slog.Any("error", err))
 		os.Exit(1)
 	}
-	nginxURL := env.Get("NGINX_URL")
-	if nginxURL == "" {
-		env.Logger.Error("environment variable NGINX_URL not defined")
+	urlPrefix := env.Get("FILESERVER_URL_PREFIX")
+	if urlPrefix == "" {
+		urlPrefix = filestore.DefaultURLPrefix
+	}
+	filestoreHost := env.Get("NGINX_URL")
+	if filestoreHost == "" {
+		env.Logger.Error("NGINX_URL must be set")
 		os.Exit(1)
 	}
-	env.FileServer = fileserver.New(fileserverPath, nginxURL)
+	env.FileStore = filestore.New(fileserverPath, urlPrefix, filestoreHost)
 
 	db, err := initDB(context.TODO(), env.Logger)
 	if err != nil {

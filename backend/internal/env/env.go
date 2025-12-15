@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/matt-dz/wecook/internal/database"
-	"github.com/matt-dz/wecook/internal/fileserver"
+	"github.com/matt-dz/wecook/internal/filestore"
 	"github.com/matt-dz/wecook/internal/http"
 	"github.com/matt-dz/wecook/internal/log"
 )
@@ -17,11 +17,11 @@ type envKeyType struct{}
 var envKey envKeyType
 
 type Env struct {
-	Logger     *slog.Logger
-	Database   *database.Database
-	HTTP       *http.HTTP
-	FileServer fileserver.FileServerInterface
-	vars       map[string]string
+	Logger    *slog.Logger
+	Database  *database.Database
+	HTTP      *http.HTTP
+	FileStore filestore.FileStoreInterface
+	vars      map[string]string
 }
 
 func (e *Env) Get(key string) string {
@@ -36,7 +36,7 @@ func (e *Env) IsProd() bool {
 }
 
 func New(logger *slog.Logger, database *database.Database,
-	http *http.HTTP, fileserver fileserver.FileServerInterface,
+	http *http.HTTP, filestore filestore.FileStoreInterface,
 	vars map[string]string,
 ) *Env {
 	if logger == nil {
@@ -44,21 +44,21 @@ func New(logger *slog.Logger, database *database.Database,
 	}
 
 	return &Env{
-		Logger:     logger,
-		Database:   database,
-		HTTP:       http,
-		FileServer: fileserver,
-		vars:       vars,
+		Logger:    logger,
+		Database:  database,
+		HTTP:      http,
+		FileStore: filestore,
+		vars:      vars,
 	}
 }
 
 func Null() *Env {
 	return &Env{
-		Logger:     log.NullLogger(),
-		Database:   nil,
-		HTTP:       nil,
-		FileServer: nil,
-		vars:       make(map[string]string),
+		Logger:    log.NullLogger(),
+		Database:  nil,
+		HTTP:      nil,
+		FileStore: nil,
+		vars:      make(map[string]string),
 	}
 }
 

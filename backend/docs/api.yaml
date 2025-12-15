@@ -391,547 +391,102 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  #   patch:
-  #     summary: Update a recipe
-  #     tags:
-  #       - Recipes
-  #     description: |
-  #       Partially updates a recipe. Supports updating title, description,
-  #       published status, cook time, prep time, servings, and cover image.
-  #       Fields not provided are left unchanged. If the request body is empty,
-  #       this is treated as a no-op and returns 204.
-  #     parameters:
-  #       - name: recipeID
-  #         in: path
-  #         required: true
-  #         description: ID of the recipe
-  #         schema:
-  #           type: integer
-  #     requestBody:
-  #       required: false
-  #       content:
-  #         multipart/form-data:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               title:
-  #                 type: string
-  #                 description: New title
-  #               description:
-  #                 type: string
-  #                 description: New description
-  #               published:
-  #                 type: boolean
-  #                 description: Published status
-  #               cook-time-amount:
-  #                 type: integer
-  #                 description: Cook time amount
-  #               cook-time-unit:
-  #                 type: string
-  #                 description: Cook time unit (minutes, hours, days)
-  #               prep-time-amount:
-  #                 type: integer
-  #                 description: Prep time amount
-  #               prep-time-unit:
-  #                 type: string
-  #                 description: Prep time unit (minutes, hours, days)
-  #               servings:
-  #                 type: number
-  #                 description: Servings
-  #               image:
-  #                 type: string
-  #                 format: binary
-  #                 description: New cover image
-  #     responses:
-  #       "204":
-  #         description: Recipe updated successfully
-  #       "400":
-  #         description: Bad request (invalid form or data)
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "404":
-  #         description: Recipe not found or user does not own it
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
-  #   put:
-  #     summary: Update a recipe with all sub-resources
-  #     tags:
-  #       - Recipes
-  #     description: |
-  #       Completely updates a recipe including ingredients and steps.
-  #       Sub-resources without an ID will be created. Sub-resources with an ID will be updated.
-  #       Sub-resources in the database but not in the request will be deleted.
-  #       An empty request body is treated as a no-op. Supports image uploads for cover, ingredients, and steps.
-  #     parameters:
-  #       - name: recipeID
-  #         in: path
-  #         required: true
-  #         description: ID of the recipe
-  #         schema:
-  #           type: integer
-  #     requestBody:
-  #       required: false
-  #       content:
-  #         multipart/form-data:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               data:
-  #                 type: string
-  #                 description: >
-  #                   JSON string containing recipe update data.
-  #                   This string MUST be valid JSON and conform to the
-  #                   UpdateRecipeFullData schema defined in components.schemas.UpdateRecipeFullData.
-  #                 example: >
-  #                   {
-  #                     "title": "My Updated Recipe",
-  #                     "description": "Updated description",
-  #                     "published": true,
-  #                     "servings": 4,
-  #                     "ingredients": [
-  #                       {
-  #                         "id": 1,
-  #                         "name": "Flour",
-  #                         "quantity": 500,
-  #                         "unit": "g"
-  #                       }
-  #                     ],
-  #                     "steps": [
-  #                       {
-  #                         "id": 1,
-  #                         "step_number": 1,
-  #                         "instruction": "Mix everything"
-  #                       }
-  #                     ]
-  #                   }
-  #               cover:
-  #                 type: string
-  #                 format: binary
-  #                 description: Cover image for recipe
-  #               ingredient-images:
-  #                 type: array
-  #                 description: Image for ingredient at index (0-based, ordered to align with data payload)
-  #                 items:
-  #                   type: string
-  #                   format: binary
-  #               step-images:
-  #                 type: array
-  #                 description: Images for steps (0-based, ordered to align with data payload)
-  #                 items:
-  #                   type: string
-  #                   format: binary
-  #     responses:
-  #       "204":
-  #         description: Recipe updated successfully
-  #       "400":
-  #         description: Bad request (invalid data or validation error)
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "404":
-  #         description: Recipe not found or user does not own it
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
-  # /api/recipes/{recipeID}/cover:
-  #   post:
-  #     summary: Update a recipe's cover image
-  #     tags:
-  #       - Recipes
-  #     description: |
-  #       Replaces the cover image of a recipe owned by the authenticated user.
-  #       Expects multipart/form-data containing a single image file.
-  #     parameters:
-  #       - name: recipeID
-  #         in: path
-  #         required: true
-  #         description: ID of the recipe to update
-  #         schema:
-  #           type: string
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         multipart/form-data:
-  #           schema:
-  #             type: object
-  #             required:
-  #               - image
-  #             properties:
-  #               image:
-  #                 type: string
-  #                 format: binary
-  #                 description: Cover image (JPEG/PNG)
-  #     responses:
-  #       "201":
-  #         description: Cover image updated
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: string
-  #       "400":
-  #         description: Bad request / invalid image / missing file
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "403":
-  #         description: User does not own recipe
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
-  # /api/recipes/{recipeID}/ingredients/{ingredientID}:
-  #   delete:
-  #     summary: Delete a recipe ingredient
-  #     tags:
-  #       - Recipes
-  #       - Ingredients
-  #     description: |
-  #       Deletes an ingredient from a recipe owned by the authenticated user.
-  #       This operation is idempotent — deleting a non-existent ingredient returns 404.
-  #     parameters:
-  #       - name: recipeID
-  #         in: path
-  #         required: true
-  #         description: ID of the recipe
-  #         schema:
-  #           type: string
-  #       - name: ingredientID
-  #         in: path
-  #         required: true
-  #         description: ID of the ingredient to delete
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "204":
-  #         description: Ingredient deleted successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: string
-  #       "400":
-  #         description: Invalid recipe ID or ingredient ID
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "404":
-  #         description: Recipe not found, not owned by user, or ingredient not found
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
-  #   patch:
-  #     summary: Update a recipe ingredient
-  #     tags:
-  #       - Recipes
-  #       - Ingredients
-  #     description: |
-  #       Partially updates a recipe ingredient.
-  #       Supports updating the ingredient's name, unit, quantity, or image.
-  #       Fields are only updated if provided. Sending an empty body results in a no-op.
-  #     parameters:
-  #       - name: recipeID
-  #         in: path
-  #         required: true
-  #         description: ID of the recipe
-  #         schema:
-  #           type: integer
-  #       - name: ingredientID
-  #         in: path
-  #         required: true
-  #         description: ID of the ingredient to update
-  #         schema:
-  #           type: integer
-  #     requestBody:
-  #       required: false
-  #       content:
-  #         multipart/form-data:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               quantity:
-  #                 type: string
-  #                 description: Updated quantity (float)
-  #               unit:
-  #                 type: string
-  #                 description: Updated unit (e.g. 'tsp', 'grams')
-  #               name:
-  #                 type: string
-  #                 description: Updated ingredient name
-  #               image:
-  #                 type: string
-  #                 format: binary
-  #                 description: Updated ingredient image
-  #     responses:
-  #       "204":
-  #         description: Ingredient updated successfully
-  #       "400":
-  #         description: Bad request (invalid form or invalid fields)
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "404":
-  #         description: Recipe not found, ingredient not found, or recipe not owned by user
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
-  # /api/recipes/{recipeID}/steps/{stepID}:
-  #   delete:
-  #     summary: Delete a recipe step
-  #     tags:
-  #       - Recipes
-  #       - Steps
-  #     description: |
-  #       Deletes a specific step from a recipe.
-  #       This operation is **idempotent**—deleting the same step twice will return `StepNotFound`.
-  #     parameters:
-  #       - name: recipeID
-  #         in: path
-  #         required: true
-  #         description: ID of the recipe
-  #         schema:
-  #           type: integer
-  #       - name: stepID
-  #         in: path
-  #         required: true
-  #         description: ID of the step to delete
-  #         schema:
-  #           type: integer
-  #     responses:
-  #       "204":
-  #         description: Step successfully deleted
-  #       "400":
-  #         description: Invalid recipe ID or step ID
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "404":
-  #         description: Recipe not found, user does not own the recipe, or step not found
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
-  #   patch:
-  #     summary: Update a recipe step
-  #     tags:
-  #       - Recipes
-  #       - Steps
-  #     description: |
-  #       Updates a specific step within a recipe.
-  #       Supports partial updates: users may update the instruction, the image, or both.
-  #     parameters:
-  #       - name: recipeID
-  #         in: path
-  #         required: true
-  #         description: ID of the recipe
-  #         schema:
-  #           type: integer
-  #       - name: stepID
-  #         in: path
-  #         required: true
-  #         description: ID of the step to update
-  #         schema:
-  #           type: integer
-  #     requestBody:
-  #       required: false
-  #       content:
-  #         multipart/form-data:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               instruction:
-  #                 type: string
-  #                 description: Updated instruction text
-  #               image:
-  #                 type: string
-  #                 format: binary
-  #                 description: Updated step image (optional)
-  #     responses:
-  #       "204":
-  #         description: Step updated successfully
-  #       "400":
-  #         description: Bad request — invalid IDs, invalid file type, or malformed form
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "404":
-  #         description: Recipe not found, not owned by user, or step not found
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
-  # /api/recipes/ingredients:
-  #   post:
-  #     summary: Create a recipe ingredient
-  #     tags:
-  #       - Recipes
-  #       - Ingredients
-  #     description: |
-  #       Creates a new ingredient for a recipe owned by the authenticated user.
-  #       Expects multipart/form-data with basic fields and an optional image upload.
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         multipart/form-data:
-  #           schema:
-  #             type: object
-  #             required:
-  #               - recipe-id
-  #               - name
-  #               - quantity
-  #             properties:
-  #               recipe-id:
-  #                 type: string
-  #                 description: Recipe ID the ingredient belongs to
-  #               name:
-  #                 type: string
-  #                 description: Ingredient name
-  #               quantity:
-  #                 type: number
-  #                 description: Ingredient quantity
-  #               unit:
-  #                 type: string
-  #                 description: Ingredient unit (e.g. g, ml, tbsp)
-  #               image:
-  #                 type: string
-  #                 format: binary
-  #                 description: Ingredient image (JPEG/PNG)
-  #     responses:
-  #       "201":
-  #         description: Ingredient created
-  #       "400":
-  #         description: Bad request / validation error / unsupported file type
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "403":
-  #         description: User does not own recipe
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "404":
-  #         description: Recipe not found
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
+  /api/recipes/{recipeID}/ingredients:
+    post:
+      summary: Create an ingredient for a recipe.
+      tags:
+        - Recipes
+        - Ingredients
+      description: >
+        Creates an ingredient for the recipe. The recipe must be
+        owned by the user.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe to retrieve
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        "200":
+          description: Ingredient Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateIngredientResponse"
+        "404":
+          description: Recipe not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/recipes/{recipeID}/ingredients/{ingredientID}:
+    patch:
+      summary: Update an ingredient for a recipe.
+      tags:
+        - Recipes
+        - Ingredients
+      description: >
+        Updates an ingredient for the recipe. The recipe must be
+        owned by the user. If no fields are provided, the operation
+        is considered a no-op.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: Recipe ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: ingredientID
+          in: path
+          required: true
+          description: Ingredient ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateIngredientBody"
+      responses:
+        "200":
+          description: Ingredient Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateIngredientResponse"
+        "400":
+          description: Invalid Form
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   # /api/recipes/personal:
   #   get:
   #     summary: Get recipes owned by the authenticated user
@@ -990,67 +545,6 @@ paths:
   #               $ref: "#/components/schemas/Error"
   #       "404":
   #         description: Recipe not found or not owned by user
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
-  # /api/recipes/steps:
-  #   post:
-  #     summary: Create a recipe step
-  #     tags:
-  #       - Recipes
-  #       - Steps
-  #     description: |
-  #       Creates a new step for a recipe owned by the authenticated user.
-  #       Accepts multipart/form-data with required fields and an optional image upload.
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         multipart/form-data:
-  #           schema:
-  #             type: object
-  #             required:
-  #               - recipe-id
-  #               - instruction
-  #             properties:
-  #               recipe-id:
-  #                 type: string
-  #                 description: ID of the recipe the step belongs to
-  #               instruction:
-  #                 type: string
-  #                 description: Step instruction text
-  #               image:
-  #                 type: string
-  #                 format: binary
-  #                 description: Optional step image (JPEG/PNG)
-  #     responses:
-  #       "201":
-  #         description: Step created
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: string
-  #       "400":
-  #         description: Bad request / validation error / invalid file type
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "403":
-  #         description: User does not own recipe
   #         content:
   #           application/json:
   #             schema:
@@ -1342,12 +836,14 @@ components:
       properties:
         id:
           type: integer
+          format: int64
           minimum: 0
         name:
           type: string
         quantity:
-          type: float
+          type: number
           minimum: 0
+          exclusiveMinimum: true
         unit:
           type: string
 
@@ -1356,11 +852,13 @@ components:
       properties:
         id:
           type: integer
+          format: int64
           minimum: 0
         instruction:
           type: string
         step_number:
-          type: number
+          type: integer
+          format: int32
           minimum: 1
       required: []
 
@@ -1374,16 +872,18 @@ components:
         published:
           type: boolean
         servings:
-          type: float
+          type: number
           minimum: 0
           exclusiveMinimum: true
         cook_time_amount:
           type: integer
+          format: int32
           minimum: 0
         cook_time_unit:
           $ref: "#/components/schemas/TimeUnit"
         prep_time_amount:
           type: integer
+          format: int32
           minimum: 0
         prep_time_unit:
           $ref: "#/components/schemas/TimeUnit"
@@ -1426,6 +926,117 @@ components:
         refresh_token:
           type: string
           description: Refresh token
+
+    CreateIngredientResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 0
+        quantity:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        name:
+          type: string
+        image_url:
+          type: string
+        unit:
+          type: string
+      required:
+        - id
+
+    CreateStepResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 0
+        step_number:
+          type: integer
+          format: int32
+          minimum: 1
+        instruction:
+          type: string
+      required:
+        - id
+        - step_number
+
+    UpdateIngredientBody:
+      type: object
+      properties:
+        quantity:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        name:
+          type: string
+        unit:
+          type: string
+
+    UpdateIngredientForm:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/UpdateIngredientBody"
+        image:
+          type: string
+          format: binary
+
+    UpdateIngredientResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 0
+        quantity:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        name:
+          type: string
+        image_url:
+          type: string
+        unit:
+          type: string
+      required:
+        - id
+        - name
+
+    UpdateStepRequest:
+      type: object
+      properties:
+        step_number:
+          type: integer
+          format: int32
+          minimum: 1
+        instruction:
+          type: string
+        image:
+          type: string
+          format: binary
+
+    UpdateStepResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 0
+        instruction:
+          type: string
+        step_number:
+          type: integer
+          format: int32
+          minimum: 1
+        image_url:
+          type: string
+      required:
+        - id
+        - step_number
 
   securitySchemes:
     AccessTokenUserBearer:
