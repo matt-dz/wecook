@@ -36,7 +36,7 @@ type FileStore struct {
 	fs            fileserver.FileServerInterface
 }
 
-var _ FileStoreInterface = (FileStore)(FileStore{})
+var _ FileStoreInterface = (FileStoreInterface)(FileStore{})
 
 func New(baseDirectory, urlPathPrefix, host string) FileStore {
 	return FileStore{
@@ -46,7 +46,9 @@ func New(baseDirectory, urlPathPrefix, host string) FileStore {
 	}
 }
 
-func (f FileStore) WriteRecipeCoverImage(recipeID int64, suffix string, data []byte) (urlPath string, n int, err error) {
+func (f FileStore) WriteRecipeCoverImage(recipeID int64, suffix string,
+	data []byte,
+) (urlPath string, n int, err error) {
 	path := coverImagePath(recipeID, suffix)
 	fullpath, n, err := f.fs.Write(path, data)
 	if err != nil {
@@ -55,7 +57,9 @@ func (f FileStore) WriteRecipeCoverImage(recipeID int64, suffix string, data []b
 	return absPathToURLPath(fullpath, f.fs.BaseDirectory(), f.urlPathPrefix), n, err
 }
 
-func (f FileStore) WriteIngredientImage(recipeID, ingredientID int64, suffix string, data []byte) (urlPath string, n int, err error) {
+func (f FileStore) WriteIngredientImage(recipeID,
+	ingredientID int64, suffix string, data []byte,
+) (urlPath string, n int, err error) {
 	path := ingredientsImagePath(recipeID, ingredientID, suffix)
 	fullpath, n, err := f.fs.Write(path, data)
 	if err != nil {
@@ -64,7 +68,9 @@ func (f FileStore) WriteIngredientImage(recipeID, ingredientID int64, suffix str
 	return absPathToURLPath(fullpath, f.fs.BaseDirectory(), f.urlPathPrefix), n, err
 }
 
-func (f FileStore) WriteStepImage(recipeID, stepID int64, suffix string, data []byte) (urlPath string, n int, err error) {
+func (f FileStore) WriteStepImage(recipeID,
+	stepID int64, suffix string, data []byte,
+) (urlPath string, n int, err error) {
 	path := stepsImagePath(recipeID, stepID, suffix)
 	fullpath, n, err := f.fs.Write(path, data)
 	if err != nil {

@@ -1487,7 +1487,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 	}
 }
 
-// Helper function for creating float32 pointers
+// Helper function for creating float32 pointers.
 func float32Ptr(f float32) *float32 {
 	return &f
 }

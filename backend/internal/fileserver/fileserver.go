@@ -5,9 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 )
@@ -178,43 +176,4 @@ func isEmptyDirectory(path string) (bool, error) {
 		return true, nil
 	}
 	return false, err
-}
-
-// filePathToStaticURL turns an on-disk file path into a URL path under your static route.
-// Example:
-//
-//	root:   /data/images/
-//	file:   ./covers/1.png
-//	prefix: files
-//	=>      /files/covers/1.png
-func filePathToStaticURL(staticRoot, filePath, urlPrefix string) (string, error) {
-	rootAbs, err := filepath.Abs(staticRoot)
-	if err != nil {
-		return "", err
-	}
-	fileAbs, err := filepath.Abs(filePath)
-	if err != nil {
-		return "", err
-	}
-
-	rel, err := filepath.Rel(rootAbs, fileAbs)
-	if err != nil {
-		return "", err
-	}
-
-	// Prevent escaping the static root (e.g. via ..)
-	if rel == "." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || rel == ".." {
-		return "", errors.New("filePath is outside staticRoot")
-	}
-
-	// OS path -> URL path
-	relURL := filepath.ToSlash(rel)
-	relURL = path.Clean("/" + relURL) // ensure leading slash & normalize
-
-	// Escape properly
-	escaped := (&url.URL{Path: relURL}).EscapedPath()
-
-	// Join with your static route prefix (e.g. "/static")
-	prefix := "/" + strings.Trim(urlPrefix, "/")
-	return prefix + escaped, nil
 }
