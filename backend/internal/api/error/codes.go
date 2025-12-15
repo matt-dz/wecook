@@ -22,6 +22,7 @@ const (
 	RecipeNotOwned          ErrorCode = "recipe_not_owned"
 	IngredientNotFound      ErrorCode = "ingredient_not_found"
 	StepNotFound            ErrorCode = "step_not_found"
+	ImageNotFound           ErrorCode = "image_not_found"
 )
 
 var errorCodeToStatusCode = map[ErrorCode]int{
@@ -42,6 +43,7 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	InvalidRefreshToken:     http.StatusUnauthorized,
 	ExpiredRefreshToken:     http.StatusUnauthorized,
 	InvalidCredentials:      http.StatusUnauthorized,
+	ImageNotFound:           http.StatusNotFound,
 }
 
 func (ec ErrorCode) StatusCode() int {
