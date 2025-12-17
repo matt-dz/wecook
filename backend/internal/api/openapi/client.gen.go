@@ -190,12 +190,6 @@ type UpdateIngredientImageForm struct {
 	Image openapi_types.File `json:"image"`
 }
 
-// UpdateIngredientImageResponse defines model for UpdateIngredientImageResponse.
-type UpdateIngredientImageResponse struct {
-	Id       int64  `json:"id"`
-	ImageUrl string `json:"image_url"`
-}
-
 // UpdateIngredientResponse defines model for UpdateIngredientResponse.
 type UpdateIngredientResponse struct {
 	Id       int64    `json:"id"`
@@ -203,6 +197,11 @@ type UpdateIngredientResponse struct {
 	Name     string   `json:"name"`
 	Quantity *float32 `json:"quantity,omitempty"`
 	Unit     *string  `json:"unit,omitempty"`
+}
+
+// UpdateStepImageForm defines model for UpdateStepImageForm.
+type UpdateStepImageForm struct {
+	Image openapi_types.File `json:"image"`
 }
 
 // UpdateStepRequest defines model for UpdateStepRequest.
@@ -254,6 +253,9 @@ type PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody = UpdateIngre
 
 // PostApiRecipesRecipeIDIngredientsIngredientIDImageMultipartRequestBody defines body for PostApiRecipesRecipeIDIngredientsIngredientIDImage for multipart/form-data ContentType.
 type PostApiRecipesRecipeIDIngredientsIngredientIDImageMultipartRequestBody = UpdateIngredientImageForm
+
+// PostApiRecipesRecipeIDIngredientsStepIDImageMultipartRequestBody defines body for PostApiRecipesRecipeIDIngredientsStepIDImage for multipart/form-data ContentType.
+type PostApiRecipesRecipeIDIngredientsStepIDImageMultipartRequestBody = UpdateStepImageForm
 
 // PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody defines body for PatchApiRecipesRecipeIDStepsStepID for application/json ContentType.
 type PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody = UpdateStepRequest
@@ -382,6 +384,9 @@ type ClientInterface interface {
 
 	// PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody request with any body
 	PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiRecipesRecipeIDIngredientsStepIDImageWithBody request with any body
+	PostApiRecipesRecipeIDIngredientsStepIDImageWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiRecipesRecipeIDSteps request
 	PostApiRecipesRecipeIDSteps(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -610,6 +615,18 @@ func (c *Client) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx contex
 
 func (c *Client) PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiRecipesRecipeIDIngredientsIngredientIDImageRequestWithBody(c.Server, recipeID, ingredientID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiRecipesRecipeIDIngredientsStepIDImageWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiRecipesRecipeIDIngredientsStepIDImageRequestWithBody(c.Server, recipeID, stepID, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1198,6 +1215,49 @@ func NewPostApiRecipesRecipeIDIngredientsIngredientIDImageRequestWithBody(server
 	return req, nil
 }
 
+// NewPostApiRecipesRecipeIDIngredientsStepIDImageRequestWithBody generates requests for PostApiRecipesRecipeIDIngredientsStepIDImage with any type of body
+func NewPostApiRecipesRecipeIDIngredientsStepIDImageRequestWithBody(server string, recipeID int64, stepID int64, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "recipeID", runtime.ParamLocationPath, recipeID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "stepID", runtime.ParamLocationPath, stepID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/recipes/%s/ingredients/%s/image", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostApiRecipesRecipeIDStepsRequest generates requests for PostApiRecipesRecipeIDSteps
 func NewPostApiRecipesRecipeIDStepsRequest(server string, recipeID int64) (*http.Request, error) {
 	var err error
@@ -1380,6 +1440,9 @@ type ClientWithResponsesInterface interface {
 
 	// PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBodyWithResponse request with any body
 	PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsIngredientIDImageResponse, error)
+
+	// PostApiRecipesRecipeIDIngredientsStepIDImageWithBodyWithResponse request with any body
+	PostApiRecipesRecipeIDIngredientsStepIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsStepIDImageResponse, error)
 
 	// PostApiRecipesRecipeIDStepsWithResponse request
 	PostApiRecipesRecipeIDStepsWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsResponse, error)
@@ -1708,7 +1771,7 @@ func (r DeleteApiRecipesRecipeIDIngredientsIngredientIDImageResponse) StatusCode
 type PostApiRecipesRecipeIDIngredientsIngredientIDImageResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *UpdateIngredientImageResponse
+	JSON200      *UpdateIngredientResponse
 	JSON400      *Error
 	JSON404      *Error
 	JSON500      *Error
@@ -1724,6 +1787,31 @@ func (r PostApiRecipesRecipeIDIngredientsIngredientIDImageResponse) Status() str
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostApiRecipesRecipeIDIngredientsIngredientIDImageResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiRecipesRecipeIDIngredientsStepIDImageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UpdateStepResponse
+	JSON400      *Error
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiRecipesRecipeIDIngredientsStepIDImageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiRecipesRecipeIDIngredientsStepIDImageResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1944,6 +2032,15 @@ func (c *ClientWithResponses) PostApiRecipesRecipeIDIngredientsIngredientIDImage
 		return nil, err
 	}
 	return ParsePostApiRecipesRecipeIDIngredientsIngredientIDImageResponse(rsp)
+}
+
+// PostApiRecipesRecipeIDIngredientsStepIDImageWithBodyWithResponse request with arbitrary body returning *PostApiRecipesRecipeIDIngredientsStepIDImageResponse
+func (c *ClientWithResponses) PostApiRecipesRecipeIDIngredientsStepIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsStepIDImageResponse, error) {
+	rsp, err := c.PostApiRecipesRecipeIDIngredientsStepIDImageWithBody(ctx, recipeID, stepID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiRecipesRecipeIDIngredientsStepIDImageResponse(rsp)
 }
 
 // PostApiRecipesRecipeIDStepsWithResponse request returning *PostApiRecipesRecipeIDStepsResponse
@@ -2528,7 +2625,54 @@ func ParsePostApiRecipesRecipeIDIngredientsIngredientIDImageResponse(rsp *http.R
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest UpdateIngredientImageResponse
+		var dest UpdateIngredientResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiRecipesRecipeIDIngredientsStepIDImageResponse parses an HTTP response from a PostApiRecipesRecipeIDIngredientsStepIDImageWithResponse call
+func ParsePostApiRecipesRecipeIDIngredientsStepIDImageResponse(rsp *http.Response) (*PostApiRecipesRecipeIDIngredientsStepIDImageResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiRecipesRecipeIDIngredientsStepIDImageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UpdateStepResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -2698,6 +2842,9 @@ type ServerInterface interface {
 	// Upload an image for a recipe ingredient
 	// (POST /api/recipes/{recipeID}/ingredients/{ingredientID}/image)
 	PostApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64)
+	// Upload an image for a recipe step
+	// (POST /api/recipes/{recipeID}/ingredients/{stepID}/image)
+	PostApiRecipesRecipeIDIngredientsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64)
 	// Create a step for a recipe.
 	// (POST /api/recipes/{recipeID}/steps)
 	PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64)
@@ -2791,6 +2938,12 @@ func (_ Unimplemented) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(w ht
 // Upload an image for a recipe ingredient
 // (POST /api/recipes/{recipeID}/ingredients/{ingredientID}/image)
 func (_ Unimplemented) PostApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Upload an image for a recipe step
+// (POST /api/recipes/{recipeID}/ingredients/{stepID}/image)
+func (_ Unimplemented) PostApiRecipesRecipeIDIngredientsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3198,6 +3351,46 @@ func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDIngredientsIngredientID
 	handler.ServeHTTP(w, r)
 }
 
+// PostApiRecipesRecipeIDIngredientsStepIDImage operation middleware
+func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDIngredientsStepIDImage(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "recipeID" -------------
+	var recipeID int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "recipeID", chi.URLParam(r, "recipeID"), &recipeID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipeID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "stepID" -------------
+	var stepID int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "stepID", chi.URLParam(r, "stepID"), &stepID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "stepID", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostApiRecipesRecipeIDIngredientsStepIDImage(w, r, recipeID, stepID)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // PostApiRecipesRecipeIDSteps operation middleware
 func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request) {
 
@@ -3423,6 +3616,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/recipes/{recipeID}/ingredients/{ingredientID}/image", wrapper.PostApiRecipesRecipeIDIngredientsIngredientIDImage)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/recipes/{recipeID}/ingredients/{stepID}/image", wrapper.PostApiRecipesRecipeIDIngredientsStepIDImage)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/recipes/{recipeID}/steps", wrapper.PostApiRecipesRecipeIDSteps)
@@ -3985,7 +4181,7 @@ type PostApiRecipesRecipeIDIngredientsIngredientIDImageResponseObject interface 
 	VisitPostApiRecipesRecipeIDIngredientsIngredientIDImageResponse(w http.ResponseWriter) error
 }
 
-type PostApiRecipesRecipeIDIngredientsIngredientIDImage200JSONResponse UpdateIngredientImageResponse
+type PostApiRecipesRecipeIDIngredientsIngredientIDImage200JSONResponse UpdateIngredientResponse
 
 func (response PostApiRecipesRecipeIDIngredientsIngredientIDImage200JSONResponse) VisitPostApiRecipesRecipeIDIngredientsIngredientIDImageResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -4015,6 +4211,52 @@ func (response PostApiRecipesRecipeIDIngredientsIngredientIDImage404JSONResponse
 type PostApiRecipesRecipeIDIngredientsIngredientIDImage500JSONResponse Error
 
 func (response PostApiRecipesRecipeIDIngredientsIngredientIDImage500JSONResponse) VisitPostApiRecipesRecipeIDIngredientsIngredientIDImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject struct {
+	RecipeID int64 `json:"recipeID"`
+	StepID   int64 `json:"stepID"`
+	Body     *multipart.Reader
+}
+
+type PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject interface {
+	VisitPostApiRecipesRecipeIDIngredientsStepIDImageResponse(w http.ResponseWriter) error
+}
+
+type PostApiRecipesRecipeIDIngredientsStepIDImage200JSONResponse UpdateStepResponse
+
+func (response PostApiRecipesRecipeIDIngredientsStepIDImage200JSONResponse) VisitPostApiRecipesRecipeIDIngredientsStepIDImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse Error
+
+func (response PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse) VisitPostApiRecipesRecipeIDIngredientsStepIDImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiRecipesRecipeIDIngredientsStepIDImage404JSONResponse Error
+
+func (response PostApiRecipesRecipeIDIngredientsStepIDImage404JSONResponse) VisitPostApiRecipesRecipeIDIngredientsStepIDImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse Error
+
+func (response PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse) VisitPostApiRecipesRecipeIDIngredientsStepIDImageResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -4155,6 +4397,9 @@ type StrictServerInterface interface {
 	// Upload an image for a recipe ingredient
 	// (POST /api/recipes/{recipeID}/ingredients/{ingredientID}/image)
 	PostApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Context, request PostApiRecipesRecipeIDIngredientsIngredientIDImageRequestObject) (PostApiRecipesRecipeIDIngredientsIngredientIDImageResponseObject, error)
+	// Upload an image for a recipe step
+	// (POST /api/recipes/{recipeID}/ingredients/{stepID}/image)
+	PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context, request PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject) (PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject, error)
 	// Create a step for a recipe.
 	// (POST /api/recipes/{recipeID}/steps)
 	PostApiRecipesRecipeIDSteps(ctx context.Context, request PostApiRecipesRecipeIDStepsRequestObject) (PostApiRecipesRecipeIDStepsResponseObject, error)
@@ -4582,6 +4827,40 @@ func (sh *strictHandler) PostApiRecipesRecipeIDIngredientsIngredientIDImage(w ht
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiRecipesRecipeIDIngredientsIngredientIDImageResponseObject); ok {
 		if err := validResponse.VisitPostApiRecipesRecipeIDIngredientsIngredientIDImageResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostApiRecipesRecipeIDIngredientsStepIDImage operation middleware
+func (sh *strictHandler) PostApiRecipesRecipeIDIngredientsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+	var request PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject
+
+	request.RecipeID = recipeID
+	request.StepID = stepID
+
+	if reader, err := r.MultipartReader(); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode multipart body: %w", err))
+		return
+	} else {
+		request.Body = reader
+	}
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PostApiRecipesRecipeIDIngredientsStepIDImage(ctx, request.(PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostApiRecipesRecipeIDIngredientsStepIDImage")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject); ok {
+		if err := validResponse.VisitPostApiRecipesRecipeIDIngredientsStepIDImageResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

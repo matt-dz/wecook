@@ -604,10 +604,21 @@ func (Server) PostApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Con
 		}, nil
 	}
 
-	return PostApiRecipesRecipeIDIngredientsIngredientIDImage200JSONResponse{
+	imageURL := ingredient.ImageUrl.String
+	res := PostApiRecipesRecipeIDIngredientsIngredientIDImage200JSONResponse{
 		Id:       ingredient.ID,
-		ImageUrl: ingredient.ImageUrl.String,
-	}, nil
+		ImageUrl: &imageURL,
+		Name:     ingredient.Name.String,
+	}
+	if ingredient.Unit.Valid {
+		unit := ingredient.Unit.String
+		res.Unit = &unit
+	}
+	if ingredient.Quantity.Valid {
+		quantity := ingredient.Quantity.Float32
+		res.Quantity = &quantity
+	}
+	return res, nil
 }
 
 func (Server) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Context,
@@ -843,6 +854,158 @@ func (Server) PatchApiRecipesRecipeIDStepsStepID(ctx context.Context,
 	if step.ImageUrl.Valid {
 		url := step.ImageUrl.String
 		res.ImageUrl = &url
+	}
+	return res, nil
+}
+
+func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
+	request PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject,
+) (PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject, error) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "missing user id",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Check ownership
+	env.Logger.DebugContext(ctx, "checking user ownership")
+	ownsStep, err := env.Database.CheckStepOwnership(ctx, database.CheckStepOwnershipParams{
+		RecipeID: request.RecipeID,
+		StepID:   request.StepID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check step ownership", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	if !ownsStep {
+		env.Logger.ErrorContext(ctx, "user does not own recipe or step")
+		return PostApiRecipesRecipeIDIngredientsStepIDImage404JSONResponse{
+			Status:  apiError.RecipeNotFound.StatusCode(),
+			Code:    apiError.RecipeNotFound.String(),
+			Message: "recipe/step does not exist or user does not own recipe",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Read image
+	env.Logger.DebugContext(ctx, "reading recipe image")
+	requestForm, err := request.Body.ReadForm(form.MaximumUploadSize)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to read form", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "invalid form",
+			ErrorId: requestID,
+		}, nil
+	}
+	imageFile, err := requestForm.File["image"][0].Open()
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to open image", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "invalid image",
+			ErrorId: requestID,
+		}, nil
+	}
+	defer func() { _ = imageFile.Close() }()
+	file, err := form.ReadFile(imageFile)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to read image", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "invalid image",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Get current image
+	env.Logger.DebugContext(ctx, "getting current image url")
+	oldImage, err := env.Database.GetRecipeStepImageURL(ctx, request.StepID)
+	if err != nil {
+		return PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Deleting old image
+	if oldImage.Valid {
+		env.Logger.DebugContext(ctx, "deleting current image")
+		err = env.FileStore.DeleteURLPath(oldImage.String)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to delete old image")
+			return PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse{
+				Status:  apiError.InternalServerError.StatusCode(),
+				Code:    apiError.InternalServerError.String(),
+				Message: "Internal Server Error",
+				ErrorId: requestID,
+			}, nil
+		}
+	}
+
+	// Write new image
+	env.Logger.DebugContext(ctx, "writing new image")
+	urlpath, _, err := env.FileStore.WriteStepImage(request.RecipeID,
+		request.StepID, file.Suffix, file.Data)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to write step image", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Update image url in database
+	env.Logger.DebugContext(ctx, "update image in database")
+	step, err := env.Database.UpdateRecipeStep(ctx, database.UpdateRecipeStepParams{
+		ID: request.StepID,
+		ImageUrl: pgtype.Text{
+			String: urlpath,
+			Valid:  true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to update recipe step", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	imageURL := step.ImageUrl.String
+	res := PostApiRecipesRecipeIDIngredientsStepIDImage200JSONResponse{
+		Id:         step.ID,
+		StepNumber: step.StepNumber,
+		ImageUrl:   &imageURL,
+	}
+	if step.Instruction.Valid {
+		inst := step.Instruction.String
+		res.Instruction = &inst
 	}
 	return res, nil
 }
