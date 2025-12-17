@@ -2907,7 +2907,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 	}
 }
 
-func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
+func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 	// Create a simple PNG image for testing (1x1 pixel)
 	validPNGImage := []byte{
 		0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
@@ -2934,7 +2934,7 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		request    PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject
+		request    PostApiRecipesRecipeIDStepsStepIDImageRequestObject
 		userID     int64
 		injectUser bool
 		imageData  []byte
@@ -2942,11 +2942,11 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 		wantStatus int
 		wantCode   string
 		wantError  bool
-		validate   func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject)
+		validate   func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject)
 	}{
 		{
 			name: "successful upload without existing image",
-			request: PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject{
+			request: PostApiRecipesRecipeIDStepsStepIDImageRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 			},
@@ -2979,8 +2979,8 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			},
 			wantStatus: 200,
 			wantError:  false,
-			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject) {
-				v, ok := resp.(PostApiRecipesRecipeIDIngredientsStepIDImage200JSONResponse)
+			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				v, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage200JSONResponse)
 				if !ok {
 					t.Errorf("expected 200 response, got %T", resp)
 					return
@@ -2995,7 +2995,7 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 		},
 		{
 			name: "successful upload replacing existing image",
-			request: PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject{
+			request: PostApiRecipesRecipeIDStepsStepIDImageRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 			},
@@ -3039,8 +3039,8 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			},
 			wantStatus: 200,
 			wantError:  false,
-			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject) {
-				v, ok := resp.(PostApiRecipesRecipeIDIngredientsStepIDImage200JSONResponse)
+			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				v, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage200JSONResponse)
 				if !ok {
 					t.Errorf("expected 200 response, got %T", resp)
 					return
@@ -3055,7 +3055,7 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 		},
 		{
 			name: "missing user id in context",
-			request: PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject{
+			request: PostApiRecipesRecipeIDStepsStepIDImageRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 			},
@@ -3066,8 +3066,8 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject) {
-				v, ok := resp.(PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse)
+			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				v, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage400JSONResponse)
 				if !ok {
 					t.Errorf("expected 400 response, got %T", resp)
 					return
@@ -3079,7 +3079,7 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 		},
 		{
 			name: "database error on ownership check",
-			request: PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject{
+			request: PostApiRecipesRecipeIDStepsStepIDImageRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 			},
@@ -3094,8 +3094,8 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject) {
-				v, ok := resp.(PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse)
+			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				v, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse)
 				if !ok {
 					t.Errorf("expected 500 response, got %T", resp)
 					return
@@ -3107,7 +3107,7 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 		},
 		{
 			name: "user does not own step",
-			request: PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject{
+			request: PostApiRecipesRecipeIDStepsStepIDImageRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 			},
@@ -3122,8 +3122,8 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			wantStatus: 404,
 			wantCode:   apiError.RecipeNotFound.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject) {
-				v, ok := resp.(PostApiRecipesRecipeIDIngredientsStepIDImage404JSONResponse)
+			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				v, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage404JSONResponse)
 				if !ok {
 					t.Errorf("expected 404 response, got %T", resp)
 					return
@@ -3135,7 +3135,7 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 		},
 		{
 			name: "invalid image format",
-			request: PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject{
+			request: PostApiRecipesRecipeIDStepsStepIDImageRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 			},
@@ -3150,8 +3150,8 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject) {
-				v, ok := resp.(PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse)
+			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				v, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage400JSONResponse)
 				if !ok {
 					t.Errorf("expected 400 response, got %T", resp)
 					return
@@ -3163,7 +3163,7 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 		},
 		{
 			name: "database error getting old image URL",
-			request: PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject{
+			request: PostApiRecipesRecipeIDStepsStepIDImageRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 			},
@@ -3182,8 +3182,8 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject) {
-				_, ok := resp.(PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse)
+			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				_, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse)
 				if !ok {
 					t.Errorf("expected 500 response, got %T", resp)
 				}
@@ -3191,7 +3191,7 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 		},
 		{
 			name: "error deleting old image",
-			request: PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject{
+			request: PostApiRecipesRecipeIDStepsStepIDImageRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 			},
@@ -3217,8 +3217,8 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject) {
-				_, ok := resp.(PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse)
+			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				_, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse)
 				if !ok {
 					t.Errorf("expected 500 response, got %T", resp)
 				}
@@ -3226,7 +3226,7 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 		},
 		{
 			name: "error writing new image",
-			request: PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject{
+			request: PostApiRecipesRecipeIDStepsStepIDImageRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 			},
@@ -3249,8 +3249,8 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject) {
-				_, ok := resp.(PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse)
+			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				_, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse)
 				if !ok {
 					t.Errorf("expected 500 response, got %T", resp)
 				}
@@ -3258,7 +3258,7 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 		},
 		{
 			name: "database error updating step",
-			request: PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject{
+			request: PostApiRecipesRecipeIDStepsStepIDImageRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 			},
@@ -3285,8 +3285,8 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject) {
-				_, ok := resp.(PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse)
+			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				_, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse)
 				if !ok {
 					t.Errorf("expected 500 response, got %T", resp)
 				}
@@ -3339,9 +3339,9 @@ func TestPostApiRecipesRecipeIDIngredientsStepIDImage(t *testing.T) {
 			})
 
 			server := NewServer()
-			resp, err := server.PostApiRecipesRecipeIDIngredientsStepIDImage(ctx, tt.request)
+			resp, err := server.PostApiRecipesRecipeIDStepsStepIDImage(ctx, tt.request)
 			if (err != nil) != tt.wantError {
-				t.Errorf("PostApiRecipesRecipeIDIngredientsStepIDImage() error = %v, wantError %v", err, tt.wantError)
+				t.Errorf("PostApiRecipesRecipeIDStepsStepIDImage() error = %v, wantError %v", err, tt.wantError)
 				return
 			}
 

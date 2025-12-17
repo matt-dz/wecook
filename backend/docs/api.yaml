@@ -695,7 +695,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /api/recipes/{recipeID}/ingredients/{stepID}/image:
+  /api/recipes/{recipeID}/steps/{stepID}/image:
     post:
       summary: Upload an image for a recipe step
       tags:

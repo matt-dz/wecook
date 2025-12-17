@@ -858,15 +858,15 @@ func (Server) PatchApiRecipesRecipeIDStepsStepID(ctx context.Context,
 	return res, nil
 }
 
-func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
-	request PostApiRecipesRecipeIDIngredientsStepIDImageRequestObject,
-) (PostApiRecipesRecipeIDIngredientsStepIDImageResponseObject, error) {
+func (Server) PostApiRecipesRecipeIDStepsStepIDImage(ctx context.Context,
+	request PostApiRecipesRecipeIDStepsStepIDImageRequestObject,
+) (PostApiRecipesRecipeIDStepsStepIDImageResponseObject, error) {
 	env := env.EnvFromCtx(ctx)
 	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
 	userID, err := token.UserIDFromCtx(ctx)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
-		return PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse{
+		return PostApiRecipesRecipeIDStepsStepIDImage400JSONResponse{
 			Status:  apiError.BadRequest.StatusCode(),
 			Code:    apiError.BadRequest.String(),
 			Message: "missing user id",
@@ -886,7 +886,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
 	})
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to check step ownership", slog.Any("error", err))
-		return PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse{
+		return PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
 			Message: "Internal Server Error",
@@ -895,7 +895,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
 	}
 	if !ownsStep {
 		env.Logger.ErrorContext(ctx, "user does not own recipe or step")
-		return PostApiRecipesRecipeIDIngredientsStepIDImage404JSONResponse{
+		return PostApiRecipesRecipeIDStepsStepIDImage404JSONResponse{
 			Status:  apiError.RecipeNotFound.StatusCode(),
 			Code:    apiError.RecipeNotFound.String(),
 			Message: "recipe/step does not exist or user does not own recipe",
@@ -908,7 +908,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
 	requestForm, err := request.Body.ReadForm(form.MaximumUploadSize)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to read form", slog.Any("error", err))
-		return PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse{
+		return PostApiRecipesRecipeIDStepsStepIDImage400JSONResponse{
 			Status:  apiError.BadRequest.StatusCode(),
 			Code:    apiError.BadRequest.String(),
 			Message: "invalid form",
@@ -918,7 +918,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
 	imageFile, err := requestForm.File["image"][0].Open()
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to open image", slog.Any("error", err))
-		return PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse{
+		return PostApiRecipesRecipeIDStepsStepIDImage400JSONResponse{
 			Status:  apiError.BadRequest.StatusCode(),
 			Code:    apiError.BadRequest.String(),
 			Message: "invalid image",
@@ -929,7 +929,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
 	file, err := form.ReadFile(imageFile)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to read image", slog.Any("error", err))
-		return PostApiRecipesRecipeIDIngredientsStepIDImage400JSONResponse{
+		return PostApiRecipesRecipeIDStepsStepIDImage400JSONResponse{
 			Status:  apiError.BadRequest.StatusCode(),
 			Code:    apiError.BadRequest.String(),
 			Message: "invalid image",
@@ -941,7 +941,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
 	env.Logger.DebugContext(ctx, "getting current image url")
 	oldImage, err := env.Database.GetRecipeStepImageURL(ctx, request.StepID)
 	if err != nil {
-		return PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse{
+		return PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
 			Message: "Internal Server Error",
@@ -955,7 +955,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
 		err = env.FileStore.DeleteURLPath(oldImage.String)
 		if err != nil {
 			env.Logger.ErrorContext(ctx, "failed to delete old image")
-			return PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse{
+			return PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse{
 				Status:  apiError.InternalServerError.StatusCode(),
 				Code:    apiError.InternalServerError.String(),
 				Message: "Internal Server Error",
@@ -970,7 +970,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
 		request.StepID, file.Suffix, file.Data)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to write step image", slog.Any("error", err))
-		return PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse{
+		return PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
 			Message: "Internal Server Error",
@@ -989,7 +989,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
 	})
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to update recipe step", slog.Any("error", err))
-		return PostApiRecipesRecipeIDIngredientsStepIDImage500JSONResponse{
+		return PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
 			Message: "Internal Server Error",
@@ -998,7 +998,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsStepIDImage(ctx context.Context,
 	}
 
 	imageURL := step.ImageUrl.String
-	res := PostApiRecipesRecipeIDIngredientsStepIDImage200JSONResponse{
+	res := PostApiRecipesRecipeIDStepsStepIDImage200JSONResponse{
 		Id:         step.ID,
 		StepNumber: step.StepNumber,
 		ImageUrl:   &imageURL,
