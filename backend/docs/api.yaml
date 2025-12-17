@@ -590,6 +590,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+
   /api/recipes/{recipeID}/steps:
     post:
       summary: Create a step for a recipe.
@@ -617,6 +618,65 @@ paths:
                 $ref: "#/components/schemas/CreateStepResponse"
         "400":
           description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/recipes/{recipeID}/steps/{stepID}:
+    patch:
+      summary: Update a step for a recipe.
+      tags:
+        - Recipes
+        - Steps
+      description: >
+        Updates a steps for the recipe. The recipe must be
+        owned by the user. If no fields are provided, the operation
+        is considered a no-op.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: Recipe ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: stepID
+          in: path
+          required: true
+          description: Step ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStepRequest"
+      responses:
+        "200":
+          description: Step Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateStepResponse"
+        "400":
+          description: Invalid Request
           content:
             application/json:
               schema:
@@ -1175,9 +1235,6 @@ components:
           minimum: 1
         instruction:
           type: string
-        image:
-          type: string
-          format: binary
 
     UpdateStepResponse:
       type: object

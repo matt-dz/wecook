@@ -205,6 +205,20 @@ type UpdateIngredientResponse struct {
 	Unit     *string  `json:"unit,omitempty"`
 }
 
+// UpdateStepRequest defines model for UpdateStepRequest.
+type UpdateStepRequest struct {
+	Instruction *string `json:"instruction,omitempty"`
+	StepNumber  *int32  `json:"step_number,omitempty"`
+}
+
+// UpdateStepResponse defines model for UpdateStepResponse.
+type UpdateStepResponse struct {
+	Id          int64   `json:"id"`
+	ImageUrl    *string `json:"image_url,omitempty"`
+	Instruction *string `json:"instruction,omitempty"`
+	StepNumber  int32   `json:"step_number"`
+}
+
 // UserLoginRequest defines model for UserLoginRequest.
 type UserLoginRequest struct {
 	Email    string `json:"email"`
@@ -240,6 +254,9 @@ type PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody = UpdateIngre
 
 // PostApiRecipesRecipeIDIngredientsIngredientIDImageMultipartRequestBody defines body for PostApiRecipesRecipeIDIngredientsIngredientIDImage for multipart/form-data ContentType.
 type PostApiRecipesRecipeIDIngredientsIngredientIDImageMultipartRequestBody = UpdateIngredientImageForm
+
+// PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody defines body for PatchApiRecipesRecipeIDStepsStepID for application/json ContentType.
+type PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody = UpdateStepRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -368,6 +385,11 @@ type ClientInterface interface {
 
 	// PostApiRecipesRecipeIDSteps request
 	PostApiRecipesRecipeIDSteps(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchApiRecipesRecipeIDStepsStepIDWithBody request with any body
+	PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) PostApiAdminWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -600,6 +622,30 @@ func (c *Client) PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody(ctx 
 
 func (c *Client) PostApiRecipesRecipeIDSteps(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiRecipesRecipeIDStepsRequest(c.Server, recipeID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody(c.Server, recipeID, stepID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiRecipesRecipeIDStepsStepIDRequest(c.Server, recipeID, stepID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1186,6 +1232,60 @@ func NewPostApiRecipesRecipeIDStepsRequest(server string, recipeID int64) (*http
 	return req, nil
 }
 
+// NewPatchApiRecipesRecipeIDStepsStepIDRequest calls the generic PatchApiRecipesRecipeIDStepsStepID builder with application/json body
+func NewPatchApiRecipesRecipeIDStepsStepIDRequest(server string, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody(server, recipeID, stepID, "application/json", bodyReader)
+}
+
+// NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody generates requests for PatchApiRecipesRecipeIDStepsStepID with any type of body
+func NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody(server string, recipeID int64, stepID int64, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "recipeID", runtime.ParamLocationPath, recipeID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "stepID", runtime.ParamLocationPath, stepID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/recipes/%s/steps/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -1283,6 +1383,11 @@ type ClientWithResponsesInterface interface {
 
 	// PostApiRecipesRecipeIDStepsWithResponse request
 	PostApiRecipesRecipeIDStepsWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsResponse, error)
+
+	// PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse request with any body
+	PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error)
+
+	PatchApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error)
 }
 
 type PostApiAdminResponse struct {
@@ -1650,6 +1755,31 @@ func (r PostApiRecipesRecipeIDStepsResponse) StatusCode() int {
 	return 0
 }
 
+type PatchApiRecipesRecipeIDStepsStepIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UpdateStepResponse
+	JSON400      *Error
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchApiRecipesRecipeIDStepsStepIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchApiRecipesRecipeIDStepsStepIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // PostApiAdminWithBodyWithResponse request with arbitrary body returning *PostApiAdminResponse
 func (c *ClientWithResponses) PostApiAdminWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error) {
 	rsp, err := c.PostApiAdminWithBody(ctx, contentType, body, reqEditors...)
@@ -1823,6 +1953,23 @@ func (c *ClientWithResponses) PostApiRecipesRecipeIDStepsWithResponse(ctx contex
 		return nil, err
 	}
 	return ParsePostApiRecipesRecipeIDStepsResponse(rsp)
+}
+
+// PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse request with arbitrary body returning *PatchApiRecipesRecipeIDStepsStepIDResponse
+func (c *ClientWithResponses) PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error) {
+	rsp, err := c.PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx, recipeID, stepID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiRecipesRecipeIDStepsStepIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error) {
+	rsp, err := c.PatchApiRecipesRecipeIDStepsStepID(ctx, recipeID, stepID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiRecipesRecipeIDStepsStepIDResponse(rsp)
 }
 
 // ParsePostApiAdminResponse parses an HTTP response from a PostApiAdminWithResponse call
@@ -2460,6 +2607,53 @@ func ParsePostApiRecipesRecipeIDStepsResponse(rsp *http.Response) (*PostApiRecip
 	return response, nil
 }
 
+// ParsePatchApiRecipesRecipeIDStepsStepIDResponse parses an HTTP response from a PatchApiRecipesRecipeIDStepsStepIDWithResponse call
+func ParsePatchApiRecipesRecipeIDStepsStepIDResponse(rsp *http.Response) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchApiRecipesRecipeIDStepsStepIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UpdateStepResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Create an admin.
@@ -2507,6 +2701,9 @@ type ServerInterface interface {
 	// Create a step for a recipe.
 	// (POST /api/recipes/{recipeID}/steps)
 	PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64)
+	// Update a step for a recipe.
+	// (PATCH /api/recipes/{recipeID}/steps/{stepID})
+	PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -2600,6 +2797,12 @@ func (_ Unimplemented) PostApiRecipesRecipeIDIngredientsIngredientIDImage(w http
 // Create a step for a recipe.
 // (POST /api/recipes/{recipeID}/steps)
 func (_ Unimplemented) PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update a step for a recipe.
+// (PATCH /api/recipes/{recipeID}/steps/{stepID})
+func (_ Unimplemented) PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3026,6 +3229,46 @@ func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDSteps(w http.ResponseWr
 	handler.ServeHTTP(w, r)
 }
 
+// PatchApiRecipesRecipeIDStepsStepID operation middleware
+func (siw *ServerInterfaceWrapper) PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "recipeID" -------------
+	var recipeID int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "recipeID", chi.URLParam(r, "recipeID"), &recipeID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipeID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "stepID" -------------
+	var stepID int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "stepID", chi.URLParam(r, "stepID"), &stepID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "stepID", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PatchApiRecipesRecipeIDStepsStepID(w, r, recipeID, stepID)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -3183,6 +3426,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/recipes/{recipeID}/steps", wrapper.PostApiRecipesRecipeIDSteps)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/recipes/{recipeID}/steps/{stepID}", wrapper.PatchApiRecipesRecipeIDStepsStepID)
 	})
 
 	return r
@@ -3819,6 +4065,52 @@ func (response PostApiRecipesRecipeIDSteps500JSONResponse) VisitPostApiRecipesRe
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PatchApiRecipesRecipeIDStepsStepIDRequestObject struct {
+	RecipeID int64 `json:"recipeID"`
+	StepID   int64 `json:"stepID"`
+	Body     *PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody
+}
+
+type PatchApiRecipesRecipeIDStepsStepIDResponseObject interface {
+	VisitPatchApiRecipesRecipeIDStepsStepIDResponse(w http.ResponseWriter) error
+}
+
+type PatchApiRecipesRecipeIDStepsStepID200JSONResponse UpdateStepResponse
+
+func (response PatchApiRecipesRecipeIDStepsStepID200JSONResponse) VisitPatchApiRecipesRecipeIDStepsStepIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiRecipesRecipeIDStepsStepID400JSONResponse Error
+
+func (response PatchApiRecipesRecipeIDStepsStepID400JSONResponse) VisitPatchApiRecipesRecipeIDStepsStepIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiRecipesRecipeIDStepsStepID404JSONResponse Error
+
+func (response PatchApiRecipesRecipeIDStepsStepID404JSONResponse) VisitPatchApiRecipesRecipeIDStepsStepIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiRecipesRecipeIDStepsStepID500JSONResponse Error
+
+func (response PatchApiRecipesRecipeIDStepsStepID500JSONResponse) VisitPatchApiRecipesRecipeIDStepsStepIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Create an admin.
@@ -3866,6 +4158,9 @@ type StrictServerInterface interface {
 	// Create a step for a recipe.
 	// (POST /api/recipes/{recipeID}/steps)
 	PostApiRecipesRecipeIDSteps(ctx context.Context, request PostApiRecipesRecipeIDStepsRequestObject) (PostApiRecipesRecipeIDStepsResponseObject, error)
+	// Update a step for a recipe.
+	// (PATCH /api/recipes/{recipeID}/steps/{stepID})
+	PatchApiRecipesRecipeIDStepsStepID(ctx context.Context, request PatchApiRecipesRecipeIDStepsStepIDRequestObject) (PatchApiRecipesRecipeIDStepsStepIDResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -4313,6 +4608,40 @@ func (sh *strictHandler) PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *h
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiRecipesRecipeIDStepsResponseObject); ok {
 		if err := validResponse.VisitPostApiRecipesRecipeIDStepsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PatchApiRecipesRecipeIDStepsStepID operation middleware
+func (sh *strictHandler) PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+	var request PatchApiRecipesRecipeIDStepsStepIDRequestObject
+
+	request.RecipeID = recipeID
+	request.StepID = stepID
+
+	var body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PatchApiRecipesRecipeIDStepsStepID(ctx, request.(PatchApiRecipesRecipeIDStepsStepIDRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PatchApiRecipesRecipeIDStepsStepID")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PatchApiRecipesRecipeIDStepsStepIDResponseObject); ok {
+		if err := validResponse.VisitPatchApiRecipesRecipeIDStepsStepIDResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

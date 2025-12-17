@@ -52,7 +52,7 @@ type Querier interface {
 	UpdateRecipeCoverImage(ctx context.Context, arg UpdateRecipeCoverImageParams) error
 	UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) (RecipeIngredient, error)
 	UpdateRecipeIngredientImage(ctx context.Context, arg UpdateRecipeIngredientImageParams) error
-	UpdateRecipeStep(ctx context.Context, arg UpdateRecipeStepParams) error
+	UpdateRecipeStep(ctx context.Context, arg UpdateRecipeStepParams) (UpdateRecipeStepRow, error)
 	UpdateRecipeStepImage(ctx context.Context, arg UpdateRecipeStepImageParams) error
 	UpdateUserRefreshTokenHash(ctx context.Context, arg UpdateUserRefreshTokenHashParams) error
 }

@@ -711,7 +711,7 @@ func (Server) PostApiRecipesRecipeIDSteps(ctx context.Context,
 
 	// Check ownership
 	env.Logger.DebugContext(ctx, "checking user ownership")
-	ownsIngredient, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+	ownsStep, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
 		ID: request.RecipeID,
 		UserID: pgtype.Int8{
 			Int64: userID,
@@ -727,8 +727,8 @@ func (Server) PostApiRecipesRecipeIDSteps(ctx context.Context,
 			ErrorId: requestID,
 		}, nil
 	}
-	if !ownsIngredient {
-		env.Logger.ErrorContext(ctx, "user does not own recipe or ingredient")
+	if !ownsStep {
+		env.Logger.ErrorContext(ctx, "user does not own recipe")
 		return PostApiRecipesRecipeIDSteps404JSONResponse{
 			Status:  apiError.RecipeNotFound.StatusCode(),
 			Code:    apiError.RecipeNotFound.String(),
@@ -756,4 +756,93 @@ func (Server) PostApiRecipesRecipeIDSteps(ctx context.Context,
 		Id:         step.ID,
 		StepNumber: step.StepNumber,
 	}, nil
+}
+
+func (Server) PatchApiRecipesRecipeIDStepsStepID(ctx context.Context,
+	request PatchApiRecipesRecipeIDStepsStepIDRequestObject,
+) (PatchApiRecipesRecipeIDStepsStepIDResponseObject, error) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		return PatchApiRecipesRecipeIDStepsStepID400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "missing user id",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Check ownership
+	env.Logger.DebugContext(ctx, "checking user ownership")
+	ownsStep, err := env.Database.CheckStepOwnership(ctx, database.CheckStepOwnershipParams{
+		RecipeID: request.RecipeID,
+		StepID:   request.StepID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check step ownership", slog.Any("error", err))
+		return PatchApiRecipesRecipeIDStepsStepID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	if !ownsStep {
+		env.Logger.ErrorContext(ctx, "user does not own recipe or step")
+		return PatchApiRecipesRecipeIDStepsStepID404JSONResponse{
+			Status:  apiError.RecipeNotFound.StatusCode(),
+			Code:    apiError.RecipeNotFound.String(),
+			Message: "recipe/step does not exist or user does not own recipe",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Update step
+	env.Logger.DebugContext(ctx, "updating step")
+	updateParams := database.UpdateRecipeStepParams{
+		ID: request.StepID,
+	}
+	if request.Body.Instruction != nil {
+		updateParams.Instruction = pgtype.Text{
+			String: *request.Body.Instruction,
+			Valid:  true,
+		}
+	}
+	if request.Body.StepNumber != nil {
+		updateParams.StepNumber = pgtype.Int4{
+			Int32: *request.Body.StepNumber,
+			Valid: true,
+		}
+	}
+	step, err := env.Database.UpdateRecipeStep(ctx, updateParams)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to update recipe step", slog.Any("error", err))
+		return PatchApiRecipesRecipeIDStepsStepID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Return response
+	res := PatchApiRecipesRecipeIDStepsStepID200JSONResponse{
+		Id:         step.ID,
+		StepNumber: step.StepNumber,
+	}
+	if step.Instruction.Valid {
+		inst := step.Instruction.String
+		res.Instruction = &inst
+	}
+	if step.ImageUrl.Valid {
+		url := step.ImageUrl.String
+		res.ImageUrl = &url
+	}
+	return res, nil
 }

@@ -2466,3 +2466,437 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 		})
 	}
 }
+
+// Helper function for creating int32 pointers.
+func int32Ptr(i int32) *int32 {
+	return &i
+}
+
+func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
+	tests := []struct {
+		name       string
+		request    PatchApiRecipesRecipeIDStepsStepIDRequestObject
+		userID     int64
+		injectUser bool
+		setup      func(mockDB *dbmoc.MockQuerier)
+		wantStatus int
+		wantCode   string
+		wantError  bool
+		validate   func(t *testing.T, resp PatchApiRecipesRecipeIDStepsStepIDResponseObject)
+	}{
+		{
+			name: "successful update with instruction only",
+			request: PatchApiRecipesRecipeIDStepsStepIDRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+				Body: &UpdateStepRequest{
+					Instruction: stringPtr("Mix all ingredients together"),
+				},
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
+						RecipeID: 123,
+						StepID:   456,
+						UserID: pgtype.Int8{
+							Int64: 789,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
+						ID: 456,
+						Instruction: pgtype.Text{
+							String: "Mix all ingredients together",
+							Valid:  true,
+						},
+					}).
+					Return(database.UpdateRecipeStepRow{
+						ID: 456,
+						Instruction: pgtype.Text{
+							String: "Mix all ingredients together",
+							Valid:  true,
+						},
+						StepNumber: 1,
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDStepsStepIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeIDStepsStepID200JSONResponse)
+				if !ok {
+					t.Errorf("expected 200 response, got %T", resp)
+					return
+				}
+				if v.Id != 456 {
+					t.Errorf("expected id 456, got %d", v.Id)
+				}
+				if v.Instruction == nil || *v.Instruction != "Mix all ingredients together" {
+					t.Errorf("expected instruction 'Mix all ingredients together', got %v", v.Instruction)
+				}
+				if v.StepNumber != 1 {
+					t.Errorf("expected step_number 1, got %d", v.StepNumber)
+				}
+			},
+		},
+		{
+			name: "successful update with step_number only",
+			request: PatchApiRecipesRecipeIDStepsStepIDRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+				Body: &UpdateStepRequest{
+					StepNumber: int32Ptr(3),
+				},
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
+						RecipeID: 123,
+						StepID:   456,
+						UserID: pgtype.Int8{
+							Int64: 789,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
+						ID: 456,
+						StepNumber: pgtype.Int4{
+							Int32: 3,
+							Valid: true,
+						},
+					}).
+					Return(database.UpdateRecipeStepRow{
+						ID: 456,
+						Instruction: pgtype.Text{
+							String: "Existing instruction",
+							Valid:  true,
+						},
+						StepNumber: 3,
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDStepsStepIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeIDStepsStepID200JSONResponse)
+				if !ok {
+					t.Errorf("expected 200 response, got %T", resp)
+					return
+				}
+				if v.Id != 456 {
+					t.Errorf("expected id 456, got %d", v.Id)
+				}
+				if v.StepNumber != 3 {
+					t.Errorf("expected step_number 3, got %d", v.StepNumber)
+				}
+			},
+		},
+		{
+			name: "successful update with both instruction and step_number",
+			request: PatchApiRecipesRecipeIDStepsStepIDRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+				Body: &UpdateStepRequest{
+					Instruction: stringPtr("Bake for 30 minutes"),
+					StepNumber:  int32Ptr(2),
+				},
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
+						RecipeID: 123,
+						StepID:   456,
+						UserID: pgtype.Int8{
+							Int64: 789,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
+						ID: 456,
+						Instruction: pgtype.Text{
+							String: "Bake for 30 minutes",
+							Valid:  true,
+						},
+						StepNumber: pgtype.Int4{
+							Int32: 2,
+							Valid: true,
+						},
+					}).
+					Return(database.UpdateRecipeStepRow{
+						ID: 456,
+						Instruction: pgtype.Text{
+							String: "Bake for 30 minutes",
+							Valid:  true,
+						},
+						StepNumber: 2,
+						ImageUrl: pgtype.Text{
+							String: "files/steps/123/456.png",
+							Valid:  true,
+						},
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDStepsStepIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeIDStepsStepID200JSONResponse)
+				if !ok {
+					t.Errorf("expected 200 response, got %T", resp)
+					return
+				}
+				if v.Id != 456 {
+					t.Errorf("expected id 456, got %d", v.Id)
+				}
+				if v.Instruction == nil || *v.Instruction != "Bake for 30 minutes" {
+					t.Errorf("expected instruction 'Bake for 30 minutes', got %v", v.Instruction)
+				}
+				if v.StepNumber != 2 {
+					t.Errorf("expected step_number 2, got %d", v.StepNumber)
+				}
+				if v.ImageUrl == nil || *v.ImageUrl != "files/steps/123/456.png" {
+					t.Errorf("expected image_url 'files/steps/123/456.png', got %v", v.ImageUrl)
+				}
+			},
+		},
+		{
+			name: "successful update with empty body (no-op)",
+			request: PatchApiRecipesRecipeIDStepsStepIDRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+				Body:     &UpdateStepRequest{},
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
+						RecipeID: 123,
+						StepID:   456,
+						UserID: pgtype.Int8{
+							Int64: 789,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
+						ID: 456,
+					}).
+					Return(database.UpdateRecipeStepRow{
+						ID: 456,
+						Instruction: pgtype.Text{
+							String: "Unchanged instruction",
+							Valid:  true,
+						},
+						StepNumber: 1,
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDStepsStepIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeIDStepsStepID200JSONResponse)
+				if !ok {
+					t.Errorf("expected 200 response, got %T", resp)
+					return
+				}
+				if v.Id != 456 {
+					t.Errorf("expected id 456, got %d", v.Id)
+				}
+			},
+		},
+		{
+			name: "missing user id in context",
+			request: PatchApiRecipesRecipeIDStepsStepIDRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+				Body: &UpdateStepRequest{
+					Instruction: stringPtr("Some instruction"),
+				},
+			},
+			userID:     0,
+			injectUser: false,
+			setup:      func(mockDB *dbmoc.MockQuerier) {},
+			wantStatus: 400,
+			wantCode:   apiError.BadRequest.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDStepsStepIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeIDStepsStepID400JSONResponse)
+				if !ok {
+					t.Errorf("expected 400 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.BadRequest.String() {
+					t.Errorf("expected code %s, got %s", apiError.BadRequest.String(), v.Code)
+				}
+				if v.Message != "missing user id" {
+					t.Errorf("expected message 'missing user id', got %s", v.Message)
+				}
+			},
+		},
+		{
+			name: "database error on ownership check",
+			request: PatchApiRecipesRecipeIDStepsStepIDRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+				Body: &UpdateStepRequest{
+					Instruction: stringPtr("Some instruction"),
+				},
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
+						RecipeID: 123,
+						StepID:   456,
+						UserID: pgtype.Int8{
+							Int64: 789,
+							Valid: true,
+						},
+					}).
+					Return(false, errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDStepsStepIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeIDStepsStepID500JSONResponse)
+				if !ok {
+					t.Errorf("expected 500 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.InternalServerError.String() {
+					t.Errorf("expected code %s, got %s", apiError.InternalServerError.String(), v.Code)
+				}
+			},
+		},
+		{
+			name: "user does not own step",
+			request: PatchApiRecipesRecipeIDStepsStepIDRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+				Body: &UpdateStepRequest{
+					Instruction: stringPtr("Some instruction"),
+				},
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
+						RecipeID: 123,
+						StepID:   456,
+						UserID: pgtype.Int8{
+							Int64: 789,
+							Valid: true,
+						},
+					}).
+					Return(false, nil)
+			},
+			wantStatus: 404,
+			wantCode:   apiError.RecipeNotFound.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDStepsStepIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeIDStepsStepID404JSONResponse)
+				if !ok {
+					t.Errorf("expected 404 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.RecipeNotFound.String() {
+					t.Errorf("expected code %s, got %s", apiError.RecipeNotFound.String(), v.Code)
+				}
+				if v.Message != "recipe/step does not exist or user does not own recipe" {
+					t.Errorf("expected message 'recipe/step does not exist or user does not own recipe', got %s", v.Message)
+				}
+			},
+		},
+		{
+			name: "database error on update",
+			request: PatchApiRecipesRecipeIDStepsStepIDRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+				Body: &UpdateStepRequest{
+					Instruction: stringPtr("Some instruction"),
+				},
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
+						RecipeID: 123,
+						StepID:   456,
+						UserID: pgtype.Int8{
+							Int64: 789,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipeStep(gomock.Any(), gomock.Any()).
+					Return(database.UpdateRecipeStepRow{}, errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDStepsStepIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeIDStepsStepID500JSONResponse)
+				if !ok {
+					t.Errorf("expected 500 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.InternalServerError.String() {
+					t.Errorf("expected code %s, got %s", apiError.InternalServerError.String(), v.Code)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockDB := dbmoc.NewMockQuerier(ctrl)
+
+			tt.setup(mockDB)
+
+			ctx := context.Background()
+			ctx = requestid.InjectRequestID(ctx, 12345)
+			if tt.injectUser {
+				ctx = token.UserIDWithCtx(ctx, tt.userID)
+			}
+			ctx = env.WithCtx(ctx, &env.Env{
+				Logger: log.NullLogger(),
+				Database: &database.Database{
+					Querier: mockDB,
+				},
+			})
+
+			server := NewServer()
+			resp, err := server.PatchApiRecipesRecipeIDStepsStepID(ctx, tt.request)
+			if (err != nil) != tt.wantError {
+				t.Errorf("PatchApiRecipesRecipeIDStepsStepID() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			if tt.validate != nil {
+				tt.validate(t, resp)
+			}
+		})
+	}
+}

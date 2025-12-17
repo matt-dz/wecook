@@ -646,11 +646,12 @@ func (mr *MockQuerierMockRecorder) UpdateRecipeIngredientImage(ctx, arg any) *go
 }
 
 // UpdateRecipeStep mocks base method.
-func (m *MockQuerier) UpdateRecipeStep(ctx context.Context, arg database.UpdateRecipeStepParams) error {
+func (m *MockQuerier) UpdateRecipeStep(ctx context.Context, arg database.UpdateRecipeStepParams) (database.UpdateRecipeStepRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateRecipeStep", ctx, arg)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(database.UpdateRecipeStepRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateRecipeStep indicates an expected call of UpdateRecipeStep.

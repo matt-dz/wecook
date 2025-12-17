@@ -63,7 +63,7 @@ CREATE TABLE recipe_steps (
   image_url text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (recipe_id, step_number)
+  UNIQUE (recipe_id, step_number) DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE OR REPLACE FUNCTION recipe_steps_before_insert ()
@@ -131,6 +131,77 @@ CREATE TRIGGER recipe_steps_after_delete_trg
   AFTER DELETE ON recipe_steps
   FOR EACH ROW
   EXECUTE FUNCTION recipe_steps_after_delete ();
+
+CREATE OR REPLACE FUNCTION recipe_steps_before_update ()
+  RETURNS TRIGGER
+  AS $$
+DECLARE
+  max_step int;
+  in_shift text;
+BEGIN
+  -- Check if we're already in a shift operation to prevent recursion
+  BEGIN
+    in_shift := current_setting('recipe_steps.in_shift', TRUE);
+  EXCEPTION
+    WHEN OTHERS THEN
+      in_shift := NULL;
+  END;
+  -- If we're in a shift operation, skip the shifting logic
+  IF in_shift = '1' THEN
+    RETURN NEW;
+    END IF;
+    -- Only handle step_number changes
+    IF OLD.step_number = NEW.step_number THEN
+      RETURN NEW;
+      END IF;
+      -- Clamp step_number to valid range
+      SELECT
+        COALESCE(MAX(step_number), 0) INTO max_step
+      FROM
+        recipe_steps
+      WHERE
+        recipe_id = NEW.recipe_id;
+        IF NEW.step_number < 1 THEN
+          NEW.step_number := 1;
+        ELSIF NEW.step_number > max_step THEN
+          NEW.step_number := max_step;
+          END IF;
+          -- Set flag to indicate we're now in a shift operation
+          PERFORM
+            set_config('recipe_steps.in_shift', '1', TRUE);
+            -- If moving to a later position, decrement steps in between
+            IF NEW.step_number > OLD.step_number THEN
+              UPDATE
+                recipe_steps
+              SET
+                step_number = step_number - 1
+              WHERE
+                recipe_id = NEW.recipe_id
+                AND step_number > OLD.step_number
+                AND step_number <= NEW.step_number
+                AND id != NEW.id;
+                -- If moving to an earlier position, increment steps in between
+              ELSIF NEW.step_number < OLD.step_number THEN
+                UPDATE
+                  recipe_steps
+                SET
+                  step_number = step_number + 1
+                WHERE
+                  recipe_id = NEW.recipe_id
+                  AND step_number >= NEW.step_number
+                  AND step_number < OLD.step_number
+                  AND id != NEW.id;
+              END IF;
+              RETURN NEW;
+END;
+
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER recipe_steps_before_update_trg
+  BEFORE UPDATE ON recipe_steps
+  FOR EACH ROW
+  EXECUTE FUNCTION recipe_steps_before_update ();
 
 CREATE FUNCTION update_table_updated_at ()
   RETURNS TRIGGER
