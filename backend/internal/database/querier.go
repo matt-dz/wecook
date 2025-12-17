@@ -19,12 +19,13 @@ type Querier interface {
 	BulkUpdateRecipeSteps(ctx context.Context, arg []BulkUpdateRecipeStepsParams) *BulkUpdateRecipeStepsBatchResults
 	CheckIngredientOwnership(ctx context.Context, arg CheckIngredientOwnershipParams) (bool, error)
 	CheckRecipeOwnership(ctx context.Context, arg CheckRecipeOwnershipParams) (bool, error)
+	CheckStepOwnership(ctx context.Context, arg CheckStepOwnershipParams) (bool, error)
 	CheckUsersTableExists(ctx context.Context) (bool, error)
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (int64, error)
 	CreateEmptyRecipeIngredient(ctx context.Context, recipeID int64) (RecipeIngredient, error)
 	CreateRecipe(ctx context.Context, arg CreateRecipeParams) (int64, error)
 	CreateRecipeIngredient(ctx context.Context, arg CreateRecipeIngredientParams) (int64, error)
-	CreateRecipeStep(ctx context.Context, arg CreateRecipeStepParams) (int64, error)
+	CreateRecipeStep(ctx context.Context, arg CreateRecipeStepParams) (CreateRecipeStepRow, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
 	DeleteRecipe(ctx context.Context, id int64) error
 	DeleteRecipeIngredient(ctx context.Context, id int64) error

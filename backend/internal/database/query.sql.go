@@ -77,6 +77,33 @@ func (q *Queries) CheckRecipeOwnership(ctx context.Context, arg CheckRecipeOwner
 	return exists, err
 }
 
+const checkStepOwnership = `-- name: CheckStepOwnership :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      recipe_steps rs
+      JOIN recipes r ON r.id = rs.recipe_id
+    WHERE
+      r.id = $2::bigint
+      AND rs.id = $3::bigint
+      AND r.user_id = $1)
+`
+
+type CheckStepOwnershipParams struct {
+	UserID   pgtype.Int8
+	RecipeID int64
+	StepID   int64
+}
+
+func (q *Queries) CheckStepOwnership(ctx context.Context, arg CheckStepOwnershipParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkStepOwnership, arg.UserID, arg.RecipeID, arg.StepID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const checkUsersTableExists = `-- name: CheckUsersTableExists :one
 SELECT
   EXISTS (
@@ -196,7 +223,7 @@ const createRecipeStep = `-- name: CreateRecipeStep :one
 INSERT INTO recipe_steps (recipe_id, instruction)
   VALUES ($1, $2)
 RETURNING
-  id
+  id, step_number
 `
 
 type CreateRecipeStepParams struct {
@@ -204,11 +231,16 @@ type CreateRecipeStepParams struct {
 	Instruction pgtype.Text
 }
 
-func (q *Queries) CreateRecipeStep(ctx context.Context, arg CreateRecipeStepParams) (int64, error) {
+type CreateRecipeStepRow struct {
+	ID         int64
+	StepNumber int32
+}
+
+func (q *Queries) CreateRecipeStep(ctx context.Context, arg CreateRecipeStepParams) (CreateRecipeStepRow, error) {
 	row := q.db.QueryRow(ctx, createRecipeStep, arg.RecipeID, arg.Instruction)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
+	var i CreateRecipeStepRow
+	err := row.Scan(&i.ID, &i.StepNumber)
+	return i, err
 }
 
 const createUser = `-- name: CreateUser :one

@@ -692,3 +692,68 @@ func (Server) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.C
 
 	return DeleteApiRecipesRecipeIDIngredientsIngredientIDImage200Response{}, nil
 }
+
+func (Server) PostApiRecipesRecipeIDSteps(ctx context.Context,
+	request PostApiRecipesRecipeIDStepsRequestObject,
+) (PostApiRecipesRecipeIDStepsResponseObject, error) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		return PostApiRecipesRecipeIDSteps400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "missing user id",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Check ownership
+	env.Logger.DebugContext(ctx, "checking user ownership")
+	ownsIngredient, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: request.RecipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check step ownership", slog.Any("error", err))
+		return PostApiRecipesRecipeIDSteps500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	if !ownsIngredient {
+		env.Logger.ErrorContext(ctx, "user does not own recipe or ingredient")
+		return PostApiRecipesRecipeIDSteps404JSONResponse{
+			Status:  apiError.RecipeNotFound.StatusCode(),
+			Code:    apiError.RecipeNotFound.String(),
+			Message: "recipe does not exist or user does not own recipe",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Create step
+	env.Logger.DebugContext(ctx, "creating step")
+	step, err := env.Database.CreateRecipeStep(ctx, database.CreateRecipeStepParams{
+		RecipeID: request.RecipeID,
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to create step", slog.Any("error", err))
+		return PostApiRecipesRecipeIDSteps500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	return PostApiRecipesRecipeIDSteps200JSONResponse{
+		Id:         step.ID,
+		StepNumber: step.StepNumber,
+	}, nil
+}

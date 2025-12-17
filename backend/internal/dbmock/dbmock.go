@@ -158,6 +158,21 @@ func (mr *MockQuerierMockRecorder) CheckRecipeOwnership(ctx, arg any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckRecipeOwnership", reflect.TypeOf((*MockQuerier)(nil).CheckRecipeOwnership), ctx, arg)
 }
 
+// CheckStepOwnership mocks base method.
+func (m *MockQuerier) CheckStepOwnership(ctx context.Context, arg database.CheckStepOwnershipParams) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckStepOwnership", ctx, arg)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckStepOwnership indicates an expected call of CheckStepOwnership.
+func (mr *MockQuerierMockRecorder) CheckStepOwnership(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckStepOwnership", reflect.TypeOf((*MockQuerier)(nil).CheckStepOwnership), ctx, arg)
+}
+
 // CheckUsersTableExists mocks base method.
 func (m *MockQuerier) CheckUsersTableExists(ctx context.Context) (bool, error) {
 	m.ctrl.T.Helper()
@@ -234,10 +249,10 @@ func (mr *MockQuerierMockRecorder) CreateRecipeIngredient(ctx, arg any) *gomock.
 }
 
 // CreateRecipeStep mocks base method.
-func (m *MockQuerier) CreateRecipeStep(ctx context.Context, arg database.CreateRecipeStepParams) (int64, error) {
+func (m *MockQuerier) CreateRecipeStep(ctx context.Context, arg database.CreateRecipeStepParams) (database.CreateRecipeStepRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateRecipeStep", ctx, arg)
-	ret0, _ := ret[0].(int64)
+	ret0, _ := ret[0].(database.CreateRecipeStepRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

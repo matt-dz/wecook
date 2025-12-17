@@ -404,7 +404,7 @@ paths:
         - name: recipeID
           in: path
           required: true
-          description: ID of the recipe to retrieve
+          description: recipe ID
           schema:
             type: integer
             format: int64
@@ -580,6 +580,49 @@ paths:
                 $ref: "#/components/schemas/Error"
         "404":
           description: Recipe or ingredient not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/recipes/{recipeID}/steps:
+    post:
+      summary: Create a step for a recipe.
+      tags:
+        - Recipes
+        - Steps
+      description: >
+        Creates a step for the recipe. The recipe must be
+        owned by the user.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: recipe ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        "200":
+          description: Step Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateStepResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found or not owned by user
           content:
             application/json:
               schema:

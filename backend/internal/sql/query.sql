@@ -100,9 +100,9 @@ WHERE
 
 -- name: CreateRecipeStep :one
 INSERT INTO recipe_steps (recipe_id, instruction)
-  VALUES ($1, $2)
+  VALUES ($1, sqlc.narg ('instruction'))
 RETURNING
-  id;
+  id, step_number;
 
 -- name: UpdateRecipeStepImage :exec
 UPDATE
@@ -134,6 +134,19 @@ SELECT
     WHERE
       r.id = @recipe_id::bigint
       AND ri.id = @ingredient_id::bigint
+      AND r.user_id = $1);
+
+-- name: CheckStepOwnership :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      recipe_steps rs
+      JOIN recipes r ON r.id = rs.recipe_id
+    WHERE
+      r.id = @recipe_id::bigint
+      AND rs.id = @step_id::bigint
       AND r.user_id = $1);
 
 -- name: UpdateRecipeCoverImage :exec
