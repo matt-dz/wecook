@@ -306,6 +306,20 @@ func (mr *MockQuerierMockRecorder) DeleteRecipeIngredient(ctx, id any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRecipeIngredient", reflect.TypeOf((*MockQuerier)(nil).DeleteRecipeIngredient), ctx, id)
 }
 
+// DeleteRecipeIngredientImageURL mocks base method.
+func (m *MockQuerier) DeleteRecipeIngredientImageURL(ctx context.Context, id int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteRecipeIngredientImageURL", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteRecipeIngredientImageURL indicates an expected call of DeleteRecipeIngredientImageURL.
+func (mr *MockQuerierMockRecorder) DeleteRecipeIngredientImageURL(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRecipeIngredientImageURL", reflect.TypeOf((*MockQuerier)(nil).DeleteRecipeIngredientImageURL), ctx, id)
+}
+
 // DeleteRecipeIngredientsByIDs mocks base method.
 func (m *MockQuerier) DeleteRecipeIngredientsByIDs(ctx context.Context, arg database.DeleteRecipeIngredientsByIDsParams) error {
 	m.ctrl.T.Helper()
@@ -332,6 +346,20 @@ func (m *MockQuerier) DeleteRecipeStep(ctx context.Context, id int64) error {
 func (mr *MockQuerierMockRecorder) DeleteRecipeStep(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRecipeStep", reflect.TypeOf((*MockQuerier)(nil).DeleteRecipeStep), ctx, id)
+}
+
+// DeleteRecipeStepImageURL mocks base method.
+func (m *MockQuerier) DeleteRecipeStepImageURL(ctx context.Context, id int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteRecipeStepImageURL", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteRecipeStepImageURL indicates an expected call of DeleteRecipeStepImageURL.
+func (mr *MockQuerierMockRecorder) DeleteRecipeStepImageURL(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRecipeStepImageURL", reflect.TypeOf((*MockQuerier)(nil).DeleteRecipeStepImageURL), ctx, id)
 }
 
 // DeleteRecipeStepsByIDs mocks base method.

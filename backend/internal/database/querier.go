@@ -29,8 +29,10 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
 	DeleteRecipe(ctx context.Context, id int64) error
 	DeleteRecipeIngredient(ctx context.Context, id int64) error
+	DeleteRecipeIngredientImageURL(ctx context.Context, id int64) error
 	DeleteRecipeIngredientsByIDs(ctx context.Context, arg DeleteRecipeIngredientsByIDsParams) error
 	DeleteRecipeStep(ctx context.Context, id int64) error
+	DeleteRecipeStepImageURL(ctx context.Context, id int64) error
 	DeleteRecipeStepsByIDs(ctx context.Context, arg DeleteRecipeStepsByIDsParams) error
 	GetAdminCount(ctx context.Context) (int64, error)
 	GetPublishedRecipeAndOwner(ctx context.Context, id int64) (GetPublishedRecipeAndOwnerRow, error)

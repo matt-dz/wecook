@@ -1984,16 +1984,20 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 						Valid:  true,
 					}, nil)
 
+				mockDB.EXPECT().
+					DeleteRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					Return(nil)
+
 				mockFS.EXPECT().
 					DeleteURLPath("files/ingredients/123/456.png").
 					Return(nil)
 			},
-			wantStatus: 200,
+			wantStatus: 204,
 			wantError:  false,
 			validate: func(t *testing.T, resp DeleteApiRecipesRecipeIDIngredientsIngredientIDImageResponseObject) {
-				_, ok := resp.(DeleteApiRecipesRecipeIDIngredientsIngredientIDImage200Response)
+				_, ok := resp.(DeleteApiRecipesRecipeIDIngredientsIngredientIDImage204Response)
 				if !ok {
-					t.Errorf("expected 200 response, got %T", resp)
+					t.Errorf("expected 204 response, got %T", resp)
 				}
 			},
 		},
@@ -2136,6 +2140,40 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			},
 		},
 		{
+			name: "database error on delete from database",
+			request: DeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequestObject{
+				RecipeID:     123,
+				IngredientID: 456,
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					Return(pgtype.Text{
+						String: "files/ingredients/123/456.png",
+						Valid:  true,
+					}, nil)
+
+				mockDB.EXPECT().
+					DeleteRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					Return(errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp DeleteApiRecipesRecipeIDIngredientsIngredientIDImageResponseObject) {
+				_, ok := resp.(DeleteApiRecipesRecipeIDIngredientsIngredientIDImage500JSONResponse)
+				if !ok {
+					t.Errorf("expected 500 response, got %T", resp)
+				}
+			},
+		},
+		{
 			name: "file system error deleting image",
 			request: DeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequestObject{
 				RecipeID:     123,
@@ -2154,6 +2192,10 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 						String: "files/ingredients/123/456.png",
 						Valid:  true,
 					}, nil)
+
+				mockDB.EXPECT().
+					DeleteRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					Return(nil)
 
 				mockFS.EXPECT().
 					DeleteURLPath("files/ingredients/123/456.png").
@@ -3342,6 +3384,311 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			resp, err := server.PostApiRecipesRecipeIDStepsStepIDImage(ctx, tt.request)
 			if (err != nil) != tt.wantError {
 				t.Errorf("PostApiRecipesRecipeIDStepsStepIDImage() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			if tt.validate != nil {
+				tt.validate(t, resp)
+			}
+		})
+	}
+}
+
+func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
+	tests := []struct {
+		name       string
+		request    DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject
+		userID     int64
+		injectUser bool
+		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		wantStatus int
+		wantCode   string
+		wantError  bool
+		validate   func(t *testing.T, resp DeleteApiRecipesRecipeIDStepsStepIDImageResponseObject)
+	}{
+		{
+			name: "successful deletion",
+			request: DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
+						RecipeID: 123,
+						StepID:   456,
+						UserID: pgtype.Int8{
+							Int64: 789,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					Return(pgtype.Text{
+						String: "files/steps/123/456.png",
+						Valid:  true,
+					}, nil)
+
+				mockDB.EXPECT().
+					DeleteRecipeStepImageURL(gomock.Any(), int64(456)).
+					Return(nil)
+
+				mockFS.EXPECT().
+					DeleteURLPath("files/steps/123/456.png").
+					Return(nil)
+			},
+			wantStatus: 204,
+			wantError:  false,
+			validate: func(t *testing.T, resp DeleteApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				_, ok := resp.(DeleteApiRecipesRecipeIDStepsStepIDImage204Response)
+				if !ok {
+					t.Errorf("expected 204 response, got %T", resp)
+				}
+			},
+		},
+		{
+			name: "missing user id in context",
+			request: DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+			},
+			userID:     0,
+			injectUser: false,
+			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			wantStatus: 400,
+			wantCode:   apiError.BadRequest.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp DeleteApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				v, ok := resp.(DeleteApiRecipesRecipeIDStepsStepIDImage400JSONResponse)
+				if !ok {
+					t.Errorf("expected 400 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.BadRequest.String() {
+					t.Errorf("expected code %s, got %s", apiError.BadRequest.String(), v.Code)
+				}
+			},
+		},
+		{
+			name: "database error on ownership check",
+			request: DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), gomock.Any()).
+					Return(false, errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp DeleteApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				v, ok := resp.(DeleteApiRecipesRecipeIDStepsStepIDImage500JSONResponse)
+				if !ok {
+					t.Errorf("expected 500 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.InternalServerError.String() {
+					t.Errorf("expected code %s, got %s", apiError.InternalServerError.String(), v.Code)
+				}
+			},
+		},
+		{
+			name: "user does not own step",
+			request: DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), gomock.Any()).
+					Return(false, nil)
+			},
+			wantStatus: 404,
+			wantCode:   apiError.RecipeNotFound.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp DeleteApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				v, ok := resp.(DeleteApiRecipesRecipeIDStepsStepIDImage404JSONResponse)
+				if !ok {
+					t.Errorf("expected 404 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.RecipeNotFound.String() {
+					t.Errorf("expected code %s, got %s", apiError.RecipeNotFound.String(), v.Code)
+				}
+			},
+		},
+		{
+			name: "database error getting image URL",
+			request: DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					Return(pgtype.Text{}, errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp DeleteApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				_, ok := resp.(DeleteApiRecipesRecipeIDStepsStepIDImage500JSONResponse)
+				if !ok {
+					t.Errorf("expected 500 response, got %T", resp)
+				}
+			},
+		},
+		{
+			name: "no image exists to delete",
+			request: DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					Return(pgtype.Text{Valid: false}, nil)
+			},
+			wantStatus: 404,
+			wantCode:   apiError.ImageNotFound.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp DeleteApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				v, ok := resp.(DeleteApiRecipesRecipeIDStepsStepIDImage404JSONResponse)
+				if !ok {
+					t.Errorf("expected 404 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.ImageNotFound.String() {
+					t.Errorf("expected code %s, got %s", apiError.ImageNotFound.String(), v.Code)
+				}
+				if v.Message != "image not found" {
+					t.Errorf("expected message 'image not found', got %s", v.Message)
+				}
+			},
+		},
+		{
+			name: "database error on delete from database",
+			request: DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					Return(pgtype.Text{
+						String: "files/steps/123/456.png",
+						Valid:  true,
+					}, nil)
+
+				mockDB.EXPECT().
+					DeleteRecipeStepImageURL(gomock.Any(), int64(456)).
+					Return(errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp DeleteApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				_, ok := resp.(DeleteApiRecipesRecipeIDStepsStepIDImage500JSONResponse)
+				if !ok {
+					t.Errorf("expected 500 response, got %T", resp)
+				}
+			},
+		},
+		{
+			name: "file system error deleting image",
+			request: DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					Return(pgtype.Text{
+						String: "files/steps/123/456.png",
+						Valid:  true,
+					}, nil)
+
+				mockDB.EXPECT().
+					DeleteRecipeStepImageURL(gomock.Any(), int64(456)).
+					Return(nil)
+
+				mockFS.EXPECT().
+					DeleteURLPath("files/steps/123/456.png").
+					Return(errors.New("file system error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp DeleteApiRecipesRecipeIDStepsStepIDImageResponseObject) {
+				_, ok := resp.(DeleteApiRecipesRecipeIDStepsStepIDImage500JSONResponse)
+				if !ok {
+					t.Errorf("expected 500 response, got %T", resp)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockFS := filestore.NewMockFileStoreInterface(ctrl)
+
+			tt.setup(mockDB, mockFS)
+
+			ctx := context.Background()
+			ctx = requestid.InjectRequestID(ctx, 12345)
+			if tt.injectUser {
+				ctx = token.UserIDWithCtx(ctx, tt.userID)
+			}
+			ctx = env.WithCtx(ctx, &env.Env{
+				Logger: log.NullLogger(),
+				Database: &database.Database{
+					Querier: mockDB,
+				},
+				FileStore: mockFS,
+			})
+
+			server := NewServer()
+			resp, err := server.DeleteApiRecipesRecipeIDStepsStepIDImage(ctx, tt.request)
+			if (err != nil) != tt.wantError {
+				t.Errorf("DeleteApiRecipesRecipeIDStepsStepIDImage() error = %v, wantError %v", err, tt.wantError)
 				return
 			}
 

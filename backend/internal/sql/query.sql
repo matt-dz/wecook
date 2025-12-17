@@ -413,3 +413,19 @@ SET
   image_url = $2
 WHERE
   id = $1;
+
+-- name: DeleteRecipeStepImageURL :exec
+UPDATE
+  recipe_steps
+SET
+  image_url = NULL
+WHERE
+  id = $1;
+
+-- name: DeleteRecipeIngredientImageURL :exec
+UPDATE
+  recipe_ingredients
+SET
+  image_url = NULL
+WHERE
+  id = $1;

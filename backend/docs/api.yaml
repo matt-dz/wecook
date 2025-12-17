@@ -571,7 +571,7 @@ paths:
             format: int64
             minimum: 0
       responses:
-        "200":
+        "204":
           description: Image deleted successfully
         "400":
           description: Invalid request
@@ -742,6 +742,52 @@ paths:
                 $ref: "#/components/schemas/Error"
         "404":
           description: Recipe or ingredient not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete an image from a recipe step
+      tags:
+        - Recipes
+        - Steps
+      description: >
+        Deletes an image from a recipe step. The recipe must be
+        owned by the user.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: Recipe ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: stepID
+          in: path
+          required: true
+          description: Ingredient ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        "204":
+          description: Image deleted successfully
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe or step not found or not owned by user
           content:
             application/json:
               schema:

@@ -289,6 +289,20 @@ func (q *Queries) DeleteRecipeIngredient(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteRecipeIngredientImageURL = `-- name: DeleteRecipeIngredientImageURL :exec
+UPDATE
+  recipe_ingredients
+SET
+  image_url = NULL
+WHERE
+  id = $1
+`
+
+func (q *Queries) DeleteRecipeIngredientImageURL(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteRecipeIngredientImageURL, id)
+	return err
+}
+
 const deleteRecipeIngredientsByIDs = `-- name: DeleteRecipeIngredientsByIDs :exec
 DELETE FROM recipe_ingredients
 WHERE recipe_id = $1
@@ -312,6 +326,20 @@ WHERE id = $1
 
 func (q *Queries) DeleteRecipeStep(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, deleteRecipeStep, id)
+	return err
+}
+
+const deleteRecipeStepImageURL = `-- name: DeleteRecipeStepImageURL :exec
+UPDATE
+  recipe_steps
+SET
+  image_url = NULL
+WHERE
+  id = $1
+`
+
+func (q *Queries) DeleteRecipeStepImageURL(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteRecipeStepImageURL, id)
 	return err
 }
 
