@@ -63,9 +63,9 @@ func (Server) PostApiRecipes(ctx context.Context,
 	}, nil
 }
 
-func (Server) GetApiRecipesRecipeID(ctx context.Context,
-	request GetApiRecipesRecipeIDRequestObject,
-) (GetApiRecipesRecipeIDResponseObject, error) {
+func (Server) GetApiRecipesRecipeIDPublic(ctx context.Context,
+	request GetApiRecipesRecipeIDPublicRequestObject,
+) (GetApiRecipesRecipeIDPublicResponseObject, error) {
 	env := env.EnvFromCtx(ctx)
 	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
 
@@ -74,7 +74,7 @@ func (Server) GetApiRecipesRecipeID(ctx context.Context,
 	row, err := env.Database.GetPublishedRecipeAndOwner(ctx, request.RecipeID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		env.Logger.ErrorContext(ctx, "recipe does not exist", slog.Any("error", err))
-		return GetApiRecipesRecipeID404JSONResponse{
+		return GetApiRecipesRecipeIDPublic404JSONResponse{
 			Code:    apiError.RecipeNotFound.String(),
 			Status:  apiError.RecipeNotFound.StatusCode(),
 			Message: "recipe does not exist or is not public",
@@ -82,7 +82,7 @@ func (Server) GetApiRecipesRecipeID(ctx context.Context,
 		}, nil
 	} else if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to get recipe and owner", slog.Any("error", err))
-		return GetApiRecipesRecipeID500JSONResponse{
+		return GetApiRecipesRecipeIDPublic500JSONResponse{
 			Code:    apiError.InternalServerError.String(),
 			Status:  apiError.InternalServerError.StatusCode(),
 			Message: "Internal Server Error",
@@ -92,7 +92,7 @@ func (Server) GetApiRecipesRecipeID(ctx context.Context,
 	steps, err := env.Database.GetRecipeSteps(ctx, request.RecipeID)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to get recipe steps", slog.Any("error", err))
-		return GetApiRecipesRecipeID500JSONResponse{
+		return GetApiRecipesRecipeIDPublic500JSONResponse{
 			Code:    apiError.InternalServerError.String(),
 			Status:  apiError.InternalServerError.StatusCode(),
 			Message: "Internal Server Error",
@@ -102,7 +102,7 @@ func (Server) GetApiRecipesRecipeID(ctx context.Context,
 	ingredients, err := env.Database.GetRecipeIngredients(ctx, request.RecipeID)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to get recipe ingredients", slog.Any("error", err))
-		return GetApiRecipesRecipeID500JSONResponse{
+		return GetApiRecipesRecipeIDPublic500JSONResponse{
 			Code:    apiError.InternalServerError.String(),
 			Status:  apiError.InternalServerError.StatusCode(),
 			Message: "Internal Server Error",
@@ -113,7 +113,7 @@ func (Server) GetApiRecipesRecipeID(ctx context.Context,
 	// Write response
 	cookTimeUnit := TimeUnit(row.CookTimeUnit.TimeUnit)
 	prepTimeUnit := TimeUnit(row.PrepTimeUnit.TimeUnit)
-	res := GetApiRecipesRecipeID200JSONResponse{
+	res := GetApiRecipesRecipeIDPublic200JSONResponse{
 		Owner: RecipeOwner{
 			FirstName: row.FirstName,
 			LastName:  row.LastName,

@@ -136,16 +136,16 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		request    GetApiRecipesRecipeIDRequestObject
+		request    GetApiRecipesRecipeIDPublicRequestObject
 		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
-		validate   func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject)
+		validate   func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject)
 	}{
 		{
 			name: "successful recipe retrieval with all fields",
-			request: GetApiRecipesRecipeIDRequestObject{
+			request: GetApiRecipesRecipeIDPublicRequestObject{
 				RecipeID: 123,
 			},
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
@@ -217,8 +217,8 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			wantStatus: 200,
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeID200JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeIDPublic200JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID200JSONResponse, got %T", resp)
 					return
@@ -254,7 +254,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		},
 		{
 			name: "recipe not found",
-			request: GetApiRecipesRecipeIDRequestObject{
+			request: GetApiRecipesRecipeIDPublicRequestObject{
 				RecipeID: 999,
 			},
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
@@ -265,8 +265,8 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			wantStatus: 404,
 			wantCode:   apiError.RecipeNotFound.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeID404JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeIDPublic404JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID404JSONResponse, got %T", resp)
 					return
@@ -278,7 +278,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		},
 		{
 			name: "database error on recipe retrieval",
-			request: GetApiRecipesRecipeIDRequestObject{
+			request: GetApiRecipesRecipeIDPublicRequestObject{
 				RecipeID: 123,
 			},
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
@@ -289,8 +289,8 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeID500JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeIDPublic500JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID500JSONResponse, got %T", resp)
 					return
@@ -302,7 +302,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		},
 		{
 			name: "database error on steps retrieval",
-			request: GetApiRecipesRecipeIDRequestObject{
+			request: GetApiRecipesRecipeIDPublicRequestObject{
 				RecipeID: 123,
 			},
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
@@ -327,8 +327,8 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeID500JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeIDPublic500JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID500JSONResponse, got %T", resp)
 					return
@@ -340,7 +340,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		},
 		{
 			name: "database error on ingredients retrieval",
-			request: GetApiRecipesRecipeIDRequestObject{
+			request: GetApiRecipesRecipeIDPublicRequestObject{
 				RecipeID: 123,
 			},
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
@@ -369,8 +369,8 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeID500JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeIDPublic500JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID500JSONResponse, got %T", resp)
 					return
@@ -382,7 +382,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		},
 		{
 			name: "recipe with empty steps and ingredients",
-			request: GetApiRecipesRecipeIDRequestObject{
+			request: GetApiRecipesRecipeIDPublicRequestObject{
 				RecipeID: 123,
 			},
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
@@ -410,8 +410,8 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			wantStatus: 200,
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeID200JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeIDPublic200JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID200JSONResponse, got %T", resp)
 					return
@@ -446,7 +446,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 				FileStore: mockFS,
 			})
 
-			resp, err := server.GetApiRecipesRecipeID(ctx, tt.request)
+			resp, err := server.GetApiRecipesRecipeIDPublic(ctx, tt.request)
 			if (err != nil) != tt.wantError {
 				t.Errorf("GetApiRecipesRecipeID() error = %v, wantError %v", err, tt.wantError)
 				return

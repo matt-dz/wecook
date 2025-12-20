@@ -303,7 +303,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /api/recipes/{recipeID}:
+  /api/recipes/{recipeID}/public:
     get:
       summary: Get a public recipe and its owner's information
       tags:
@@ -346,6 +346,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /api/recipes/{recipeID}:
     delete:
       summary: Delete a recipe
       tags:
