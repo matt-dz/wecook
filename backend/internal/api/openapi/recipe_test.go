@@ -136,22 +136,104 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		request    GetApiRecipesRecipeIDPublicRequestObject
+		request    GetApiRecipesRecipeIDRequestObject
+		userID     int64
+		injectUser bool
 		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
-		validate   func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject)
+		validate   func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject)
 	}{
 		{
-			name: "successful recipe retrieval with all fields",
-			request: GetApiRecipesRecipeIDPublicRequestObject{
+			name: "missing user id in context",
+			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 			},
+			userID:     0,
+			injectUser: false,
+			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			wantStatus: 400,
+			wantCode:   apiError.BadRequest.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeID400JSONResponse)
+				if !ok {
+					t.Errorf("expected 400 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.BadRequest.String() {
+					t.Errorf("expected code %s, got %s", apiError.BadRequest.String(), v.Code)
+				}
+			},
+		},
+		{
+			name: "database error on ownership check",
+			request: GetApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
-					GetPublishedRecipeAndOwner(gomock.Any(), int64(123)).
-					Return(database.GetPublishedRecipeAndOwnerRow{
+					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
+					Return(false, errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeID500JSONResponse)
+				if !ok {
+					t.Errorf("expected 500 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.InternalServerError.String() {
+					t.Errorf("expected code %s, got %s", apiError.InternalServerError.String(), v.Code)
+				}
+			},
+		},
+		{
+			name: "user does not own recipe",
+			request: GetApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
+					Return(false, nil)
+			},
+			wantStatus: 404,
+			wantCode:   apiError.RecipeNotFound.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeID404JSONResponse)
+				if !ok {
+					t.Errorf("expected 404 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.RecipeNotFound.String() {
+					t.Errorf("expected code %s, got %s", apiError.RecipeNotFound.String(), v.Code)
+				}
+			},
+		},
+		{
+			name: "successful recipe retrieval with all fields",
+			request: GetApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{
 						ID:             123,
 						UserID:         pgtype.Int8{Int64: 456, Valid: true},
 						Title:          "Test Recipe",
@@ -217,8 +299,8 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			wantStatus: 200,
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeIDPublic200JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeID200JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID200JSONResponse, got %T", resp)
 					return
@@ -254,19 +336,25 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		},
 		{
 			name: "recipe not found",
-			request: GetApiRecipesRecipeIDPublicRequestObject{
+			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 999,
 			},
+			userID:     456,
+			injectUser: true,
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
-					GetPublishedRecipeAndOwner(gomock.Any(), int64(999)).
-					Return(database.GetPublishedRecipeAndOwnerRow{}, pgx.ErrNoRows)
+					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(999)).
+					Return(database.GetRecipeAndOwnerRow{}, pgx.ErrNoRows)
 			},
 			wantStatus: 404,
 			wantCode:   apiError.RecipeNotFound.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeIDPublic404JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeID404JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID404JSONResponse, got %T", resp)
 					return
@@ -278,19 +366,25 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		},
 		{
 			name: "database error on recipe retrieval",
-			request: GetApiRecipesRecipeIDPublicRequestObject{
+			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 			},
+			userID:     456,
+			injectUser: true,
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
-					GetPublishedRecipeAndOwner(gomock.Any(), int64(123)).
-					Return(database.GetPublishedRecipeAndOwnerRow{}, errors.New("database connection failed"))
+					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{}, errors.New("database connection failed"))
 			},
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeIDPublic500JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeID500JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID500JSONResponse, got %T", resp)
 					return
@@ -302,13 +396,19 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		},
 		{
 			name: "database error on steps retrieval",
-			request: GetApiRecipesRecipeIDPublicRequestObject{
+			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 			},
+			userID:     456,
+			injectUser: true,
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
-					GetPublishedRecipeAndOwner(gomock.Any(), int64(123)).
-					Return(database.GetPublishedRecipeAndOwnerRow{
+					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{
 						ID:        123,
 						UserID:    pgtype.Int8{Int64: 456, Valid: true},
 						Title:     "Test Recipe",
@@ -327,8 +427,8 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeIDPublic500JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeID500JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID500JSONResponse, got %T", resp)
 					return
@@ -340,13 +440,19 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		},
 		{
 			name: "database error on ingredients retrieval",
-			request: GetApiRecipesRecipeIDPublicRequestObject{
+			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 			},
+			userID:     456,
+			injectUser: true,
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
-					GetPublishedRecipeAndOwner(gomock.Any(), int64(123)).
-					Return(database.GetPublishedRecipeAndOwnerRow{
+					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{
 						ID:        123,
 						UserID:    pgtype.Int8{Int64: 456, Valid: true},
 						Title:     "Test Recipe",
@@ -369,8 +475,8 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			wantStatus: 500,
 			wantCode:   apiError.InternalServerError.String(),
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeIDPublic500JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeID500JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID500JSONResponse, got %T", resp)
 					return
@@ -382,13 +488,19 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		},
 		{
 			name: "recipe with empty steps and ingredients",
-			request: GetApiRecipesRecipeIDPublicRequestObject{
+			request: GetApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 			},
+			userID:     456,
+			injectUser: true,
 			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
-					GetPublishedRecipeAndOwner(gomock.Any(), int64(123)).
-					Return(database.GetPublishedRecipeAndOwnerRow{
+					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					GetRecipeAndOwner(gomock.Any(), int64(123)).
+					Return(database.GetRecipeAndOwnerRow{
 						ID:        123,
 						UserID:    pgtype.Int8{Int64: 456, Valid: true},
 						Title:     "Minimal Recipe",
@@ -410,8 +522,8 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			wantStatus: 200,
 			wantError:  false,
-			validate: func(t *testing.T, resp GetApiRecipesRecipeIDPublicResponseObject) {
-				v, ok := resp.(GetApiRecipesRecipeIDPublic200JSONResponse)
+			validate: func(t *testing.T, resp GetApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(GetApiRecipesRecipeID200JSONResponse)
 				if !ok {
 					t.Errorf("expected GetApiRecipesRecipeID200JSONResponse, got %T", resp)
 					return
@@ -438,6 +550,9 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
+			if tt.injectUser {
+				ctx = token.UserIDWithCtx(ctx, tt.userID)
+			}
 			ctx = env.WithCtx(ctx, &env.Env{
 				Logger: log.NullLogger(),
 				Database: &database.Database{
@@ -446,7 +561,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 				FileStore: mockFS,
 			})
 
-			resp, err := server.GetApiRecipesRecipeIDPublic(ctx, tt.request)
+			resp, err := server.GetApiRecipesRecipeID(ctx, tt.request)
 			if (err != nil) != tt.wantError {
 				t.Errorf("GetApiRecipesRecipeID() error = %v, wantError %v", err, tt.wantError)
 				return

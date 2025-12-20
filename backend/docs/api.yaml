@@ -347,6 +347,47 @@ paths:
                 $ref: "#/components/schemas/Error"
 
   /api/recipes/{recipeID}:
+    get:
+      summary: Get a personal recipe and the owner information
+      tags:
+        - Recipes
+      description: >
+        Retrieves a recipe by ID, including recipe details and the owner's basic information.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: ID of the recipe to retrieve
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        "200":
+          description: Recipe found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRecipeResponse"
+        "400":
+          description: Bad request (invalid recipe ID)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
     delete:
       summary: Delete a recipe
       tags:

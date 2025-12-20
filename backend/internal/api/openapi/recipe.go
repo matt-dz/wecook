@@ -23,6 +23,105 @@ const (
 	maxUploadSize      = 20 << 20 // ~ 20 MB
 )
 
+// buildRecipeWithIngredientsAndSteps is a helper function that fetches recipe details
+// (steps and ingredients) and builds the response structure.
+func buildRecipeWithIngredientsAndSteps(
+	ctx context.Context,
+	env *env.Env,
+	recipeID int64,
+	row database.GetRecipeAndOwnerRow,
+) (RecipeWithIngredientsAndSteps, RecipeOwner, error) {
+	// Get steps
+	steps, err := env.Database.GetRecipeSteps(ctx, recipeID)
+	if err != nil {
+		return RecipeWithIngredientsAndSteps{}, RecipeOwner{}, err
+	}
+
+	// Get ingredients
+	ingredients, err := env.Database.GetRecipeIngredients(ctx, recipeID)
+	if err != nil {
+		return RecipeWithIngredientsAndSteps{}, RecipeOwner{}, err
+	}
+
+	// Build owner
+	owner := RecipeOwner{
+		FirstName: row.FirstName,
+		LastName:  row.LastName,
+		Id:        row.ID,
+	}
+
+	// Build recipe
+	cookTimeUnit := TimeUnit(row.CookTimeUnit.TimeUnit)
+	prepTimeUnit := TimeUnit(row.PrepTimeUnit.TimeUnit)
+	recipe := RecipeWithIngredientsAndSteps{
+		CookTimeAmount: &row.CookTimeAmount.Int32,
+		CookTimeUnit:   &cookTimeUnit,
+		PrepTimeAmount: &row.PrepTimeAmount.Int32,
+		PrepTimeUnit:   &prepTimeUnit,
+		UserId:         row.UserID.Int64,
+		CreatedAt:      row.CreatedAt.Time,
+		UpdatedAt:      row.UpdatedAt.Time,
+		Published:      row.Published,
+		Title:          row.Title,
+		Id:             row.ID,
+		Servings:       &row.Servings.Float32,
+		Description:    &row.Description.String,
+		Steps:          make([]RecipeStep, 0),
+		Ingredients:    make([]RecipeIngredient, 0),
+	}
+
+	// Add recipe image URL if exists
+	if row.ImageUrl.String != "" {
+		imageURL := env.FileStore.FileURL(row.ImageUrl.String)
+		recipe.ImageUrl = &imageURL
+	}
+
+	// Build steps
+	for _, step := range steps {
+		newStep := RecipeStep{
+			Id:         step.ID,
+			RecipeId:   step.RecipeID,
+			StepNumber: step.StepNumber,
+		}
+		if step.Instruction.Valid {
+			instr := step.Instruction.String
+			newStep.Instruction = &instr
+		}
+		if step.ImageUrl.Valid {
+			imageURL := env.FileStore.FileURL(step.ImageUrl.String)
+			newStep.ImageUrl = &imageURL
+		}
+		recipe.Steps = append(recipe.Steps, newStep)
+	}
+
+	// Build ingredients
+	for _, ingredient := range ingredients {
+		newIngredient := RecipeIngredient{
+			Id:       ingredient.ID,
+			RecipeId: ingredient.RecipeID,
+		}
+		if ingredient.Quantity.Valid {
+			quantity := ingredient.Quantity.Float32
+			newIngredient.Quantity = &quantity
+		}
+		if ingredient.Name.Valid {
+			name := ingredient.Name.String
+			newIngredient.Name = &name
+		}
+		if ingredient.Unit.Valid {
+			unit := ingredient.Unit.String
+			newIngredient.Unit = &unit
+		}
+		if ingredient.ImageUrl.Valid {
+			imageURL := env.FileStore.FileURL(ingredient.ImageUrl.String)
+			newIngredient.ImageUrl = &imageURL
+		}
+		recipe.Ingredients = append(recipe.Ingredients, newIngredient)
+	}
+
+	return recipe, owner, nil
+}
+
 func (Server) PostApiRecipes(ctx context.Context,
 	request PostApiRecipesRequestObject,
 ) (PostApiRecipesResponseObject, error) {
@@ -71,7 +170,7 @@ func (Server) GetApiRecipesRecipeIDPublic(ctx context.Context,
 
 	// Get recipe and owner
 	env.Logger.DebugContext(ctx, "getting recipe and owner")
-	row, err := env.Database.GetPublishedRecipeAndOwner(ctx, request.RecipeID)
+	publishedRow, err := env.Database.GetPublishedRecipeAndOwner(ctx, request.RecipeID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		env.Logger.ErrorContext(ctx, "recipe does not exist", slog.Any("error", err))
 		return GetApiRecipesRecipeIDPublic404JSONResponse{
@@ -89,19 +188,31 @@ func (Server) GetApiRecipesRecipeIDPublic(ctx context.Context,
 			ErrorId: requestID,
 		}, nil
 	}
-	steps, err := env.Database.GetRecipeSteps(ctx, request.RecipeID)
-	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get recipe steps", slog.Any("error", err))
-		return GetApiRecipesRecipeIDPublic500JSONResponse{
-			Code:    apiError.InternalServerError.String(),
-			Status:  apiError.InternalServerError.StatusCode(),
-			Message: "Internal Server Error",
-			ErrorId: requestID,
-		}, nil
+
+	// Convert to GetRecipeAndOwnerRow (same structure, different field order)
+	row := database.GetRecipeAndOwnerRow{
+		UserID:         publishedRow.UserID,
+		ImageUrl:       publishedRow.ImageUrl,
+		Title:          publishedRow.Title,
+		Description:    publishedRow.Description,
+		CreatedAt:      publishedRow.CreatedAt,
+		UpdatedAt:      publishedRow.UpdatedAt,
+		Published:      publishedRow.Published,
+		ID:             publishedRow.ID,
+		CookTimeAmount: publishedRow.CookTimeAmount,
+		CookTimeUnit:   publishedRow.CookTimeUnit,
+		PrepTimeAmount: publishedRow.PrepTimeAmount,
+		PrepTimeUnit:   publishedRow.PrepTimeUnit,
+		Servings:       publishedRow.Servings,
+		FirstName:      publishedRow.FirstName,
+		LastName:       publishedRow.LastName,
+		ID_2:           publishedRow.ID_2,
 	}
-	ingredients, err := env.Database.GetRecipeIngredients(ctx, request.RecipeID)
+
+	// Build recipe with ingredients and steps
+	recipe, owner, err := buildRecipeWithIngredientsAndSteps(ctx, env, request.RecipeID, row)
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get recipe ingredients", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "failed to build recipe details", slog.Any("error", err))
 		return GetApiRecipesRecipeIDPublic500JSONResponse{
 			Code:    apiError.InternalServerError.String(),
 			Status:  apiError.InternalServerError.StatusCode(),
@@ -110,76 +221,94 @@ func (Server) GetApiRecipesRecipeIDPublic(ctx context.Context,
 		}, nil
 	}
 
-	// Write response
-	cookTimeUnit := TimeUnit(row.CookTimeUnit.TimeUnit)
-	prepTimeUnit := TimeUnit(row.PrepTimeUnit.TimeUnit)
-	res := GetApiRecipesRecipeIDPublic200JSONResponse{
-		Owner: RecipeOwner{
-			FirstName: row.FirstName,
-			LastName:  row.LastName,
-			Id:        row.ID,
+	return GetApiRecipesRecipeIDPublic200JSONResponse{
+		Owner:  owner,
+		Recipe: recipe,
+	}, nil
+}
+
+func (Server) GetApiRecipesRecipeID(ctx context.Context,
+	request GetApiRecipesRecipeIDRequestObject) (
+	GetApiRecipesRecipeIDResponseObject, error,
+) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		return GetApiRecipesRecipeID400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "missing user id",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Check ownership
+	env.Logger.DebugContext(ctx, "checking user ownership")
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: request.RecipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
 		},
-		Recipe: RecipeWithIngredientsAndSteps{
-			CookTimeAmount: &row.CookTimeAmount.Int32,
-			CookTimeUnit:   &cookTimeUnit,
-			PrepTimeAmount: &row.PrepTimeAmount.Int32,
-			PrepTimeUnit:   &prepTimeUnit,
-			UserId:         row.UserID.Int64,
-			CreatedAt:      row.CreatedAt.Time,
-			UpdatedAt:      row.UpdatedAt.Time,
-			Published:      row.Published,
-			Title:          row.Title,
-			Id:             row.ID,
-			Servings:       &row.Servings.Float32,
-			Description:    &row.Description.String,
-			Steps:          make([]RecipeStep, 0),
-			Ingredients:    make([]RecipeIngredient, 0),
-		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check recipe ownership", slog.Any("error", err))
+		return GetApiRecipesRecipeID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
 	}
-	if row.ImageUrl.String != "" {
-		imageURL := env.FileStore.FileURL(row.ImageUrl.String)
-		res.Recipe.ImageUrl = &imageURL
+	if !ownsRecipe {
+		env.Logger.ErrorContext(ctx, "user does not own recipe")
+		return GetApiRecipesRecipeID404JSONResponse{
+			Status:  apiError.RecipeNotFound.StatusCode(),
+			Code:    apiError.RecipeNotFound.String(),
+			Message: "recipe does not exist or user does not own it",
+			ErrorId: requestID,
+		}, nil
 	}
-	for _, step := range steps {
-		newStep := RecipeStep{
-			Id:         step.ID,
-			RecipeId:   step.RecipeID,
-			StepNumber: step.StepNumber,
-		}
-		if step.Instruction.Valid {
-			instr := step.Instruction.String
-			newStep.Instruction = &instr
-		}
-		if step.ImageUrl.Valid {
-			imageURL := env.FileStore.FileURL(step.ImageUrl.String)
-			newStep.ImageUrl = &imageURL
-		}
-		res.Recipe.Steps = append(res.Recipe.Steps, newStep)
+
+	// Get recipe and owner
+	env.Logger.DebugContext(ctx, "getting recipe and owner")
+	row, err := env.Database.GetRecipeAndOwner(ctx, request.RecipeID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		env.Logger.ErrorContext(ctx, "recipe does not exist", slog.Any("error", err))
+		return GetApiRecipesRecipeID404JSONResponse{
+			Code:    apiError.RecipeNotFound.String(),
+			Status:  apiError.RecipeNotFound.StatusCode(),
+			Message: "recipe does not exist",
+			ErrorId: requestID,
+		}, nil
+	} else if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe and owner", slog.Any("error", err))
+		return GetApiRecipesRecipeID500JSONResponse{
+			Code:    apiError.InternalServerError.String(),
+			Status:  apiError.InternalServerError.StatusCode(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
 	}
-	for _, ingredient := range ingredients {
-		newIngredient := RecipeIngredient{
-			Id:       ingredient.ID,
-			RecipeId: ingredient.RecipeID,
-		}
-		if ingredient.Quantity.Valid {
-			quantity := ingredient.Quantity.Float32
-			newIngredient.Quantity = &quantity
-		}
-		if ingredient.Name.Valid {
-			name := ingredient.Name.String
-			newIngredient.Name = &name
-		}
-		if ingredient.Unit.Valid {
-			unit := ingredient.Unit.String
-			newIngredient.Unit = &unit
-		}
-		if ingredient.ImageUrl.Valid {
-			imageURL := env.FileStore.FileURL(ingredient.ImageUrl.String)
-			newIngredient.ImageUrl = &imageURL
-		}
-		res.Recipe.Ingredients = append(res.Recipe.Ingredients, newIngredient)
+
+	// Build recipe with ingredients and steps
+	recipe, owner, err := buildRecipeWithIngredientsAndSteps(ctx, env, request.RecipeID, row)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to build recipe details", slog.Any("error", err))
+		return GetApiRecipesRecipeID500JSONResponse{
+			Code:    apiError.InternalServerError.String(),
+			Status:  apiError.InternalServerError.StatusCode(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
 	}
-	return res, nil
+
+	return GetApiRecipesRecipeID200JSONResponse{
+		Owner:  owner,
+		Recipe: recipe,
+	}, nil
 }
 
 func (Server) DeleteApiRecipesRecipeID(
