@@ -1301,7 +1301,7 @@ func (Server) DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx context.Contex
 	env.Logger.DebugContext(ctx, "getting image url")
 	imageurl, err := env.Database.GetRecipeIngredientImageURL(ctx, request.IngredientID)
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get image url")
+		env.Logger.ErrorContext(ctx, "failed to get image url", slog.Any("error", err))
 		return DeleteApiRecipesRecipeIDIngredientsIngredientID500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
@@ -1330,7 +1330,7 @@ func (Server) DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx context.Contex
 	env.Logger.DebugContext(ctx, "deleting ingredient")
 	err = env.Database.DeleteRecipeIngredient(ctx, request.IngredientID)
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to delete ingredient")
+		env.Logger.ErrorContext(ctx, "failed to delete ingredient", slog.Any("error", err))
 		return DeleteApiRecipesRecipeIDIngredientsIngredientID500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
@@ -1340,6 +1340,76 @@ func (Server) DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx context.Contex
 	}
 
 	return DeleteApiRecipesRecipeIDIngredientsIngredientID204Response{}, nil
+}
+
+func (Server) GetApiRecipesPublic(ctx context.Context,
+	request GetApiRecipesPublicRequestObject) (
+	GetApiRecipesPublicResponseObject, error,
+) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+
+	// TODO: add pagination
+	env.Logger.DebugContext(ctx, "getting public recipes")
+	rows, err := env.Database.GetPublicRecipes(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get public recipes", slog.Any("error", err))
+		return GetApiRecipesPublic500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Build response
+	res := GetApiRecipesPublic200JSONResponse{
+		Recipes: make([]RecipeAndOwner, len(rows)),
+	}
+	for idx, recipe := range rows {
+		r := Recipe{
+			CreatedAt: recipe.CreatedAt.Time,
+			UpdatedAt: recipe.UpdatedAt.Time,
+			UserId:    recipe.UserID.Int64,
+			Title:     recipe.Title,
+			Published: recipe.Published,
+			Id:        recipe.RecipeID,
+		}
+		if recipe.CookTimeAmount.Valid {
+			r.CookTimeAmount = &recipe.CookTimeAmount.Int32
+		}
+		if recipe.CookTimeUnit.Valid {
+			r.CookTimeUnit = (*TimeUnit)(&recipe.CookTimeUnit.TimeUnit)
+		}
+		if recipe.Description.Valid {
+			r.Description = &recipe.Description.String
+		}
+		if recipe.ImageUrl.Valid {
+			r.ImageUrl = &recipe.ImageUrl.String
+		}
+		if recipe.PrepTimeAmount.Valid {
+			r.PrepTimeAmount = &recipe.PrepTimeAmount.Int32
+		}
+		if recipe.PrepTimeUnit.Valid {
+			r.PrepTimeUnit = (*TimeUnit)(&recipe.PrepTimeUnit.TimeUnit)
+		}
+		if recipe.Servings.Valid {
+			r.Servings = &recipe.Servings.Float32
+		}
+
+		ro := RecipeOwner{
+			FirstName: recipe.FirstName,
+			LastName:  recipe.LastName,
+			Id:        recipe.UserID.Int64,
+		}
+
+		res.Recipes[idx] = RecipeAndOwner{
+			Recipe: &r,
+			Owner:  &ro,
+		}
+	}
+
+	return res, nil
 }
 
 func (Server) DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context,

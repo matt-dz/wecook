@@ -375,6 +375,86 @@ func (q *Queries) GetAdminCount(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const getPublicRecipes = `-- name: GetPublicRecipes :many
+SELECT
+  r.user_id,
+  r.image_url,
+  r.title,
+  r.description,
+  r.created_at,
+  r.updated_at,
+  r.published,
+  r.cook_time_amount,
+  r.cook_time_unit,
+  r.prep_time_amount,
+  r.prep_time_unit,
+  r.id AS recipe_id,
+  r.servings,
+  u.first_name,
+  u.last_name
+FROM
+  recipes r
+  JOIN users u ON r.user_id = u.id
+WHERE
+  r.published = TRUE
+ORDER BY
+  r.updated_at DESC
+`
+
+type GetPublicRecipesRow struct {
+	UserID         pgtype.Int8
+	ImageUrl       pgtype.Text
+	Title          string
+	Description    pgtype.Text
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+	Published      bool
+	CookTimeAmount pgtype.Int4
+	CookTimeUnit   NullTimeUnit
+	PrepTimeAmount pgtype.Int4
+	PrepTimeUnit   NullTimeUnit
+	RecipeID       int64
+	Servings       pgtype.Float4
+	FirstName      string
+	LastName       string
+}
+
+func (q *Queries) GetPublicRecipes(ctx context.Context) ([]GetPublicRecipesRow, error) {
+	rows, err := q.db.Query(ctx, getPublicRecipes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPublicRecipesRow
+	for rows.Next() {
+		var i GetPublicRecipesRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.ImageUrl,
+			&i.Title,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Published,
+			&i.CookTimeAmount,
+			&i.CookTimeUnit,
+			&i.PrepTimeAmount,
+			&i.PrepTimeUnit,
+			&i.RecipeID,
+			&i.Servings,
+			&i.FirstName,
+			&i.LastName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPublishedRecipeAndOwner = `-- name: GetPublishedRecipeAndOwner :one
 SELECT
   r.user_id,

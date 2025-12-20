@@ -391,6 +391,21 @@ func (mr *MockQuerierMockRecorder) GetAdminCount(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAdminCount", reflect.TypeOf((*MockQuerier)(nil).GetAdminCount), ctx)
 }
 
+// GetPublicRecipes mocks base method.
+func (m *MockQuerier) GetPublicRecipes(ctx context.Context) ([]database.GetPublicRecipesRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPublicRecipes", ctx)
+	ret0, _ := ret[0].([]database.GetPublicRecipesRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPublicRecipes indicates an expected call of GetPublicRecipes.
+func (mr *MockQuerierMockRecorder) GetPublicRecipes(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPublicRecipes", reflect.TypeOf((*MockQuerier)(nil).GetPublicRecipes), ctx)
+}
+
 // GetPublishedRecipeAndOwner mocks base method.
 func (m *MockQuerier) GetPublishedRecipeAndOwner(ctx context.Context, id int64) (database.GetPublishedRecipeAndOwnerRow, error) {
 	m.ctrl.T.Helper()

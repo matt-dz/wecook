@@ -313,7 +313,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetPersonalRecipesResponse"
+                $ref: "#/components/schemas/GetRecipesResponse"
         "400":
           description: Bad request
           content:
@@ -322,6 +322,32 @@ paths:
                 $ref: "#/components/schemas/Error"
         "401":
           description: Unauthorized — missing or invalid access token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/recipes/public:
+    get:
+      summary: Get all public recipes
+      tags:
+        - Recipes
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRecipesResponse"
+        "400":
+          description: Bad request
           content:
             application/json:
               schema:
@@ -1152,7 +1178,7 @@ components:
       required:
         - recipe_id
 
-    GetPersonalRecipesResponse:
+    GetRecipesResponse:
       type: object
       properties:
         recipes:

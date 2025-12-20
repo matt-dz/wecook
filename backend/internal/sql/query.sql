@@ -251,6 +251,31 @@ WHERE
 ORDER BY
   r.updated_at DESC;
 
+-- name: GetPublicRecipes :many
+SELECT
+  r.user_id,
+  r.image_url,
+  r.title,
+  r.description,
+  r.created_at,
+  r.updated_at,
+  r.published,
+  r.cook_time_amount,
+  r.cook_time_unit,
+  r.prep_time_amount,
+  r.prep_time_unit,
+  r.id AS recipe_id,
+  r.servings,
+  u.first_name,
+  u.last_name
+FROM
+  recipes r
+  JOIN users u ON r.user_id = u.id
+WHERE
+  r.published = TRUE
+ORDER BY
+  r.updated_at DESC;
+
 -- name: DeleteRecipe :exec
 DELETE FROM recipes
 WHERE id = $1;
