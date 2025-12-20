@@ -1432,3 +1432,84 @@ func (Server) DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context,
 
 	return DeleteApiRecipesRecipeIDStepsStepID204Response{}, nil
 }
+
+func (Server) GetApiRecipes(ctx context.Context,
+	request GetApiRecipesRequestObject) (
+	GetApiRecipesResponseObject, error,
+) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		return GetApiRecipes400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "missing user id",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Get user recipes
+	env.Logger.DebugContext(ctx, "getting user recipes")
+	rows, err := env.Database.GetRecipesByOwner(ctx, userID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get user recipes", slog.Any("error", err))
+		return GetApiRecipes500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Build response
+	env.Logger.DebugContext(ctx, "building response")
+	res := GetApiRecipes200JSONResponse{
+		Recipes: make([]RecipeAndOwner, len(rows)),
+	}
+	for idx, recipe := range rows {
+		r := Recipe{
+			CreatedAt: recipe.CreatedAt.Time,
+			UpdatedAt: recipe.UpdatedAt.Time,
+			UserId:    recipe.UserID.Int64,
+			Title:     recipe.Title,
+			Published: recipe.Published,
+			Id:        recipe.RecipeID,
+		}
+		if recipe.CookTimeAmount.Valid {
+			r.CookTimeAmount = &recipe.CookTimeAmount.Int32
+		}
+		if recipe.CookTimeUnit.Valid {
+			r.CookTimeUnit = (*TimeUnit)(&recipe.CookTimeUnit.TimeUnit)
+		}
+		if recipe.Description.Valid {
+			r.Description = &recipe.Description.String
+		}
+		if recipe.ImageUrl.Valid {
+			r.ImageUrl = &recipe.ImageUrl.String
+		}
+		if recipe.PrepTimeAmount.Valid {
+			r.PrepTimeAmount = &recipe.PrepTimeAmount.Int32
+		}
+		if recipe.PrepTimeUnit.Valid {
+			r.PrepTimeUnit = (*TimeUnit)(&recipe.PrepTimeUnit.TimeUnit)
+		}
+		if recipe.Servings.Valid {
+			r.Servings = &recipe.Servings.Float32
+		}
+
+		ro := RecipeOwner{
+			FirstName: recipe.FirstName,
+			LastName:  recipe.LastName,
+			Id:        recipe.UserID.Int64,
+		}
+
+		res.Recipes[idx] = RecipeAndOwner{
+			Recipe: &r,
+			Owner:  &ro,
+		}
+	}
+
+	return res, nil
+}

@@ -239,11 +239,10 @@ SELECT
   r.cook_time_unit,
   r.prep_time_amount,
   r.prep_time_unit,
-  r.id,
+  r.id AS recipe_id,
   r.servings,
   u.first_name,
-  u.last_name,
-  u.id
+  u.last_name
 FROM
   recipes r
   JOIN users u ON r.user_id = u.id

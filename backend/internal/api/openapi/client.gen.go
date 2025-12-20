@@ -91,6 +91,11 @@ type Error struct {
 	Status  int    `json:"status"`
 }
 
+// GetPersonalRecipesResponse defines model for GetPersonalRecipesResponse.
+type GetPersonalRecipesResponse struct {
+	Recipes []RecipeAndOwner `json:"recipes"`
+}
+
 // GetRecipeResponse defines model for GetRecipeResponse.
 type GetRecipeResponse struct {
 	Owner  RecipeOwner                   `json:"owner"`
@@ -122,6 +127,12 @@ type Recipe struct {
 	Title          string    `json:"title"`
 	UpdatedAt      time.Time `json:"updated_at"`
 	UserId         int64     `json:"user_id"`
+}
+
+// RecipeAndOwner defines model for RecipeAndOwner.
+type RecipeAndOwner struct {
+	Owner  *RecipeOwner `json:"owner,omitempty"`
+	Recipe *Recipe      `json:"recipe,omitempty"`
 }
 
 // RecipeIngredient defines model for RecipeIngredient.
@@ -362,6 +373,9 @@ type ClientInterface interface {
 	// GetApiPing request
 	GetApiPing(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetApiRecipes request
+	GetApiRecipes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostApiRecipes request
 	PostApiRecipes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -531,6 +545,18 @@ func (c *Client) GetApiOpenapiYaml(ctx context.Context, reqEditors ...RequestEdi
 
 func (c *Client) GetApiPing(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiPingRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetApiRecipes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiRecipesRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -991,6 +1017,33 @@ func NewGetApiPingRequest(server string) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/api/ping")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetApiRecipesRequest generates requests for GetApiRecipes
+func NewGetApiRecipesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/recipes")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1635,6 +1688,9 @@ type ClientWithResponsesInterface interface {
 	// GetApiPingWithResponse request
 	GetApiPingWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiPingResponse, error)
 
+	// GetApiRecipesWithResponse request
+	GetApiRecipesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiRecipesResponse, error)
+
 	// PostApiRecipesWithResponse request
 	PostApiRecipesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostApiRecipesResponse, error)
 
@@ -1843,6 +1899,31 @@ func (r GetApiPingResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetApiPingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetApiRecipesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetPersonalRecipesResponse
+	JSON400      *Error
+	JSON401      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiRecipesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiRecipesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -2289,6 +2370,15 @@ func (c *ClientWithResponses) GetApiPingWithResponse(ctx context.Context, reqEdi
 	return ParseGetApiPingResponse(rsp)
 }
 
+// GetApiRecipesWithResponse request returning *GetApiRecipesResponse
+func (c *ClientWithResponses) GetApiRecipesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiRecipesResponse, error) {
+	rsp, err := c.GetApiRecipes(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiRecipesResponse(rsp)
+}
+
 // PostApiRecipesWithResponse request returning *PostApiRecipesResponse
 func (c *ClientWithResponses) PostApiRecipesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostApiRecipesResponse, error) {
 	rsp, err := c.PostApiRecipes(ctx, reqEditors...)
@@ -2692,6 +2782,53 @@ func ParseGetApiPingResponse(rsp *http.Response) (*GetApiPingResponse, error) {
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiRecipesResponse parses an HTTP response from a GetApiRecipesWithResponse call
+func ParseGetApiRecipesResponse(rsp *http.Response) (*GetApiRecipesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiRecipesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetPersonalRecipesResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -3350,6 +3487,9 @@ type ServerInterface interface {
 	// Ping endpoint.
 	// (GET /api/ping)
 	GetApiPing(w http.ResponseWriter, r *http.Request)
+	// Get all personal recipes
+	// (GET /api/recipes)
+	GetApiRecipes(w http.ResponseWriter, r *http.Request)
 	// Create a new recipe
 	// (POST /api/recipes)
 	PostApiRecipes(w http.ResponseWriter, r *http.Request)
@@ -3437,6 +3577,12 @@ func (_ Unimplemented) GetApiOpenapiYaml(w http.ResponseWriter, r *http.Request)
 // Ping endpoint.
 // (GET /api/ping)
 func (_ Unimplemented) GetApiPing(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get all personal recipes
+// (GET /api/recipes)
+func (_ Unimplemented) GetApiRecipes(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3680,6 +3826,26 @@ func (siw *ServerInterfaceWrapper) GetApiPing(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetApiPing(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetApiRecipes operation middleware
+func (siw *ServerInterfaceWrapper) GetApiRecipes(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetApiRecipes(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4313,6 +4479,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/api/ping", wrapper.GetApiPing)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/recipes", wrapper.GetApiRecipes)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/recipes", wrapper.PostApiRecipes)
 	})
 	r.Group(func(r chi.Router) {
@@ -4629,6 +4798,49 @@ func (response GetApiPing200Response) VisitGetApiPingResponse(w http.ResponseWri
 type GetApiPing500JSONResponse Error
 
 func (response GetApiPing500JSONResponse) VisitGetApiPingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiRecipesRequestObject struct {
+}
+
+type GetApiRecipesResponseObject interface {
+	VisitGetApiRecipesResponse(w http.ResponseWriter) error
+}
+
+type GetApiRecipes200JSONResponse GetPersonalRecipesResponse
+
+func (response GetApiRecipes200JSONResponse) VisitGetApiRecipesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiRecipes400JSONResponse Error
+
+func (response GetApiRecipes400JSONResponse) VisitGetApiRecipesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiRecipes401JSONResponse Error
+
+func (response GetApiRecipes401JSONResponse) VisitGetApiRecipesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiRecipes500JSONResponse Error
+
+func (response GetApiRecipes500JSONResponse) VisitGetApiRecipesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -5280,6 +5492,9 @@ type StrictServerInterface interface {
 	// Ping endpoint.
 	// (GET /api/ping)
 	GetApiPing(ctx context.Context, request GetApiPingRequestObject) (GetApiPingResponseObject, error)
+	// Get all personal recipes
+	// (GET /api/recipes)
+	GetApiRecipes(ctx context.Context, request GetApiRecipesRequestObject) (GetApiRecipesResponseObject, error)
 	// Create a new recipe
 	// (POST /api/recipes)
 	PostApiRecipes(ctx context.Context, request PostApiRecipesRequestObject) (PostApiRecipesResponseObject, error)
@@ -5546,6 +5761,30 @@ func (sh *strictHandler) GetApiPing(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetApiPingResponseObject); ok {
 		if err := validResponse.VisitGetApiPingResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetApiRecipes operation middleware
+func (sh *strictHandler) GetApiRecipes(w http.ResponseWriter, r *http.Request) {
+	var request GetApiRecipesRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetApiRecipes(ctx, request.(GetApiRecipesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetApiRecipes")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetApiRecipesResponseObject); ok {
+		if err := validResponse.VisitGetApiRecipesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

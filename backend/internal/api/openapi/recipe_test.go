@@ -574,6 +574,243 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 	}
 }
 
+func TestGetApiRecipes(t *testing.T) {
+	server := NewServer()
+
+	now := time.Now()
+	cookTimeUnit := database.TimeUnitMinutes
+	prepTimeUnit := database.TimeUnitHours
+
+	tests := []struct {
+		name       string
+		userID     int64
+		injectUser bool
+		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		wantStatus int
+		wantCode   string
+		wantError  bool
+		validate   func(t *testing.T, resp GetApiRecipesResponseObject)
+	}{
+		{
+			name:       "missing user id in context",
+			userID:     0,
+			injectUser: false,
+			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			wantStatus: 400,
+			wantCode:   apiError.BadRequest.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp GetApiRecipesResponseObject) {
+				v, ok := resp.(GetApiRecipes400JSONResponse)
+				if !ok {
+					t.Errorf("expected 400 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.BadRequest.String() {
+					t.Errorf("expected code %s, got %s", apiError.BadRequest.String(), v.Code)
+				}
+			},
+		},
+		{
+			name:       "database error on getting recipes",
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					GetRecipesByOwner(gomock.Any(), int64(456)).
+					Return(nil, errors.New("database connection failed"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp GetApiRecipesResponseObject) {
+				v, ok := resp.(GetApiRecipes500JSONResponse)
+				if !ok {
+					t.Errorf("expected 500 response, got %T", resp)
+					return
+				}
+				if v.Code != apiError.InternalServerError.String() {
+					t.Errorf("expected code %s, got %s", apiError.InternalServerError.String(), v.Code)
+				}
+			},
+		},
+		{
+			name:       "successful retrieval with no recipes",
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					GetRecipesByOwner(gomock.Any(), int64(456)).
+					Return([]database.GetRecipesByOwnerRow{}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp GetApiRecipesResponseObject) {
+				v, ok := resp.(GetApiRecipes200JSONResponse)
+				if !ok {
+					t.Errorf("expected GetApiRecipes200JSONResponse, got %T", resp)
+					return
+				}
+				if len(v.Recipes) != 0 {
+					t.Errorf("expected 0 recipes, got %d", len(v.Recipes))
+				}
+			},
+		},
+		{
+			name:       "successful retrieval with multiple recipes",
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					GetRecipesByOwner(gomock.Any(), int64(456)).
+					Return([]database.GetRecipesByOwnerRow{
+						{
+							UserID:         pgtype.Int8{Int64: 456, Valid: true},
+							ImageUrl:       pgtype.Text{String: "recipe1.jpg", Valid: true},
+							Title:          "Recipe 1",
+							Description:    pgtype.Text{String: "First recipe", Valid: true},
+							CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
+							UpdatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
+							Published:      true,
+							CookTimeAmount: pgtype.Int4{Int32: 30, Valid: true},
+							CookTimeUnit:   database.NullTimeUnit{TimeUnit: cookTimeUnit, Valid: true},
+							PrepTimeAmount: pgtype.Int4{Int32: 15, Valid: true},
+							PrepTimeUnit:   database.NullTimeUnit{TimeUnit: prepTimeUnit, Valid: true},
+							RecipeID:       1,
+							Servings:       pgtype.Float4{Float32: 4.0, Valid: true},
+							FirstName:      "John",
+							LastName:       "Doe",
+						},
+						{
+							UserID:         pgtype.Int8{Int64: 456, Valid: true},
+							ImageUrl:       pgtype.Text{String: "", Valid: false},
+							Title:          "Recipe 2",
+							Description:    pgtype.Text{String: "", Valid: false},
+							CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
+							UpdatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
+							Published:      false,
+							CookTimeAmount: pgtype.Int4{Int32: 0, Valid: false},
+							CookTimeUnit:   database.NullTimeUnit{TimeUnit: "", Valid: false},
+							PrepTimeAmount: pgtype.Int4{Int32: 0, Valid: false},
+							PrepTimeUnit:   database.NullTimeUnit{TimeUnit: "", Valid: false},
+							RecipeID:       2,
+							Servings:       pgtype.Float4{Float32: 0, Valid: false},
+							FirstName:      "John",
+							LastName:       "Doe",
+						},
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp GetApiRecipesResponseObject) {
+				v, ok := resp.(GetApiRecipes200JSONResponse)
+				if !ok {
+					t.Errorf("expected GetApiRecipes200JSONResponse, got %T", resp)
+					return
+				}
+				if len(v.Recipes) != 2 {
+					t.Errorf("expected 2 recipes, got %d", len(v.Recipes))
+					return
+				}
+
+				// Validate first recipe (with all fields)
+				recipe1 := v.Recipes[0]
+				if recipe1.Recipe.Id != 1 {
+					t.Errorf("expected recipe ID 1, got %d", recipe1.Recipe.Id)
+				}
+				if recipe1.Recipe.Title != "Recipe 1" {
+					t.Errorf("expected title 'Recipe 1', got %s", recipe1.Recipe.Title)
+				}
+				if recipe1.Recipe.Description == nil || *recipe1.Recipe.Description != "First recipe" {
+					t.Errorf("expected description 'First recipe', got %v", recipe1.Recipe.Description)
+				}
+				if recipe1.Recipe.ImageUrl == nil || *recipe1.Recipe.ImageUrl != "recipe1.jpg" {
+					t.Errorf("expected image URL 'recipe1.jpg', got %v", recipe1.Recipe.ImageUrl)
+				}
+				if !recipe1.Recipe.Published {
+					t.Errorf("expected recipe to be published")
+				}
+				if recipe1.Recipe.CookTimeAmount == nil || *recipe1.Recipe.CookTimeAmount != 30 {
+					t.Errorf("expected cook time amount 30, got %v", recipe1.Recipe.CookTimeAmount)
+				}
+				if recipe1.Recipe.PrepTimeAmount == nil || *recipe1.Recipe.PrepTimeAmount != 15 {
+					t.Errorf("expected prep time amount 15, got %v", recipe1.Recipe.PrepTimeAmount)
+				}
+				if recipe1.Recipe.Servings == nil || *recipe1.Recipe.Servings != 4.0 {
+					t.Errorf("expected servings 4.0, got %v", recipe1.Recipe.Servings)
+				}
+				if recipe1.Owner.FirstName != "John" {
+					t.Errorf("expected owner first name 'John', got %s", recipe1.Owner.FirstName)
+				}
+				if recipe1.Owner.LastName != "Doe" {
+					t.Errorf("expected owner last name 'Doe', got %s", recipe1.Owner.LastName)
+				}
+
+				// Validate second recipe (minimal fields)
+				recipe2 := v.Recipes[1]
+				if recipe2.Recipe.Id != 2 {
+					t.Errorf("expected recipe ID 2, got %d", recipe2.Recipe.Id)
+				}
+				if recipe2.Recipe.Title != "Recipe 2" {
+					t.Errorf("expected title 'Recipe 2', got %s", recipe2.Recipe.Title)
+				}
+				if recipe2.Recipe.Description != nil {
+					t.Errorf("expected nil description, got %v", recipe2.Recipe.Description)
+				}
+				if recipe2.Recipe.ImageUrl != nil {
+					t.Errorf("expected nil image URL, got %v", recipe2.Recipe.ImageUrl)
+				}
+				if recipe2.Recipe.Published {
+					t.Errorf("expected recipe to not be published")
+				}
+				if recipe2.Recipe.CookTimeAmount != nil {
+					t.Errorf("expected nil cook time amount, got %v", recipe2.Recipe.CookTimeAmount)
+				}
+				if recipe2.Recipe.PrepTimeAmount != nil {
+					t.Errorf("expected nil prep time amount, got %v", recipe2.Recipe.PrepTimeAmount)
+				}
+				if recipe2.Recipe.Servings != nil {
+					t.Errorf("expected nil servings, got %v", recipe2.Recipe.Servings)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockFS := filestore.NewMockFileStoreInterface(ctrl)
+
+			tt.setup(mockDB, mockFS)
+
+			ctx := context.Background()
+			ctx = requestid.InjectRequestID(ctx, 12345)
+			if tt.injectUser {
+				ctx = token.UserIDWithCtx(ctx, tt.userID)
+			}
+			ctx = env.WithCtx(ctx, &env.Env{
+				Logger: log.NullLogger(),
+				Database: &database.Database{
+					Querier: mockDB,
+				},
+				FileStore: mockFS,
+			})
+
+			resp, err := server.GetApiRecipes(ctx, GetApiRecipesRequestObject{})
+			if (err != nil) != tt.wantError {
+				t.Errorf("GetApiRecipes() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			if tt.validate != nil {
+				tt.validate(t, resp)
+			}
+		})
+	}
+}
+
 func TestDeleteApiRecipesRecipeID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

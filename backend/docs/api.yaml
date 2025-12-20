@@ -303,6 +303,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+    get:
+      summary: Get all personal recipes
+      tags:
+        - Recipes
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPersonalRecipesResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized — missing or invalid access token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/recipes/{recipeID}/public:
     get:
       summary: Get a public recipe and its owner's information
@@ -933,107 +963,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  # /api/recipes/personal:
-  #   get:
-  #     summary: Get recipes owned by the authenticated user
-  #     tags:
-  #       - Recipes
-  #     description: >
-  #       Returns all recipes created by the authenticated user, including
-  #       recipe details and owner information.
-  #     responses:
-  #       "200":
-  #         description: List of personal recipes
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/GetPersonalRecipesResponse"
-  #       "401":
-  #         description: Unauthorized
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
-  # /api/recipes/personal/{recipeID}:
-  #   get:
-  #     summary: Get a personal (owned) recipe
-  #     tags:
-  #       - Recipes
-  #     description: |
-  #       Retrieves a recipe **only if it is owned by the authenticated user**.
-  #       Includes full recipe details: steps, ingredients, metadata, and owner info.
-  #     parameters:
-  #       - name: recipeID
-  #         in: path
-  #         required: true
-  #         description: ID of the recipe
-  #         schema:
-  #           type: integer
-  #     responses:
-  #       "200":
-  #         description: Full recipe with steps and ingredients
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/GetRecipeResponse"
-  #       "400":
-  #         description: Bad request — invalid recipe ID
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "404":
-  #         description: Recipe not found or not owned by user
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "500":
-  #         description: Internal server error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #
-  # /api/setup/admin:
-  #   post:
-  #     summary: Setup the first admin.
-  #     tags:
-  #       - Admin
-  #     description: This endpoint should only be hit once on system startup.
-  #     requestBody:
-  #       description: Create Admin Request
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             $ref: "#/components/schemas/CreateAdminRequest"
-  #     responses:
-  #       "200":
-  #         description: OK
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/CreateAdminResponse"
-  #       "409":
-  #         description: Status Conflict
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
-  #       "422":
-  #         description: Unprocessible Entity
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -1230,6 +1159,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RecipeAndOwner"
+      required:
+        - recipes
 
     GetRecipeResponse:
       type: object
