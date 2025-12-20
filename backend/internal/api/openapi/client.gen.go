@@ -391,6 +391,9 @@ type ClientInterface interface {
 	// PostApiRecipesRecipeIDSteps request
 	PostApiRecipesRecipeIDSteps(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteApiRecipesRecipeIDStepsStepID request
+	DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PatchApiRecipesRecipeIDStepsStepIDWithBody request with any body
 	PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -645,6 +648,18 @@ func (c *Client) PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody(ctx 
 
 func (c *Client) PostApiRecipesRecipeIDSteps(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiRecipesRecipeIDStepsRequest(c.Server, recipeID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApiRecipesRecipeIDStepsStepIDRequest(c.Server, recipeID, stepID)
 	if err != nil {
 		return nil, err
 	}
@@ -1320,6 +1335,47 @@ func NewPostApiRecipesRecipeIDStepsRequest(server string, recipeID int64) (*http
 	return req, nil
 }
 
+// NewDeleteApiRecipesRecipeIDStepsStepIDRequest generates requests for DeleteApiRecipesRecipeIDStepsStepID
+func NewDeleteApiRecipesRecipeIDStepsStepIDRequest(server string, recipeID int64, stepID int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "recipeID", runtime.ParamLocationPath, recipeID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "stepID", runtime.ParamLocationPath, stepID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/recipes/%s/steps/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewPatchApiRecipesRecipeIDStepsStepIDRequest calls the generic PatchApiRecipesRecipeIDStepsStepID builder with application/json body
 func NewPatchApiRecipesRecipeIDStepsStepIDRequest(server string, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -1558,6 +1614,9 @@ type ClientWithResponsesInterface interface {
 
 	// PostApiRecipesRecipeIDStepsWithResponse request
 	PostApiRecipesRecipeIDStepsWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsResponse, error)
+
+	// DeleteApiRecipesRecipeIDStepsStepIDWithResponse request
+	DeleteApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDStepsStepIDResponse, error)
 
 	// PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse request with any body
 	PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error)
@@ -1960,6 +2019,30 @@ func (r PostApiRecipesRecipeIDStepsResponse) StatusCode() int {
 	return 0
 }
 
+type DeleteApiRecipesRecipeIDStepsStepIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *Error
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteApiRecipesRecipeIDStepsStepIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteApiRecipesRecipeIDStepsStepIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PatchApiRecipesRecipeIDStepsStepIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -2216,6 +2299,15 @@ func (c *ClientWithResponses) PostApiRecipesRecipeIDStepsWithResponse(ctx contex
 		return nil, err
 	}
 	return ParsePostApiRecipesRecipeIDStepsResponse(rsp)
+}
+
+// DeleteApiRecipesRecipeIDStepsStepIDWithResponse request returning *DeleteApiRecipesRecipeIDStepsStepIDResponse
+func (c *ClientWithResponses) DeleteApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDStepsStepIDResponse, error) {
+	rsp, err := c.DeleteApiRecipesRecipeIDStepsStepID(ctx, recipeID, stepID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteApiRecipesRecipeIDStepsStepIDResponse(rsp)
 }
 
 // PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse request with arbitrary body returning *PatchApiRecipesRecipeIDStepsStepIDResponse
@@ -2928,6 +3020,46 @@ func ParsePostApiRecipesRecipeIDStepsResponse(rsp *http.Response) (*PostApiRecip
 	return response, nil
 }
 
+// ParseDeleteApiRecipesRecipeIDStepsStepIDResponse parses an HTTP response from a DeleteApiRecipesRecipeIDStepsStepIDWithResponse call
+func ParseDeleteApiRecipesRecipeIDStepsStepIDResponse(rsp *http.Response) (*DeleteApiRecipesRecipeIDStepsStepIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteApiRecipesRecipeIDStepsStepIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePatchApiRecipesRecipeIDStepsStepIDResponse parses an HTTP response from a PatchApiRecipesRecipeIDStepsStepIDWithResponse call
 func ParsePatchApiRecipesRecipeIDStepsStepIDResponse(rsp *http.Response) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -3112,6 +3244,9 @@ type ServerInterface interface {
 	// Create a step for a recipe.
 	// (POST /api/recipes/{recipeID}/steps)
 	PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64)
+	// Delete a step from a recipe.
+	// (DELETE /api/recipes/{recipeID}/steps/{stepID})
+	DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64)
 	// Update a step for a recipe.
 	// (PATCH /api/recipes/{recipeID}/steps/{stepID})
 	PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64)
@@ -3220,6 +3355,12 @@ func (_ Unimplemented) PostApiRecipesRecipeIDIngredientsIngredientIDImage(w http
 // Create a step for a recipe.
 // (POST /api/recipes/{recipeID}/steps)
 func (_ Unimplemented) PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete a step from a recipe.
+// (DELETE /api/recipes/{recipeID}/steps/{stepID})
+func (_ Unimplemented) DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3704,6 +3845,46 @@ func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDSteps(w http.ResponseWr
 	handler.ServeHTTP(w, r)
 }
 
+// DeleteApiRecipesRecipeIDStepsStepID operation middleware
+func (siw *ServerInterfaceWrapper) DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "recipeID" -------------
+	var recipeID int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "recipeID", chi.URLParam(r, "recipeID"), &recipeID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipeID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "stepID" -------------
+	var stepID int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "stepID", chi.URLParam(r, "stepID"), &stepID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "stepID", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteApiRecipesRecipeIDStepsStepID(w, r, recipeID, stepID)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // PatchApiRecipesRecipeIDStepsStepID operation middleware
 func (siw *ServerInterfaceWrapper) PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request) {
 
@@ -3984,6 +4165,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/recipes/{recipeID}/steps", wrapper.PostApiRecipesRecipeIDSteps)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/recipes/{recipeID}/steps/{stepID}", wrapper.DeleteApiRecipesRecipeIDStepsStepID)
 	})
 	r.Group(func(r chi.Router) {
 		r.Patch(options.BaseURL+"/api/recipes/{recipeID}/steps/{stepID}", wrapper.PatchApiRecipesRecipeIDStepsStepID)
@@ -4673,6 +4857,50 @@ func (response PostApiRecipesRecipeIDSteps500JSONResponse) VisitPostApiRecipesRe
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteApiRecipesRecipeIDStepsStepIDRequestObject struct {
+	RecipeID int64 `json:"recipeID"`
+	StepID   int64 `json:"stepID"`
+}
+
+type DeleteApiRecipesRecipeIDStepsStepIDResponseObject interface {
+	VisitDeleteApiRecipesRecipeIDStepsStepIDResponse(w http.ResponseWriter) error
+}
+
+type DeleteApiRecipesRecipeIDStepsStepID204Response struct {
+}
+
+func (response DeleteApiRecipesRecipeIDStepsStepID204Response) VisitDeleteApiRecipesRecipeIDStepsStepIDResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteApiRecipesRecipeIDStepsStepID400JSONResponse Error
+
+func (response DeleteApiRecipesRecipeIDStepsStepID400JSONResponse) VisitDeleteApiRecipesRecipeIDStepsStepIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApiRecipesRecipeIDStepsStepID404JSONResponse Error
+
+func (response DeleteApiRecipesRecipeIDStepsStepID404JSONResponse) VisitDeleteApiRecipesRecipeIDStepsStepIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApiRecipesRecipeIDStepsStepID500JSONResponse Error
+
+func (response DeleteApiRecipesRecipeIDStepsStepID500JSONResponse) VisitDeleteApiRecipesRecipeIDStepsStepIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type PatchApiRecipesRecipeIDStepsStepIDRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
 	StepID   int64 `json:"stepID"`
@@ -4859,6 +5087,9 @@ type StrictServerInterface interface {
 	// Create a step for a recipe.
 	// (POST /api/recipes/{recipeID}/steps)
 	PostApiRecipesRecipeIDSteps(ctx context.Context, request PostApiRecipesRecipeIDStepsRequestObject) (PostApiRecipesRecipeIDStepsResponseObject, error)
+	// Delete a step from a recipe.
+	// (DELETE /api/recipes/{recipeID}/steps/{stepID})
+	DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context, request DeleteApiRecipesRecipeIDStepsStepIDRequestObject) (DeleteApiRecipesRecipeIDStepsStepIDResponseObject, error)
 	// Update a step for a recipe.
 	// (PATCH /api/recipes/{recipeID}/steps/{stepID})
 	PatchApiRecipesRecipeIDStepsStepID(ctx context.Context, request PatchApiRecipesRecipeIDStepsStepIDRequestObject) (PatchApiRecipesRecipeIDStepsStepIDResponseObject, error)
@@ -5342,6 +5573,33 @@ func (sh *strictHandler) PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *h
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiRecipesRecipeIDStepsResponseObject); ok {
 		if err := validResponse.VisitPostApiRecipesRecipeIDStepsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteApiRecipesRecipeIDStepsStepID operation middleware
+func (sh *strictHandler) DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+	var request DeleteApiRecipesRecipeIDStepsStepIDRequestObject
+
+	request.RecipeID = recipeID
+	request.StepID = stepID
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteApiRecipesRecipeIDStepsStepID(ctx, request.(DeleteApiRecipesRecipeIDStepsStepIDRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteApiRecipesRecipeIDStepsStepID")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteApiRecipesRecipeIDStepsStepIDResponseObject); ok {
+		if err := validResponse.VisitDeleteApiRecipesRecipeIDStepsStepIDResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

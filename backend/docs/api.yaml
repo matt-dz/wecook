@@ -741,6 +741,53 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+    delete:
+      summary: Delete a step from a recipe.
+      tags:
+        - Recipes
+        - Steps
+      description: >
+        Deletes a steps from a recipe. The recipe must be
+        owned by the user.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: Recipe ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: stepID
+          in: path
+          required: true
+          description: Step ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        "204":
+          description: Step Deleted
+        "400":
+          description: Invalid Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/recipes/{recipeID}/steps/{stepID}/image:
     post:
       summary: Upload an image for a recipe step
