@@ -595,12 +595,17 @@ func TestPostApiAuthRefresh(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
-			ctx = env.WithCtx(ctx, &env.Env{
-				Logger: log.NullLogger(),
-				Database: &database.Database{
+			ctx = env.WithCtx(ctx, env.New(
+				log.NullLogger(),
+				&database.Database{
 					Querier: mockDB,
 				},
-			})
+				nil,
+				nil,
+				map[string]string{
+					"APP_SECRET": "test-secret-key-for-jwt-signing",
+				},
+			))
 
 			resp, err := server.PostApiAuthRefresh(ctx, tt.request)
 			if (err != nil) != tt.wantError {

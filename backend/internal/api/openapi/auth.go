@@ -352,7 +352,7 @@ func (Server) PostApiAuthRefresh(ctx context.Context,
 	expiresIn := int64(token.AccessTokenLifetime)
 	return loginSuccessResponse{
 		accessCookie:  token.NewAccessTokenCookie(accessToken, env),
-		refreshCookie: token.NewRefreshTokenCookie(refreshToken, env),
+		refreshCookie: token.NewRefreshTokenCookie(newRefreshToken, env),
 		body: LoginResponse{
 			AccessToken: accessToken,
 			TokenType:   &tokenType,
