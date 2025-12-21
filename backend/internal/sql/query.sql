@@ -352,7 +352,7 @@ WHERE
 RETURNING
   *;
 
--- name: UpdateRecipe :exec
+-- name: UpdateRecipe :one
 UPDATE
   recipes
 SET
@@ -366,7 +366,20 @@ SET
   prep_time_unit = coalesce(sqlc.narg ('prep_time_unit'), prep_time_unit),
   servings = coalesce(sqlc.narg ('servings'), servings)
 WHERE
-  id = $1;
+  id = $1
+RETURNING
+  id,
+  image_url,
+  title,
+  description,
+  published,
+  cook_time_amount,
+  cook_time_unit,
+  prep_time_amount,
+  prep_time_unit,
+  servings,
+  updated_at,
+  created_at;
 
 -- name: GetRecipeIngredientIDs :many
 SELECT

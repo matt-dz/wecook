@@ -4959,3 +4959,362 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 		})
 	}
 }
+
+func TestPatchApiRecipesRecipeID(t *testing.T) {
+	now := time.Now()
+
+	tests := []struct {
+		name       string
+		request    PatchApiRecipesRecipeIDRequestObject
+		userID     int64
+		injectUser bool
+		setup      func(mockDB *dbmoc.MockQuerier)
+		wantStatus int
+		wantCode   string
+		wantError  bool
+		validate   func(t *testing.T, resp PatchApiRecipesRecipeIDResponseObject)
+	}{
+		{
+			name: "successful update with all fields",
+			request: PatchApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+				Body: &PatchApiRecipesRecipeIDJSONRequestBody{
+					Title:          stringPtr("Updated Recipe"),
+					Description:    stringPtr("An updated description"),
+					Servings:       float32Ptr(6.0),
+					CookTimeAmount: int32Ptr(45),
+					CookTimeUnit:   timeUnitPtr(Minutes),
+					PrepTimeAmount: int32Ptr(20),
+					PrepTimeUnit:   timeUnitPtr(Minutes),
+					Published:      boolPtr(true),
+				},
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipe(gomock.Any(), gomock.Any()).
+					Return(database.UpdateRecipeRow{
+						ID:             123,
+						Title:          "Updated Recipe",
+						Description:    pgtype.Text{String: "An updated description", Valid: true},
+						Servings:       pgtype.Float4{Float32: 6.0, Valid: true},
+						CookTimeAmount: pgtype.Int4{Int32: 45, Valid: true},
+						CookTimeUnit:   database.NullTimeUnit{TimeUnit: database.TimeUnitMinutes, Valid: true},
+						PrepTimeAmount: pgtype.Int4{Int32: 20, Valid: true},
+						PrepTimeUnit:   database.NullTimeUnit{TimeUnit: database.TimeUnitMinutes, Valid: true},
+						Published:      true,
+						CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
+						UpdatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
+						ImageUrl:       pgtype.Text{String: "recipe.jpg", Valid: true},
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeID200JSONResponse)
+				if !ok {
+					t.Errorf("expected PatchApiRecipesRecipeID200JSONResponse, got %T", resp)
+					return
+				}
+				if v.Id != 123 {
+					t.Errorf("expected ID 123, got %d", v.Id)
+				}
+				if v.Title != "Updated Recipe" {
+					t.Errorf("expected title 'Updated Recipe', got %s", v.Title)
+				}
+				if v.Description == nil || *v.Description != "An updated description" {
+					t.Errorf("expected description 'An updated description', got %v", v.Description)
+				}
+				if v.Servings == nil || *v.Servings != 6.0 {
+					t.Errorf("expected servings 6.0, got %v", v.Servings)
+				}
+				if v.CookTimeAmount == nil || *v.CookTimeAmount != 45 {
+					t.Errorf("expected cook time amount 45, got %v", v.CookTimeAmount)
+				}
+				if v.PrepTimeAmount == nil || *v.PrepTimeAmount != 20 {
+					t.Errorf("expected prep time amount 20, got %v", v.PrepTimeAmount)
+				}
+				if !v.Published {
+					t.Errorf("expected published to be true")
+				}
+			},
+		},
+		{
+			name: "successful update with partial fields",
+			request: PatchApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+				Body: &PatchApiRecipesRecipeIDJSONRequestBody{
+					Title:     stringPtr("New Title"),
+					Published: boolPtr(false),
+				},
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipe(gomock.Any(), gomock.Any()).
+					Return(database.UpdateRecipeRow{
+						ID:        123,
+						Title:     "New Title",
+						Published: false,
+						CreatedAt: pgtype.Timestamptz{Time: now, Valid: true},
+						UpdatedAt: pgtype.Timestamptz{Time: now, Valid: true},
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeID200JSONResponse)
+				if !ok {
+					t.Errorf("expected PatchApiRecipesRecipeID200JSONResponse, got %T", resp)
+					return
+				}
+				if v.Title != "New Title" {
+					t.Errorf("expected title 'New Title', got %s", v.Title)
+				}
+				if v.Published {
+					t.Errorf("expected published to be false")
+				}
+			},
+		},
+		{
+			name: "successful update with only description",
+			request: PatchApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+				Body: &PatchApiRecipesRecipeIDJSONRequestBody{
+					Description: stringPtr("Just updating description"),
+				},
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipe(gomock.Any(), gomock.Any()).
+					Return(database.UpdateRecipeRow{
+						ID:          123,
+						Title:       "Original Title",
+						Description: pgtype.Text{String: "Just updating description", Valid: true},
+						Published:   false,
+						CreatedAt:   pgtype.Timestamptz{Time: now, Valid: true},
+						UpdatedAt:   pgtype.Timestamptz{Time: now, Valid: true},
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeID200JSONResponse)
+				if !ok {
+					t.Errorf("expected PatchApiRecipesRecipeID200JSONResponse, got %T", resp)
+					return
+				}
+				if v.Description == nil || *v.Description != "Just updating description" {
+					t.Errorf("expected description 'Just updating description', got %v", v.Description)
+				}
+			},
+		},
+		{
+			name: "missing user id in context",
+			request: PatchApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+				Body:     &PatchApiRecipesRecipeIDJSONRequestBody{},
+			},
+			injectUser: false,
+			setup:      func(mockDB *dbmoc.MockQuerier) {},
+			wantStatus: 400,
+			wantCode:   apiError.BadRequest.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeID400JSONResponse)
+				if !ok {
+					t.Errorf("expected PatchApiRecipesRecipeID400JSONResponse, got %T", resp)
+					return
+				}
+				if v.Code != apiError.BadRequest.String() {
+					t.Errorf("expected code %s, got %s", apiError.BadRequest.String(), v.Code)
+				}
+			},
+		},
+		{
+			name: "database error on ownership check",
+			request: PatchApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+				Body: &PatchApiRecipesRecipeIDJSONRequestBody{
+					Title: stringPtr("New Title"),
+				},
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(false, errors.New("database connection failed"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeID500JSONResponse)
+				if !ok {
+					t.Errorf("expected PatchApiRecipesRecipeID500JSONResponse, got %T", resp)
+					return
+				}
+				if v.Code != apiError.InternalServerError.String() {
+					t.Errorf("expected code %s, got %s", apiError.InternalServerError.String(), v.Code)
+				}
+			},
+		},
+		{
+			name: "user does not own recipe",
+			request: PatchApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+				Body: &PatchApiRecipesRecipeIDJSONRequestBody{
+					Title: stringPtr("New Title"),
+				},
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(false, nil)
+			},
+			wantStatus: 404,
+			wantCode:   apiError.RecipeNotFound.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeID404JSONResponse)
+				if !ok {
+					t.Errorf("expected PatchApiRecipesRecipeID404JSONResponse, got %T", resp)
+					return
+				}
+				if v.Code != apiError.RecipeNotFound.String() {
+					t.Errorf("expected code %s, got %s", apiError.RecipeNotFound.String(), v.Code)
+				}
+			},
+		},
+		{
+			name: "database error on update",
+			request: PatchApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+				Body: &PatchApiRecipesRecipeIDJSONRequestBody{
+					Title: stringPtr("New Title"),
+				},
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier) {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipe(gomock.Any(), gomock.Any()).
+					Return(database.UpdateRecipeRow{}, errors.New("database connection failed"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeID500JSONResponse)
+				if !ok {
+					t.Errorf("expected PatchApiRecipesRecipeID500JSONResponse, got %T", resp)
+					return
+				}
+				if v.Code != apiError.InternalServerError.String() {
+					t.Errorf("expected code %s, got %s", apiError.InternalServerError.String(), v.Code)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockDB := dbmoc.NewMockQuerier(ctrl)
+			server := NewServer()
+
+			tt.setup(mockDB)
+
+			ctx := context.Background()
+			ctx = requestid.InjectRequestID(ctx, 12345)
+			if tt.injectUser {
+				ctx = token.UserIDWithCtx(ctx, tt.userID)
+			}
+			ctx = env.WithCtx(ctx, &env.Env{
+				Logger: log.NullLogger(),
+				Database: &database.Database{
+					Querier: mockDB,
+				},
+			})
+
+			resp, err := server.PatchApiRecipesRecipeID(ctx, tt.request)
+			if (err != nil) != tt.wantError {
+				t.Errorf("PatchApiRecipesRecipeID() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			if tt.validate != nil {
+				tt.validate(t, resp)
+			}
+		})
+	}
+}
+
+func timeUnitPtr(t TimeUnit) *TimeUnit {
+	return &t
+}
+
+func boolPtr(b bool) *bool {
+	return &b
+}

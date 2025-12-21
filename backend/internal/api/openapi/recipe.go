@@ -51,23 +51,39 @@ func buildRecipeWithIngredientsAndSteps(
 	}
 
 	// Build recipe
-	cookTimeUnit := TimeUnit(row.CookTimeUnit.TimeUnit)
-	prepTimeUnit := TimeUnit(row.PrepTimeUnit.TimeUnit)
 	recipe := RecipeWithIngredientsAndSteps{
-		CookTimeAmount: &row.CookTimeAmount.Int32,
-		CookTimeUnit:   &cookTimeUnit,
-		PrepTimeAmount: &row.PrepTimeAmount.Int32,
-		PrepTimeUnit:   &prepTimeUnit,
-		UserId:         row.UserID.Int64,
-		CreatedAt:      row.CreatedAt.Time,
-		UpdatedAt:      row.UpdatedAt.Time,
-		Published:      row.Published,
-		Title:          row.Title,
-		Id:             row.ID,
-		Servings:       &row.Servings.Float32,
-		Description:    &row.Description.String,
-		Steps:          make([]RecipeStep, 0),
-		Ingredients:    make([]RecipeIngredient, 0),
+		UserId:      row.UserID.Int64,
+		CreatedAt:   row.CreatedAt.Time,
+		UpdatedAt:   row.UpdatedAt.Time,
+		Published:   row.Published,
+		Title:       row.Title,
+		Id:          row.ID,
+		Steps:       make([]RecipeStep, 0),
+		Ingredients: make([]RecipeIngredient, 0),
+	}
+	if row.Servings.Valid {
+		servings := row.Servings.Float32
+		recipe.Servings = &servings
+	}
+	if row.Description.Valid {
+		description := row.Description.String
+		recipe.Description = &description
+	}
+	if row.CookTimeAmount.Valid {
+		cookTime := row.CookTimeAmount.Int32
+		recipe.CookTimeAmount = &cookTime
+	}
+	if row.CookTimeUnit.Valid {
+		cookTimeUnit := TimeUnit(row.CookTimeUnit.TimeUnit)
+		recipe.CookTimeUnit = &cookTimeUnit
+	}
+	if row.PrepTimeAmount.Valid {
+		prepTime := row.PrepTimeAmount.Int32
+		recipe.PrepTimeAmount = &prepTime
+	}
+	if row.PrepTimeUnit.Valid {
+		prepTimeUnit := TimeUnit(row.PrepTimeUnit.TimeUnit)
+		recipe.PrepTimeUnit = &prepTimeUnit
 	}
 
 	// Add recipe image URL if exists
@@ -1582,4 +1598,136 @@ func (Server) GetApiRecipes(ctx context.Context,
 	}
 
 	return res, nil
+}
+
+func (Server) PatchApiRecipesRecipeID(ctx context.Context,
+	request PatchApiRecipesRecipeIDRequestObject) (
+	PatchApiRecipesRecipeIDResponseObject, error,
+) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		return PatchApiRecipesRecipeID400JSONResponse{
+			Status:  apiError.BadRequest.StatusCode(),
+			Code:    apiError.BadRequest.String(),
+			Message: "missing user id",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// check ownership
+	env.Logger.DebugContext(ctx, "checking recipe ownership")
+	ownsRecipe, err := env.Database.CheckRecipeOwnership(ctx, database.CheckRecipeOwnershipParams{
+		ID: request.RecipeID,
+		UserID: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to check ownership", slog.Any("error", err))
+		return PatchApiRecipesRecipeID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	if !ownsRecipe {
+		return PatchApiRecipesRecipeID404JSONResponse{
+			Status:  apiError.RecipeNotFound.StatusCode(),
+			Code:    apiError.RecipeNotFound.String(),
+			Message: "recipe not owned by user or does not exist",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Update recipe
+	env.Logger.DebugContext(ctx, "updating recipe")
+	updateParams := database.UpdateRecipeParams{
+		ID: request.RecipeID,
+	}
+	if request.Body.Description != nil {
+		updateParams.Description.String = *request.Body.Description
+		updateParams.Description.Valid = true
+	}
+	if request.Body.Servings != nil {
+		updateParams.Servings.Float32 = *request.Body.Servings
+		updateParams.Servings.Valid = true
+	}
+	if request.Body.PrepTimeAmount != nil {
+		updateParams.PrepTimeAmount.Int32 = *request.Body.PrepTimeAmount
+		updateParams.PrepTimeAmount.Valid = true
+	}
+	if request.Body.PrepTimeUnit != nil {
+		updateParams.PrepTimeUnit.TimeUnit = database.TimeUnit(*request.Body.CookTimeUnit)
+		updateParams.PrepTimeUnit.Valid = true
+	}
+	if request.Body.CookTimeAmount != nil {
+		updateParams.CookTimeAmount.Int32 = *request.Body.CookTimeAmount
+		updateParams.CookTimeAmount.Valid = true
+	}
+	if request.Body.CookTimeUnit != nil {
+		updateParams.CookTimeUnit.TimeUnit = database.TimeUnit(*request.Body.CookTimeUnit)
+		updateParams.CookTimeUnit.Valid = true
+	}
+	if request.Body.Published != nil {
+		updateParams.Published.Bool = *request.Body.Published
+		updateParams.Published.Valid = true
+	}
+	if request.Body.Title != nil {
+		updateParams.Title.String = *request.Body.Title
+		updateParams.Title.Valid = true
+	}
+	rec, err := env.Database.UpdateRecipe(ctx, updateParams)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to update recipe", slog.Any("error", err))
+		return PatchApiRecipesRecipeID500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	resp := PatchApiRecipesRecipeID200JSONResponse{
+		Id:        rec.ID,
+		Published: rec.Published,
+		Title:     rec.Title,
+		UserId:    userID,
+		CreatedAt: rec.CreatedAt.Time,
+		UpdatedAt: rec.UpdatedAt.Time,
+	}
+	if rec.CookTimeUnit.Valid {
+		unit := TimeUnit(rec.CookTimeUnit.TimeUnit)
+		resp.CookTimeUnit = &unit
+	}
+	if rec.CookTimeAmount.Valid {
+		am := rec.CookTimeAmount.Int32
+		resp.CookTimeAmount = &am
+	}
+	if rec.PrepTimeUnit.Valid {
+		unit := TimeUnit(rec.PrepTimeUnit.TimeUnit)
+		resp.PrepTimeUnit = &unit
+	}
+	if rec.PrepTimeAmount.Valid {
+		am := rec.PrepTimeAmount.Int32
+		resp.PrepTimeAmount = &am
+	}
+	if rec.Servings.Valid {
+		servings := rec.Servings.Float32
+		resp.Servings = &servings
+	}
+	if rec.Description.Valid {
+		desc := rec.Description.String
+		resp.Description = &desc
+	}
+	if rec.ImageUrl.Valid {
+		imageURL := rec.ImageUrl.String
+		resp.ImageUrl = &imageURL
+	}
+
+	return resp, nil
 }

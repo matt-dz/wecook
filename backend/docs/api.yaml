@@ -444,6 +444,53 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+    patch:
+      summary: Update a recipe
+      tags:
+        - Recipes
+      description: >
+        Updates a recipe owned by the authenticated user.
+      parameters:
+        - name: recipeID
+          in: path
+          required: true
+          description: recipe ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRecipe"
+      responses:
+        "200":
+          description: Recipe Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recipe"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Recipe Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
     delete:
       summary: Delete a recipe
       tags:
@@ -456,7 +503,7 @@ paths:
         - name: recipeID
           in: path
           required: true
-          description: ID of the recipe to retrieve
+          description: recipe ID
           schema:
             type: integer
             format: int64
@@ -1290,14 +1337,6 @@ components:
           minimum: 0
         prep_time_unit:
           $ref: "#/components/schemas/TimeUnit"
-        ingredients:
-          type: array
-          items:
-            $ref: "#/components/schemas/UpdateRecipeIngredient"
-        steps:
-          type: array
-          items:
-            $ref: "#/components/schemas/UpdateRecipeStep"
 
     TimeUnit:
       type: string

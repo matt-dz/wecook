@@ -955,7 +955,7 @@ func (q *Queries) GetUserRole(ctx context.Context, id int64) (Role, error) {
 	return role, err
 }
 
-const updateRecipe = `-- name: UpdateRecipe :exec
+const updateRecipe = `-- name: UpdateRecipe :one
 UPDATE
   recipes
 SET
@@ -970,6 +970,19 @@ SET
   servings = coalesce($10, servings)
 WHERE
   id = $1
+RETURNING
+  id,
+  image_url,
+  title,
+  description,
+  published,
+  cook_time_amount,
+  cook_time_unit,
+  prep_time_amount,
+  prep_time_unit,
+  servings,
+  updated_at,
+  created_at
 `
 
 type UpdateRecipeParams struct {
@@ -985,8 +998,23 @@ type UpdateRecipeParams struct {
 	Servings       pgtype.Float4
 }
 
-func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) error {
-	_, err := q.db.Exec(ctx, updateRecipe,
+type UpdateRecipeRow struct {
+	ID             int64
+	ImageUrl       pgtype.Text
+	Title          string
+	Description    pgtype.Text
+	Published      bool
+	CookTimeAmount pgtype.Int4
+	CookTimeUnit   NullTimeUnit
+	PrepTimeAmount pgtype.Int4
+	PrepTimeUnit   NullTimeUnit
+	Servings       pgtype.Float4
+	UpdatedAt      pgtype.Timestamptz
+	CreatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (UpdateRecipeRow, error) {
+	row := q.db.QueryRow(ctx, updateRecipe,
 		arg.ID,
 		arg.ImageUrl,
 		arg.Title,
@@ -998,7 +1026,22 @@ func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) erro
 		arg.PrepTimeUnit,
 		arg.Servings,
 	)
-	return err
+	var i UpdateRecipeRow
+	err := row.Scan(
+		&i.ID,
+		&i.ImageUrl,
+		&i.Title,
+		&i.Description,
+		&i.Published,
+		&i.CookTimeAmount,
+		&i.CookTimeUnit,
+		&i.PrepTimeAmount,
+		&i.PrepTimeUnit,
+		&i.Servings,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updateRecipeCoverImage = `-- name: UpdateRecipeCoverImage :exec

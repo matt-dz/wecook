@@ -51,7 +51,7 @@ type Querier interface {
 	GetUser(ctx context.Context, lower string) (GetUserRow, error)
 	GetUserRefreshTokenHash(ctx context.Context, id int64) (GetUserRefreshTokenHashRow, error)
 	GetUserRole(ctx context.Context, id int64) (Role, error)
-	UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) error
+	UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (UpdateRecipeRow, error)
 	UpdateRecipeCoverImage(ctx context.Context, arg UpdateRecipeCoverImageParams) error
 	UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) (RecipeIngredient, error)
 	UpdateRecipeIngredientImage(ctx context.Context, arg UpdateRecipeIngredientImageParams) error

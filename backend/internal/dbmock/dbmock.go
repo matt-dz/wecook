@@ -632,11 +632,12 @@ func (mr *MockQuerierMockRecorder) GetUserRole(ctx, id any) *gomock.Call {
 }
 
 // UpdateRecipe mocks base method.
-func (m *MockQuerier) UpdateRecipe(ctx context.Context, arg database.UpdateRecipeParams) error {
+func (m *MockQuerier) UpdateRecipe(ctx context.Context, arg database.UpdateRecipeParams) (database.UpdateRecipeRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateRecipe", ctx, arg)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(database.UpdateRecipeRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateRecipe indicates an expected call of UpdateRecipe.
