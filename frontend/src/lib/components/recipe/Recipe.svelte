@@ -1,15 +1,18 @@
 <script lang="ts">
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { formatDuration, toMinutes } from '$lib/time';
 	import { resolve } from '$app/paths';
 	import { twMerge } from 'tailwind-merge';
+	import { EllipsisVertical } from '@lucide/svelte';
 	import clsx from 'clsx';
 	import type { RecipeAndOwnerWithoutStepsAndIngredientsType } from '$lib/recipes';
 	interface Props {
 		recipe: RecipeAndOwnerWithoutStepsAndIngredientsType;
 		className?: string;
+		editable?: boolean;
 	}
 
-	let { recipe, className }: Props = $props();
+	let { recipe, className, editable = false }: Props = $props();
 
 	const totalCookTime =
 		(recipe.recipe?.cook_time_amount && recipe.recipe?.cook_time_unit
@@ -21,7 +24,7 @@
 </script>
 
 <a
-	class="h-fit w-fit rounded-lg border-solid border-gray-400/50 p-3 shadow-none transition-shadow duration-250 hover:shadow-[0_0_12px_rgba(0,0,0,0.5)]"
+	class="h-fit w-fit rounded-[20px] border-solid border-gray-400/50 p-3 shadow-none transition-shadow duration-250 hover:shadow-[0_0_12px_rgba(0,0,0,0.5)]"
 	href={resolve('/recipes/[id]', {
 		id: recipe.recipe.id.toString()
 	})}
@@ -49,7 +52,31 @@
 		></div>
 	{/if}
 
-	<h1 class="text-lg font-semibold">{recipe.recipe.title}</h1>
-	<h2 class="text-sm capitalize">{recipe.owner.first_name} {recipe.owner.last_name}</h2>
-	<h3 class="text-sm text-gray-400">{formatDuration(totalCookTime)}</h3>
+	<div class="mt-1 flex items-start">
+		<div class="flex-1">
+			<h1 class="text-lg font-semibold">{recipe.recipe.title}</h1>
+			<h2 class="text-sm capitalize">{recipe.owner.first_name} {recipe.owner.last_name}</h2>
+			<h3 class="text-sm text-gray-400">{formatDuration(totalCookTime)}</h3>
+		</div>
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger>
+				{#snippet child({ props })}
+					<button {...props} class="rounded-full p-2 hover:bg-gray-200">
+						<EllipsisVertical />
+					</button>
+				{/snippet}
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content>
+				<DropdownMenu.Group>
+					{#if editable}
+						<DropdownMenu.Item>
+							<a class="w-full" href={resolve(`/recipes/${recipe.recipe.id}/edit`)}> Edit </a>
+						</DropdownMenu.Item>
+						<DropdownMenu.Item>Publish</DropdownMenu.Item>
+					{/if}
+					<DropdownMenu.Item>Share</DropdownMenu.Item>
+				</DropdownMenu.Group>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
+	</div>
 </a>

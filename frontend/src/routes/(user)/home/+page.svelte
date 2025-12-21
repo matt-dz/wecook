@@ -51,6 +51,7 @@
 				<Recipe
 					className="h-[60vw] w-[90vw] min-[650px]:h-[25vw] min-[650px]:w-[40vw] min-[900px]:h-[20vw] min-[900px]:w-[30vw] min-[900px]:max-h-[196px] min-[900px]:max-w-[296px]"
 					{recipe}
+					editable={true}
 				/>
 			{/each}
 		</div>

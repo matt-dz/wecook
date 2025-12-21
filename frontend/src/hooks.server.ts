@@ -1,6 +1,7 @@
 import { verifySession, refreshSession } from '$lib/auth';
 import ky, { HTTPError, type Options } from 'ky';
 import { baseOptions } from '$lib/http';
+import { REFRESH_TOKEN_COOKIE_NAME } from '$lib/auth';
 import { accessTokenExpired, refreshTokenExpired } from '$lib/errors/api';
 import { redirect, type Handle } from '@sveltejs/kit';
 import * as setCookie from 'set-cookie-parser';
@@ -30,15 +31,22 @@ export const handle: Handle = async ({ event, resolve }) => {
 					if (!(await accessTokenExpired(response))) {
 						return response;
 					}
+					console.log('attempting to retry');
+					const refreshToken = event.cookies.get(REFRESH_TOKEN_COOKIE_NAME);
+					if (!refreshToken) {
+						return redirect(303, '/login');
+					}
 
 					try {
 						// Refresh the session
-						const res = await refreshSession({
-							...baseOptions,
-							headers: {
-								Cookie: concatenateCookies(event.cookies)
-							}
-						});
+						console.log('refreshing session');
+						const res = await refreshSession(
+							{
+								refresh_token: refreshToken
+							},
+							options
+						);
+						console.log('refreshed session');
 
 						// Patch the cookies in the event
 						setCookie.parse(res.headers.getSetCookie()).map(({ name, value, ...opts }) => {
@@ -79,8 +87,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 				redirect(303, '/login');
 			}
 			console.error(e.message);
+			console.error(await e.response.json());
 		} else {
-			console.log(e);
+			console.error(e);
 		}
 		redirect(303, '/');
 	}

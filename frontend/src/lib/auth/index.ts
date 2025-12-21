@@ -6,14 +6,18 @@ const ACCESS_TOKEN_COOKIE_NAME = (import.meta.env.PROD ? '__Host-Http-' : '') + 
 const REFRESH_TOKEN_COOKIE_NAME = (import.meta.env.PROD ? '__Host-Http-' : '') + 'refresh';
 
 export async function verifySession(fetch: FetchType, options?: Options) {
-	await fetch.get(`${PUBLIC_BACKEND_URL}/api/auth/session/verify`, options);
+	await fetch.get(`${PUBLIC_BACKEND_URL}/api/auth/verify`, options);
 }
 
+export type RefreshSessionRequest = {
+	refresh_token: string;
+};
+
 // refreshSession refreshes the user session.
-export async function refreshSession(options?: Options) {
-	return await ky.post(`${PUBLIC_BACKEND_URL}/api/auth/session/refresh`, {
+export async function refreshSession(request: RefreshSessionRequest, options?: Options) {
+	return await ky.post(`${PUBLIC_BACKEND_URL}/api/auth/refresh`, {
 		...options,
-		credentials: 'include'
+		json: request
 	});
 }
 

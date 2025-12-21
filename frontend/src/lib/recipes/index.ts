@@ -30,30 +30,53 @@ export const RecipeWithoutStepsAndIngredients = z.object({
 
 export type RecipeWithoutStepsAndIngredients = z.infer<typeof RecipeWithoutStepsAndIngredients>;
 
-export const Step = z.object({
-	created_at: z.iso.datetime(),
+export const StepSchema = z.object({
 	id: z.int(),
 	image_url: z.string().optional(),
-	instruction: z.string(),
+	instruction: z.string().optional(),
 	recipe_id: z.int(),
-	step_number: z.int(),
-	updated_at: z.iso.datetime()
+	step_number: z.int()
 });
 
-export const Ingredient = z.object({
+export type Step = z.infer<typeof StepSchema>;
+
+export const UpdateStepSchema = z.object({
+	id: z.int().optional(),
+	image_url: z.string().optional(),
+	instruction: z.string().optional(),
+	recipe_id: z.int().optional(),
+	step_number: z.int()
+});
+
+export type UpdateStep = z.infer<typeof UpdateStepSchema>;
+
+export const IngredientSchema = z.object({
 	id: z.int(),
 	image_url: z.string().optional(),
-	name: z.string(),
-	quantity: z.int(),
+	name: z.string().optional(),
+	quantity: z.int().optional(),
+	recipe_id: z.int().optional(),
+	unit: z.string().optional()
+});
+
+export type Ingredient = z.infer<typeof IngredientSchema>;
+
+export const UpdateIngredientSchema = z.object({
+	id: z.int().optional(),
+	image_url: z.string().optional(),
+	name: z.string().optional(),
+	quantity: z.int().optional(),
 	recipe_id: z.int(),
 	unit: z.string().optional()
 });
 
-export const Recipe = z.object({
+export type UpdateIngredient = z.infer<typeof UpdateIngredientSchema>;
+
+export const RecipeSchema = z.object({
 	cook_time_amount: z.int().optional(),
-	cook_time_unit: z.enum(['minutes', 'hours', 'days']),
+	cook_time_unit: z.enum(['minutes', 'hours', 'days']).optional(),
 	prep_time_amount: z.int().optional(),
-	prep_time_unit: z.enum(['minutes', 'hours', 'days']),
+	prep_time_unit: z.enum(['minutes', 'hours', 'days']).optional(),
 	title: z.string(),
 	published: z.boolean(),
 	created_at: z.iso.datetime(),
@@ -63,15 +86,15 @@ export const Recipe = z.object({
 	user_id: z.int(),
 	id: z.int(),
 	servings: z.number().optional(),
-	ingredients: z.array(Ingredient),
-	steps: z.array(Step)
+	ingredients: z.array(IngredientSchema),
+	steps: z.array(StepSchema)
 });
 
-export type Recipe = z.infer<typeof Recipe>;
+export type Recipe = z.infer<typeof RecipeSchema>;
 
 export const RecipeAndOwner = z.object({
 	owner: RecipeOwner,
-	recipe: Recipe
+	recipe: RecipeSchema
 });
 
 export type RecipeAndOwnerType = z.infer<typeof RecipeAndOwner>;
@@ -93,8 +116,20 @@ export async function GetPersonalRecipes(
 	fetch: FetchType,
 	options?: Options
 ): Promise<z.infer<typeof GetPersonalRecipesResponse>> {
-	const res = await fetch(`${PUBLIC_BACKEND_URL}/api/recipes/personal`, options);
+	const res = await fetch(`${PUBLIC_BACKEND_URL}/api/recipes`, options);
 	return GetPersonalRecipesResponse.parse(await res.json());
+}
+
+export const GetRecipesResponse = z.object({
+	recipes: z.array(RecipeAndOwnerWithoutStepsAndIngredients)
+});
+
+export async function GetRecipes(
+	fetch: FetchType,
+	options?: Options
+): Promise<z.infer<typeof GetRecipesResponse>> {
+	const res = await fetch(`${PUBLIC_BACKEND_URL}/api/recipes/public`, options);
+	return GetRecipesResponse.parse(await res.json());
 }
 
 export async function GetRecipe(
@@ -128,6 +163,6 @@ export async function GetPersonalRecipe(
 	id: number,
 	options?: Options
 ): Promise<GetPersonalRecipeResponseType> {
-	const res = await fetch.get(`${PUBLIC_BACKEND_URL}/api/recipes/personal/${id}`, options).json();
+	const res = await fetch.get(`${PUBLIC_BACKEND_URL}/api/recipes/${id}`, options).json();
 	return GetPersonalRecipeResponse.parse(res);
 }

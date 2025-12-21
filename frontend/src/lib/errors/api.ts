@@ -50,10 +50,14 @@ export async function accessTokenExpired(response: KyResponse) {
 		if (!res.success) {
 			return false;
 		}
+		if (response.status !== 401) {
+			return false;
+		}
 
 		return (
-			(res.data.code === ApiErrorCodes.ExpiredAccessToken && response.status === 401) ||
-			(res.data.code === ApiErrorCodes.InvalidAccessToken && response.status === 401)
+			ApiErrorCodes.ExpiredAccessToken === res.data.code ||
+			ApiErrorCodes.InvalidAccessToken === res.data.code ||
+			ApiErrorCodes.InvalidCredentials === res.data.code
 		);
 	} catch {
 		return false;
