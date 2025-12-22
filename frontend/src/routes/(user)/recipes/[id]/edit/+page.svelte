@@ -1,133 +1,159 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { type TimeUnitType } from '$lib/recipes';
+	import {
+		updatePersonalRecipe,
+		updateIngredient,
+		createIngredient,
+		updateStep,
+		type TimeUnitType,
+		type UpdateRecipeRequest,
+		type UpdateIngredientRequest,
+		type UpdateStepRequest,
+		createStep
+	} from '$lib/recipes';
+	import fetch from '$lib/http';
 	import Input from '$lib/components/input/Input.svelte';
 	import TextArea from '$lib/components/textarea/TextArea.svelte';
 	import DropdownMenu from '$lib/components/dropdown-menu/DropdownMenu.svelte';
 	import Button from '$lib/components/button/Button.svelte';
+	import { debounce } from '$lib/debounce';
+	import { HTTPError } from 'ky';
+	import clsx from 'clsx';
 
 	let { data }: PageProps = $props();
+	let recipe = data.recipe;
 
-	type ingredientInput = {
-		name?: string;
-		unit?: string;
-		quantity?: number;
-		place: number;
-		id?: number;
-	};
+	let title: string | undefined = $state(data.recipe.recipe.title);
+	let description: string | undefined = $state(recipe.recipe.description);
+	let servings: number | undefined = $state(recipe.recipe.servings);
+	let cookTime: number | undefined = $state(recipe.recipe.cook_time_amount);
+	let cookTimeUnit: TimeUnitType | undefined = $state(recipe.recipe.cook_time_unit);
+	let prepTime: number | undefined = $state(recipe.recipe.prep_time_amount);
+	let prepTimeUnit: TimeUnitType | undefined = $state(recipe.recipe.prep_time_unit);
+	let ingredients = $state(recipe.recipe.ingredients);
+	let steps = $state(recipe.recipe.steps);
+	let published = $state(recipe.recipe.published);
 
-	type stepInput = {
-		instruction?: string;
-		image_url?: string;
-		place: number;
-		id?: number;
-	};
+	const debounceDelay = 200;
 
-	let ingredients: ingredientInput[] = $state(
-		data.recipe?.recipe.ingredients.map((i, idx) => ({
-			name: i.name,
-			unit: i.unit,
-			quantity: i.quantity,
-			place: idx,
-			id: i.id
-		})) ?? []
+	const updateRecipeField = debounce(
+		async (field: keyof UpdateRecipeRequest, value: UpdateRecipeRequest[typeof field]) => {
+			await updatePersonalRecipe(fetch, {
+				[field]: value,
+				recipe_id: recipe.recipe.id
+			});
+		},
+		debounceDelay
 	);
 
-	let steps: stepInput[] = $state(
-		data.recipe?.recipe.steps.map((i, idx) => ({
-			instruction: i.instruction,
-			image_url: i.image_url,
-			place: idx,
-			id: i.id
-		})) ?? []
+	const updateIngredientField = debounce(
+		async (
+			ingredientID: number,
+			field: keyof UpdateIngredientRequest,
+			value: UpdateIngredientRequest[typeof field]
+		) => {
+			await updateIngredient(fetch, {
+				[field]: value,
+				recipe_id: recipe.recipe.id,
+				ingredient_id: ingredientID
+			});
+		},
+		debounceDelay
 	);
 
-	let title: string | undefined = $state(data.recipe?.recipe.title);
-	let description: string | undefined = $state(data.recipe?.recipe.description);
-	let servings: number | undefined = $state(data.recipe?.recipe.servings);
-	let cookTime: number | undefined = $state(data.recipe?.recipe.cook_time_amount);
-	let cookTimeUnit: TimeUnitType | undefined = $state(data.recipe?.recipe.cook_time_unit);
-	let prepTime: number | undefined = $state(data.recipe?.recipe.prep_time_amount);
-	let prepTimeUnit: TimeUnitType | undefined = $state(data.recipe?.recipe.prep_time_unit);
+	const updateStepField = debounce(
+		async (
+			stepID: number,
+			field: keyof UpdateStepRequest,
+			value: UpdateStepRequest[typeof field]
+		) => {
+			await updateStep(fetch, {
+				[field]: value,
+				recipe_id: recipe.recipe.id,
+				step_id: stepID
+			});
+		},
+		debounceDelay
+	);
 
-	const newIngredient = () => {
-		ingredients = [
-			...ingredients,
-			{
-				name: undefined,
-				unit: undefined,
-				quantity: undefined,
-				place: Math.max(...ingredients.map((i) => i.place), 1) + 1
-			}
-		];
+	const onTitleChange = () => title !== undefined && updateRecipeField('title', title);
+	const onDescriptionChange = () =>
+		description !== undefined && updateRecipeField('description', description);
+	const onServingsChange = () => servings !== undefined && updateRecipeField('servings', servings);
+	const onPrepTimeChange = () =>
+		prepTime !== undefined && updateRecipeField('prep_time_amount', prepTime);
+	const onPrepTimeUnitChange = () =>
+		prepTimeUnit !== undefined && updateRecipeField('prep_time_unit', prepTimeUnit);
+	const onCookTimeChange = () =>
+		cookTime !== undefined && updateRecipeField('cook_time_amount', cookTime);
+	const onCookTimeUnitChange = () =>
+		cookTimeUnit !== undefined && updateRecipeField('cook_time_unit', cookTimeUnit);
+
+	const onIngredientQuantityChange = (ingredientID: number) => {
+		const ingredient = ingredients.find((i) => i.id === ingredientID);
+		if (!ingredient) return;
+		updateIngredientField(ingredientID, 'quantity', ingredient.quantity);
+	};
+	const onIngredientUnitChange = (ingredientID: number) => {
+		const ingredient = ingredients.find((i) => i.id === ingredientID);
+		if (!ingredient) return;
+		updateIngredientField(ingredientID, 'unit', ingredient.unit);
+	};
+	const onIngredientNameChange = (ingredientID: number) => {
+		const ingredient = ingredients.find((i) => i.id === ingredientID);
+		if (!ingredient) return;
+		updateIngredientField(ingredientID, 'name', ingredient.name);
 	};
 
-	const newStep = () => {
-		steps = [
-			...steps,
-			{
-				instruction: undefined,
-				image_url: undefined,
-				place: Math.max(...steps.map((i) => i.place), 1) + 1,
-				id: undefined
-			}
-		];
+	const onStepInstructionChange = (stepID: number) => {
+		const step = steps.find((s) => s.id === stepID);
+		if (!step) return;
+		updateStepField(stepID, 'instruction', step.instruction);
 	};
 
-	const updatedIngredients = () =>
-		// retrieve ingredients that have been updated and added
-		ingredients
-			.map((i) => {
-				const nameEl = document.getElementById('n-' + i.place.toString());
-				const quantityEl = document.getElementById('q-' + i.place.toString());
-				const unitEl = document.getElementById('u-' + i.place.toString());
-				if (!nameEl || !quantityEl || !unitEl) return;
+	const togglePublish = async () => {
+		try {
+			await updatePersonalRecipe(fetch, {
+				recipe_id: recipe.recipe.id,
+				published: !published
+			});
+			published = !published;
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to publish recipe', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to publish recipe. try again later.');
+		}
+	};
 
-				const name = (nameEl as HTMLInputElement).value?.trim();
-				const quantityStr = (quantityEl as HTMLInputElement).value?.trim();
-				const unit = (unitEl as HTMLInputElement).value?.trim();
+	const handleCreateIngredient = async () => {
+		try {
+			const newIngredient = await createIngredient(fetch, { recipe_id: recipe.recipe.id });
+			ingredients = [...ingredients, newIngredient];
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to create ingredient', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to create ingredient. try again later.');
+		}
+	};
 
-				const updated = {
-					...i,
-					name,
-					unit
-				};
-
-				const quantity = parseFloat(quantityStr);
-				if (isNaN(quantity)) return updated; // reject bad input
-				updated.quantity = quantity;
-
-				if (i.name !== updated.name || i.unit !== updated.unit || i.quantity !== updated.quantity)
-					return updated;
-			})
-			.filter((i) => i);
-
-	const updatedSteps = () =>
-		steps
-			.map((s) => {
-				// TODO: add image_url validation
-				const instructionEl = document.getElementById('step-' + s.place.toString());
-				if (!instructionEl) return;
-
-				const instruction = (instructionEl as HTMLTextAreaElement).value;
-				if (instruction !== s.instruction) {
-					return {
-						...s,
-						instruction
-					};
-				}
-			})
-			.filter((s) => s);
-
-	const saveRecipe = () => {
-		const ingredients = updatedIngredients();
-		const steps = updatedSteps();
-		console.log('ingredients', ingredients);
-		console.log('steps', steps);
-		console.log('title', title);
-		console.log('description', description);
-		console.log('cook time', cookTime);
-		console.log('cook time unit', cookTimeUnit);
+	const handleCreateStep = async () => {
+		try {
+			const newStep = await createStep(fetch, { recipe_id: recipe.recipe.id });
+			steps = [...steps, newStep];
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to create step', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to create step. try again later.');
+		}
 	};
 
 	const onlyPositiveNumbers = (e: KeyboardEvent) => {
@@ -144,7 +170,7 @@
 				name="title"
 				bind:value={title}
 				className="font-IowanOldStyleBT"
-				defaultValue={data.recipe?.recipe.title}
+				oninput={onTitleChange}
 			/>
 		</div>
 
@@ -154,7 +180,7 @@
 				name="description"
 				bind:value={description}
 				className="font-IowanOldStyleBT"
-				defaultValue={data.recipe?.recipe.description}
+				oninput={onDescriptionChange}
 			/>
 		</div>
 
@@ -169,6 +195,7 @@
 					className="w-32"
 					defaultValue={1}
 					bind:value={servings}
+					oninput={onServingsChange}
 				/>
 			</div>
 			<div class="flex gap-8">
@@ -182,8 +209,9 @@
 							type="number"
 							className="w-16"
 							placeholder="30"
+							oninput={onPrepTimeChange}
 						/>
-						<DropdownMenu bind:value={prepTimeUnit} />
+						<DropdownMenu bind:value={prepTimeUnit} onValueChange={onPrepTimeUnitChange} />
 					</div>
 				</div>
 				<div class="mt-2 flex flex-col gap-1">
@@ -196,8 +224,9 @@
 							className="w-16"
 							placeholder="30"
 							bind:value={cookTime}
+							oninput={onCookTimeChange}
 						/>
-						<DropdownMenu bind:value={cookTimeUnit} />
+						<DropdownMenu bind:value={cookTimeUnit} onValueChange={onCookTimeUnitChange} />
 					</div>
 				</div>
 			</div>
@@ -206,58 +235,63 @@
 		<div>
 			<h1 class="mb-2 text-2xl">Ingredients</h1>
 			<div class="flex flex-col gap-2">
-				{#each ingredients as ingredient (ingredient.place)}
+				{#each ingredients as ingredient (ingredient.id)}
 					<div>
 						<Input
 							className="w-20"
-							id={'q-' + ingredient.place}
 							placeholder="Quantity"
 							type="number"
 							onkeydown={onlyPositiveNumbers}
-							defaultValue={ingredient.quantity}
+							bind:value={ingredient.quantity}
+							oninput={() => onIngredientQuantityChange(ingredient.id)}
 						/>
 						<Input
 							className="w-20"
-							id={'u-' + ingredient.place}
 							placeholder="Unit"
-							defaultValue={ingredient.unit}
+							bind:value={ingredient.unit}
+							oninput={() => onIngredientUnitChange(ingredient.id)}
 						/>
 						<p class="inline-block">of</p>
-						<Input className="w-60" id={'n-' + ingredient.place} defaultValue={ingredient.name} />
+						<Input
+							className="w-60"
+							bind:value={ingredient.name}
+							placeholder="Name"
+							oninput={() => onIngredientNameChange(ingredient.id)}
+						/>
 					</div>
 				{/each}
 			</div>
-			<Button onclick={newIngredient} className="font-medium text-sm mt-4">Add Ingredient</Button>
+			<Button onclick={handleCreateIngredient} className="font-medium text-sm mt-4"
+				>Add Ingredient</Button
+			>
 		</div>
 
 		<div>
 			<h1 class="mb-2 text-2xl">Steps</h1>
 			<div class="flex flex-col gap-2">
-				{#each steps as step, idx (step.place)}
+				{#each steps as step (step.id)}
 					<div class="w-full">
-						<label for="step" class="text-lg">Step {idx + 1}</label>
+						<label for="step" class="text-lg">Step {step.step_number}</label>
 						<TextArea
-							id={'step-' + step.place}
+							bind:value={step.instruction}
 							name="step"
 							className="block w-full"
 							placeholder="Enter instructions"
+							oninput={() => onStepInstructionChange(step.id)}
 						/>
 					</div>
 				{/each}
 			</div>
-			<Button onclick={newStep} className="font-medium text-sm mt-4">Add Step</Button>
+			<Button onclick={handleCreateStep} className="font-medium text-sm mt-4">Add Step</Button>
 		</div>
 
-		<div class="space-x-2">
-			<Button
-				onclick={saveRecipe}
-				className="text-sm font-medium from-blue-300 to-blue-200 w-fit hover:from-blue-200 hover:to-blue-100 mt-6"
-				>Save</Button
-			>
-			<Button
-				className="text-sm font-medium from-green-300 to-green-200 w-fit hover:from-green-200 hover:to-green-100 mt-6"
-				>Publish</Button
-			>
-		</div>
+		<Button
+			onclick={togglePublish}
+			className={clsx(
+				'text-sm font-medium w-fit mt-6',
+				!published && 'from-green-300 to-green-200 hover:from-green-200 hover:to-green-100',
+				published && 'from-red-300 to-red-200 hover:from-red-200 hover:to-red-100'
+			)}>{published ? 'Unpublish' : 'Publish'}</Button
+		>
 	</div>
 </div>

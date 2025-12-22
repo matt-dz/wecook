@@ -3,8 +3,9 @@
 	import { TimeUnit, type TimeUnitType } from '$lib/recipes';
 	interface Props {
 		value?: TimeUnitType;
+		onValueChange?: (val: string) => void;
 	}
-	let { value = $bindable() }: Props = $props();
+	let { value = $bindable(), onValueChange }: Props = $props();
 
 	const capitalize = (s: string) => {
 		if (s.length === 0) return s;
@@ -12,7 +13,7 @@
 	};
 </script>
 
-<Select.Root type="single" bind:value>
+<Select.Root type="single" bind:value {onValueChange}>
 	<Select.Trigger class="w-24 border-gray-400 bg-gray-200/50 font-inter">
 		{value ? capitalize(value) : 'Unit'}
 	</Select.Trigger>

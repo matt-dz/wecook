@@ -5,9 +5,9 @@
 	import { twMerge } from 'tailwind-merge';
 	import { EllipsisVertical } from '@lucide/svelte';
 	import clsx from 'clsx';
-	import type { RecipeAndOwnerWithoutStepsAndIngredientsType } from '$lib/recipes';
+	import type { RecipeAndOwner } from '$lib/recipes';
 	interface Props {
-		recipe: RecipeAndOwnerWithoutStepsAndIngredientsType;
+		recipe: RecipeAndOwner;
 		className?: string;
 		editable?: boolean;
 	}

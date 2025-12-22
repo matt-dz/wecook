@@ -42,10 +42,9 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 			if (await refreshTokenExpired(e.response)) {
 				redirect(303, '/login');
 			}
-			console.error(e.message);
-			return;
 		}
 		// TODO: handle unexpected errors
 		console.error(e);
+		throw e;
 	}
 };

@@ -11,7 +11,7 @@
 		const adjustedPortion = portion === null || portion <= 0 ? 1 : portion;
 		return data.recipe.recipe.ingredients.map((i) => ({
 			...i,
-			quantity: i.quantity * adjustedPortion
+			quantity: (i.quantity ?? 0) * adjustedPortion
 		}));
 	});
 
