@@ -1662,7 +1662,7 @@ func (Server) PatchApiRecipesRecipeID(ctx context.Context,
 		updateParams.PrepTimeAmount.Valid = true
 	}
 	if request.Body.PrepTimeUnit != nil {
-		updateParams.PrepTimeUnit.TimeUnit = database.TimeUnit(*request.Body.CookTimeUnit)
+		updateParams.PrepTimeUnit.TimeUnit = database.TimeUnit(*request.Body.PrepTimeUnit)
 		updateParams.PrepTimeUnit.Valid = true
 	}
 	if request.Body.CookTimeAmount != nil {
