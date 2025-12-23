@@ -291,3 +291,19 @@ export async function deleteIngredient(
 		options
 	);
 }
+
+export type DeleteStepRequest = {
+	recipe_id: number;
+	step_id: number;
+};
+
+export async function deleteStep(
+	fetch: FetchType,
+	request: DeleteStepRequest,
+	options?: Options
+): Promise<void> {
+	await fetch.delete(
+		`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/steps/${request.step_id}`,
+		options
+	);
+}

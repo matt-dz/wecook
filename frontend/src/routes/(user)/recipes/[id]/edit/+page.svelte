@@ -10,16 +10,19 @@
 		type UpdateIngredientRequest,
 		type UpdateStepRequest,
 		createStep,
-		deleteIngredient
+		deleteIngredient,
+		deleteStep
 	} from '$lib/recipes';
 	import fetch from '$lib/http';
 	import Input from '$lib/components/input/Input.svelte';
+	import StepInput from '$lib/components/step/Input.svelte';
+	import IngredientInput from '$lib/components/ingredient/Input.svelte';
 	import TextArea from '$lib/components/textarea/TextArea.svelte';
-	import DropdownMenu from '$lib/components/dropdown-menu/DropdownMenu.svelte';
+	import TimeunitMenu from '$lib/components/timeunit-menu/TimeunitMenu.svelte';
 	import Button from '$lib/components/button/Button.svelte';
 	import { debounce } from '$lib/debounce';
 	import { HTTPError } from 'ky';
-	import { X } from '@lucide/svelte';
+	import { X, EllipsisVertical } from '@lucide/svelte';
 	import clsx from 'clsx';
 
 	let { data }: PageProps = $props();
@@ -174,6 +177,29 @@
 		}
 	};
 
+	const handleDeleteStep = async (stepID: number) => {
+		try {
+			await deleteStep(fetch, {
+				recipe_id: data.recipe.recipe.id,
+				step_id: stepID
+			});
+			const idx = steps.findIndex((s) => s.id === stepID);
+			if (idx !== -1) {
+				steps = [
+					...steps.slice(0, idx),
+					...steps.slice(idx + 1).map((s) => ({ ...s, step_number: s.step_number - 1 }))
+				];
+			}
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to delete step', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to delete step. try again later.');
+		}
+	};
+
 	const onlyPositiveNumbers = (e: KeyboardEvent) => {
 		const invalid = ['e', 'E', '+', '-'];
 		if (invalid.includes(e.key)) e.preventDefault();
@@ -229,7 +255,7 @@
 							placeholder="30"
 							oninput={onPrepTimeChange}
 						/>
-						<DropdownMenu bind:value={prepTimeUnit} onValueChange={onPrepTimeUnitChange} />
+						<TimeunitMenu bind:value={prepTimeUnit} onValueChange={onPrepTimeUnitChange} />
 					</div>
 				</div>
 				<div class="mt-2 flex flex-col gap-1">
@@ -244,7 +270,7 @@
 							bind:value={cookTime}
 							oninput={onCookTimeChange}
 						/>
-						<DropdownMenu bind:value={cookTimeUnit} onValueChange={onCookTimeUnitChange} />
+						<TimeunitMenu bind:value={cookTimeUnit} onValueChange={onCookTimeUnitChange} />
 					</div>
 				</div>
 			</div>
@@ -253,36 +279,14 @@
 		<div>
 			<h1 class="mb-2 text-2xl">Ingredients</h1>
 			<div class="flex flex-col gap-2">
-				{#each ingredients as ingredient (ingredient.id)}
-					<div class="flex items-center gap-2">
-						<Input
-							className="w-20"
-							placeholder="Quantity"
-							type="number"
-							onkeydown={onlyPositiveNumbers}
-							bind:value={ingredient.quantity}
-							oninput={() => onIngredientQuantityChange(ingredient.id)}
-						/>
-						<Input
-							className="w-20"
-							placeholder="Unit"
-							bind:value={ingredient.unit}
-							oninput={() => onIngredientUnitChange(ingredient.id)}
-						/>
-						<p class="inline-block">of</p>
-						<Input
-							className="w-60"
-							bind:value={ingredient.name}
-							placeholder="Name"
-							oninput={() => onIngredientNameChange(ingredient.id)}
-						/>
-						<button
-							onclick={() => handleDeleteIngredient(ingredient.id)}
-							class="rounded-full p-1 hover:bg-red-200"
-						>
-							<X strokeWidth={1.5} />
-						</button>
-					</div>
+				{#each ingredients as ingredient, idx (ingredient.id)}
+					<IngredientInput
+						bind:ingredient={ingredients[idx]}
+						onQuantityChange={() => onIngredientQuantityChange(ingredient.id)}
+						onUnitChange={() => onIngredientUnitChange(ingredient.id)}
+						onNameChange={() => onIngredientNameChange(ingredient.id)}
+						onDelete={() => handleDeleteIngredient(ingredient.id)}
+					/>
 				{/each}
 			</div>
 			<Button onclick={handleCreateIngredient} className="font-medium text-sm mt-4"
@@ -292,16 +296,13 @@
 
 		<div>
 			<h1 class="mb-2 text-2xl">Steps</h1>
-			<div class="flex flex-col gap-2">
-				{#each steps as step (step.id)}
+			<div class="flex flex-col gap-4">
+				{#each steps as step, i (step.id)}
 					<div class="w-full">
-						<label for="step" class="text-lg">Step {step.step_number}</label>
-						<TextArea
-							bind:value={step.instruction}
-							name="step"
-							className="block w-full"
-							placeholder="Enter instructions"
-							oninput={() => onStepInstructionChange(step.id)}
+						<StepInput
+							bind:step={steps[i]}
+							onInstructionChange={() => onStepInstructionChange(step.id)}
+							onDelete={() => handleDeleteStep(step.id)}
 						/>
 					</div>
 				{/each}
