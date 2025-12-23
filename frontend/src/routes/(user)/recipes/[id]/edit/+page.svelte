@@ -9,7 +9,8 @@
 		type UpdateRecipeRequest,
 		type UpdateIngredientRequest,
 		type UpdateStepRequest,
-		createStep
+		createStep,
+		deleteIngredient
 	} from '$lib/recipes';
 	import fetch from '$lib/http';
 	import Input from '$lib/components/input/Input.svelte';
@@ -18,21 +19,21 @@
 	import Button from '$lib/components/button/Button.svelte';
 	import { debounce } from '$lib/debounce';
 	import { HTTPError } from 'ky';
+	import { X } from '@lucide/svelte';
 	import clsx from 'clsx';
 
 	let { data }: PageProps = $props();
-	let recipe = data.recipe;
 
 	let title: string | undefined = $state(data.recipe.recipe.title);
-	let description: string | undefined = $state(recipe.recipe.description);
-	let servings: number | undefined = $state(recipe.recipe.servings);
-	let cookTime: number | undefined = $state(recipe.recipe.cook_time_amount);
-	let cookTimeUnit: TimeUnitType | undefined = $state(recipe.recipe.cook_time_unit);
-	let prepTime: number | undefined = $state(recipe.recipe.prep_time_amount);
-	let prepTimeUnit: TimeUnitType | undefined = $state(recipe.recipe.prep_time_unit);
-	let ingredients = $state(recipe.recipe.ingredients);
-	let steps = $state(recipe.recipe.steps);
-	let published = $state(recipe.recipe.published);
+	let description: string | undefined = $state(data.recipe.recipe.description);
+	let servings: number | undefined = $state(data.recipe.recipe.servings);
+	let cookTime: number | undefined = $state(data.recipe.recipe.cook_time_amount);
+	let cookTimeUnit: TimeUnitType | undefined = $state(data.recipe.recipe.cook_time_unit);
+	let prepTime: number | undefined = $state(data.recipe.recipe.prep_time_amount);
+	let prepTimeUnit: TimeUnitType | undefined = $state(data.recipe.recipe.prep_time_unit);
+	let ingredients = $state(data.recipe.recipe.ingredients);
+	let steps = $state(data.recipe.recipe.steps);
+	let published = $state(data.recipe.recipe.published);
 
 	const debounceDelay = 200;
 
@@ -40,7 +41,7 @@
 		async (field: keyof UpdateRecipeRequest, value: UpdateRecipeRequest[typeof field]) => {
 			await updatePersonalRecipe(fetch, {
 				[field]: value,
-				recipe_id: recipe.recipe.id
+				recipe_id: data.recipe.recipe.id
 			});
 		},
 		debounceDelay
@@ -54,7 +55,7 @@
 		) => {
 			await updateIngredient(fetch, {
 				[field]: value,
-				recipe_id: recipe.recipe.id,
+				recipe_id: data.recipe.recipe.id,
 				ingredient_id: ingredientID
 			});
 		},
@@ -69,7 +70,7 @@
 		) => {
 			await updateStep(fetch, {
 				[field]: value,
-				recipe_id: recipe.recipe.id,
+				recipe_id: data.recipe.recipe.id,
 				step_id: stepID
 			});
 		},
@@ -114,7 +115,7 @@
 	const togglePublish = async () => {
 		try {
 			await updatePersonalRecipe(fetch, {
-				recipe_id: recipe.recipe.id,
+				recipe_id: data.recipe.recipe.id,
 				published: !published
 			});
 			published = !published;
@@ -130,7 +131,7 @@
 
 	const handleCreateIngredient = async () => {
 		try {
-			const newIngredient = await createIngredient(fetch, { recipe_id: recipe.recipe.id });
+			const newIngredient = await createIngredient(fetch, { recipe_id: data.recipe.recipe.id });
 			ingredients = [...ingredients, newIngredient];
 		} catch (e) {
 			if (e instanceof HTTPError) {
@@ -144,7 +145,7 @@
 
 	const handleCreateStep = async () => {
 		try {
-			const newStep = await createStep(fetch, { recipe_id: recipe.recipe.id });
+			const newStep = await createStep(fetch, { recipe_id: data.recipe.recipe.id });
 			steps = [...steps, newStep];
 		} catch (e) {
 			if (e instanceof HTTPError) {
@@ -153,6 +154,23 @@
 				console.error(e);
 			}
 			alert('failed to create step. try again later.');
+		}
+	};
+
+	const handleDeleteIngredient = async (ingredientID: number) => {
+		try {
+			await deleteIngredient(fetch, {
+				recipe_id: data.recipe.recipe.id,
+				ingredient_id: ingredientID
+			});
+			ingredients = ingredients.filter((i) => i.id !== ingredientID);
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to delete ingredient', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to delete ingredient. try again later.');
 		}
 	};
 
@@ -236,7 +254,7 @@
 			<h1 class="mb-2 text-2xl">Ingredients</h1>
 			<div class="flex flex-col gap-2">
 				{#each ingredients as ingredient (ingredient.id)}
-					<div>
+					<div class="flex items-center gap-2">
 						<Input
 							className="w-20"
 							placeholder="Quantity"
@@ -258,6 +276,12 @@
 							placeholder="Name"
 							oninput={() => onIngredientNameChange(ingredient.id)}
 						/>
+						<button
+							onclick={() => handleDeleteIngredient(ingredient.id)}
+							class="rounded-full p-1 hover:bg-red-200"
+						>
+							<X strokeWidth={1.5} />
+						</button>
 					</div>
 				{/each}
 			</div>

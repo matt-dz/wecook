@@ -2,22 +2,23 @@ import { type FetchType } from '$lib/http';
 import ky, { type Options } from 'ky';
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
 
-const ACCESS_TOKEN_COOKIE_NAME = (import.meta.env.PROD ? '__Host-Http-' : '') + 'access';
-const REFRESH_TOKEN_COOKIE_NAME = (import.meta.env.PROD ? '__Host-Http-' : '') + 'refresh';
+const ACCESS_TOKEN_COOKIE_NAME = 'access';
+const REFRESH_TOKEN_COOKIE_NAME = 'refresh';
 
 export async function verifySession(fetch: FetchType, options?: Options) {
 	await fetch.get(`${PUBLIC_BACKEND_URL}/api/auth/verify`, options);
 }
 
 export type RefreshSessionRequest = {
-	refresh_token: string;
+	refresh_token?: string;
 };
 
 // refreshSession refreshes the user session.
 export async function refreshSession(request: RefreshSessionRequest, options?: Options) {
 	return await ky.post(`${PUBLIC_BACKEND_URL}/api/auth/refresh`, {
 		...options,
-		json: request
+		json: request,
+		credentials: 'include'
 	});
 }
 

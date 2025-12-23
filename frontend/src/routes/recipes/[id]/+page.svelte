@@ -5,7 +5,6 @@
 
 	let { data }: PageProps = $props();
 	let portion: number = $state(1);
-	const recipe = data.recipe;
 
 	let ingredients = $derived.by(() => {
 		const adjustedPortion = portion === null || portion <= 0 ? 1 : portion;
@@ -20,12 +19,18 @@
 		if (invalid.includes(e.key)) e.preventDefault();
 	};
 
+	const formatLocale = (n: number, decimals: number) => {
+		return new Intl.NumberFormat(undefined, {
+			maximumFractionDigits: decimals
+		}).format(n);
+	};
+
 	const totalCookTime =
-		(recipe.recipe?.cook_time_amount && recipe.recipe?.cook_time_unit
-			? toMinutes(recipe.recipe.cook_time_amount, recipe.recipe.cook_time_unit)
+		(data.recipe.recipe?.cook_time_amount && data.recipe.recipe?.cook_time_unit
+			? toMinutes(data.recipe.recipe.cook_time_amount, data.recipe.recipe.cook_time_unit)
 			: 0) +
-		(recipe.recipe?.prep_time_amount && recipe.recipe?.prep_time_unit
-			? toMinutes(recipe.recipe.prep_time_amount, recipe.recipe.prep_time_unit)
+		(data.recipe.recipe?.prep_time_amount && data.recipe.recipe?.prep_time_unit
+			? toMinutes(data.recipe.recipe.prep_time_amount, data.recipe.recipe.prep_time_unit)
 			: 0);
 </script>
 
@@ -47,13 +52,15 @@
 				</h3>
 			</div>
 
-			<div class="h-96 w-lg">
-				<img
-					src={data.recipe.recipe.image_url}
-					alt="cover"
-					class="h-full w-full object-cover object-center"
-				/>
-			</div>
+			{#if data.recipe.recipe.image_url}
+				<div class="h-96 w-lg">
+					<img
+						src={data.recipe.recipe.image_url}
+						alt="cover"
+						class="h-full w-full object-cover object-center"
+					/>
+				</div>
+			{/if}
 		</div>
 
 		<p>{data.recipe.recipe.description}</p>
@@ -77,7 +84,7 @@
 			<ul class="list-inside list-disc">
 				{#each ingredients as ingredient (ingredient.id)}
 					<li>
-						{ingredient.quantity}{ingredient.unit && ` ${ingredient.unit} of`}
+						{formatLocale(ingredient.quantity, 3)}{ingredient.unit && ` ${ingredient.unit} of`}
 						{ingredient.name}
 					</li>
 				{/each}

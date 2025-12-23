@@ -41,7 +41,7 @@ const fetch = ky.create({
 
 				// Refresh the users session
 				try {
-					await refreshSession(baseOptions);
+					await refreshSession({}, baseOptions);
 				} catch (e) {
 					if (e instanceof HTTPError) {
 						if (await refreshTokenExpired(e.response)) {

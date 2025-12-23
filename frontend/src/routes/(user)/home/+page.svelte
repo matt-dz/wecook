@@ -37,7 +37,7 @@
 
 <div class="mt-8 mb-4 flex justify-center px-6">
 	<div class="flex w-full max-w-5xl justify-between border-b border-solid border-gray-300 pb-2">
-		<h1 class="text-xl">Recipes</h1>
+		<h1 class="text-xl">Your Recipes</h1>
 		<Button onclick={createNewRecipe} className="text-sm">New Recipe</Button>
 	</div>
 </div>

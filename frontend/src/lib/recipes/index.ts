@@ -120,7 +120,7 @@ export async function GetRecipes(
 	return GetRecipesResponse.parse(await res.json());
 }
 
-export type GetRecipeResponse = RecipeAndOwner;
+export type GetRecipeResponse = RecipeWithStepsIngredientsAndOwner;
 
 export async function GetRecipe(
 	fetch: FetchType,
@@ -128,7 +128,7 @@ export async function GetRecipe(
 	options?: Options
 ): Promise<GetRecipeResponse> {
 	const res = await fetch(`${PUBLIC_BACKEND_URL}/api/recipes/${id}`, options).json();
-	return RecipeAndOwnerSchema.parse(res);
+	return RecipeWithStepsIngredientsAndOwnerSchema.parse(res);
 }
 
 export const CreateRecipeResponseSchema = z.object({
@@ -274,4 +274,20 @@ export async function createStep(
 		})
 		.json();
 	return StepSchema.parse(res);
+}
+
+export type DeleteIngredientRequest = {
+	recipe_id: number;
+	ingredient_id: number;
+};
+
+export async function deleteIngredient(
+	fetch: FetchType,
+	request: DeleteIngredientRequest,
+	options?: Options
+): Promise<void> {
+	await fetch.delete(
+		`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}`,
+		options
+	);
 }
