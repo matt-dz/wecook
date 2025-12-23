@@ -115,6 +115,9 @@ CREATE OR REPLACE FUNCTION recipe_steps_after_delete ()
   RETURNS TRIGGER
   AS $$
 BEGIN
+  -- Set flag to indicate we're in a shift operation to prevent before_update trigger from running
+  PERFORM
+    set_config('recipe_steps.in_shift', '1', TRUE);
   UPDATE
     recipe_steps
   SET

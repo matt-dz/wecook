@@ -39,16 +39,16 @@ const (
 var ErrMalformedRefreshToken = errors.New("malformed refresh token")
 
 func AccessTokenName(env *env.Env) string {
-	if env.IsProd() {
-		return "__Host-Http-access"
-	}
+	// if env.IsProd() {
+	// 	return "__Host-Http-access"
+	// }
 	return "access"
 }
 
 func RefreshTokenName(env *env.Env) string {
-	if env.IsProd() {
-		return "__Host-Http-refresh"
-	}
+	// if env.IsProd() {
+	// 	return "__Host-Http-refresh"
+	// }
 	return "refresh"
 }
 
