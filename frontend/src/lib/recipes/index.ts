@@ -127,7 +127,7 @@ export async function GetRecipe(
 	id: number,
 	options?: Options
 ): Promise<GetRecipeResponse> {
-	const res = await fetch(`${PUBLIC_BACKEND_URL}/api/recipes/${id}`, options).json();
+	const res = await fetch(`${PUBLIC_BACKEND_URL}/api/recipes/${id}/public`, options).json();
 	return RecipeWithStepsIngredientsAndOwnerSchema.parse(res);
 }
 

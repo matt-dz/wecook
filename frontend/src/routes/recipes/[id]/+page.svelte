@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { toMinutes, formatDuration } from '$lib/time';
+	import { formatDuration } from '$lib/time';
 	import Input from '$lib/components/input/Input.svelte';
 
 	let { data }: PageProps = $props();
@@ -24,15 +24,6 @@
 			maximumFractionDigits: decimals
 		}).format(n);
 	};
-	console.log(data.recipe.recipe.description);
-
-	const totalCookTime =
-		(data.recipe.recipe?.cook_time_amount && data.recipe.recipe?.cook_time_unit
-			? toMinutes(data.recipe.recipe.cook_time_amount, data.recipe.recipe.cook_time_unit)
-			: 0) +
-		(data.recipe.recipe?.prep_time_amount && data.recipe.recipe?.prep_time_unit
-			? toMinutes(data.recipe.recipe.prep_time_amount, data.recipe.recipe.prep_time_unit)
-			: 0);
 </script>
 
 <svelte:head>
@@ -58,7 +49,7 @@
 				</h3>
 				<h3 class="text-lg text-gray-500">
 					{#if data.recipe.recipe.cook_time_amount && data.recipe.recipe.cook_time_unit}
-						Prep Time: {formatDuration(
+						Cook Time: {formatDuration(
 							data.recipe.recipe.cook_time_amount,
 							data.recipe.recipe.cook_time_unit
 						)}

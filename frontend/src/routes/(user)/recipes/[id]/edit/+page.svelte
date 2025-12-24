@@ -357,7 +357,11 @@
 		<div class="flex flex-col gap-1">
 			<label for="recipe-image" class="text-lg">Recipe Cover Image</label>
 			{#if recipeImageUrl}
-				<ImagePreview src={recipeImageUrl} alt={title || 'Recipe'} onRemove={onRecipeImageDeletion} />
+				<ImagePreview
+					src={recipeImageUrl}
+					alt={title || 'Recipe'}
+					onRemove={onRecipeImageDeletion}
+				/>
 			{:else}
 				<Button onclick={openRecipeFilePicker} className="w-fit text-sm font-medium">
 					Upload Image
