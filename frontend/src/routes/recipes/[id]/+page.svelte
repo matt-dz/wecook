@@ -24,6 +24,7 @@
 			maximumFractionDigits: decimals
 		}).format(n);
 	};
+	console.log(data.recipe.recipe.description);
 
 	const totalCookTime =
 		(data.recipe.recipe?.cook_time_amount && data.recipe.recipe?.cook_time_unit
@@ -63,7 +64,7 @@
 			{/if}
 		</div>
 
-		<p>{data.recipe.recipe.description}</p>
+		<p class="whitespace-pre-wrap">{data.recipe.recipe.description}</p>
 
 		{#if data.recipe.recipe.ingredients}
 			<h1 class="mt-12 mb-2 text-3xl">Ingredients</h1>
