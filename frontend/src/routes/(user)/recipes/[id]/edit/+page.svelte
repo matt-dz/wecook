@@ -15,7 +15,9 @@
 		uploadIngredientImage,
 		deleteIngredientImage,
 		uploadStepImage,
-		deleteStepImage
+		deleteStepImage,
+		uploadRecipeImage,
+		deleteRecipeImage
 	} from '$lib/recipes';
 	import fetch from '$lib/http';
 	import Input from '$lib/components/input/Input.svelte';
@@ -24,6 +26,7 @@
 	import TextArea from '$lib/components/textarea/TextArea.svelte';
 	import TimeunitMenu from '$lib/components/timeunit-menu/TimeunitMenu.svelte';
 	import Button from '$lib/components/button/Button.svelte';
+	import ImagePreview from '$lib/components/image/ImagePreview.svelte';
 	import { debounce } from '$lib/debounce';
 	import { HTTPError } from 'ky';
 	import clsx from 'clsx';
@@ -40,6 +43,9 @@
 	let ingredients = $state(data.recipe.recipe.ingredients);
 	let steps = $state(data.recipe.recipe.steps);
 	let published = $state(data.recipe.recipe.published);
+	let recipeImageUrl = $state<string | undefined>(data.recipe.recipe.image_url);
+
+	let recipeFileInput: HTMLInputElement;
 
 	const debounceDelay = 200;
 
@@ -190,6 +196,51 @@
 		}
 	};
 
+	const onRecipeImageUpload = async (image: File) => {
+		try {
+			const res = await uploadRecipeImage(fetch, {
+				recipe_id: data.recipe.recipe.id,
+				image
+			});
+			recipeImageUrl = res.image_url;
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to upload image', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to upload image. try again later.');
+		}
+	};
+
+	const onRecipeImageDeletion = async () => {
+		try {
+			await deleteRecipeImage(fetch, {
+				recipe_id: data.recipe.recipe.id
+			});
+			recipeImageUrl = undefined;
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to delete image', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to delete image. try again later.');
+		}
+	};
+
+	const openRecipeFilePicker = () => {
+		recipeFileInput?.click();
+	};
+
+	const handleRecipeFileSelect = (e: Event) => {
+		const target = e.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (file) {
+			onRecipeImageUpload(file);
+		}
+	};
+
 	const togglePublish = async () => {
 		try {
 			await updatePersonalRecipe(fetch, {
@@ -300,6 +351,24 @@
 				bind:value={description}
 				className="font-IowanOldStyleBT"
 				oninput={onDescriptionChange}
+			/>
+		</div>
+
+		<div class="flex flex-col gap-1">
+			<label for="recipe-image" class="text-lg">Recipe Cover Image</label>
+			{#if recipeImageUrl}
+				<ImagePreview src={recipeImageUrl} alt={title || 'Recipe'} onRemove={onRecipeImageDeletion} />
+			{:else}
+				<Button onclick={openRecipeFilePicker} className="w-fit text-sm font-medium">
+					Upload Image
+				</Button>
+			{/if}
+			<input
+				type="file"
+				accept="image/*"
+				bind:this={recipeFileInput}
+				onchange={handleRecipeFileSelect}
+				class="hidden"
 			/>
 		</div>
 

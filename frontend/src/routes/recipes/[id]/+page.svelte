@@ -40,8 +40,8 @@
 </svelte:head>
 
 <div class="mt-16 mb-16 flex justify-center px-6">
-	<div class="w-full max-w-5xl">
-		<div class="mb-12 flex justify-between">
+	<div class="w-full max-w-3xl">
+		<div class="mb-12 flex flex-col justify-between">
 			<div>
 				<h1 class="text-3xl font-semibold">{data.recipe.recipe.title}</h1>
 				<h2 class="text-lg capitalize">
@@ -49,16 +49,29 @@
 					{data.recipe.owner.last_name}
 				</h2>
 				<h3 class="text-lg text-gray-500">
-					Cook Time: {formatDuration(totalCookTime)}
+					{#if data.recipe.recipe.prep_time_amount && data.recipe.recipe.prep_time_unit}
+						Prep Time: {formatDuration(
+							data.recipe.recipe.prep_time_amount,
+							data.recipe.recipe.prep_time_unit
+						)}
+					{/if}
+				</h3>
+				<h3 class="text-lg text-gray-500">
+					{#if data.recipe.recipe.cook_time_amount && data.recipe.recipe.cook_time_unit}
+						Prep Time: {formatDuration(
+							data.recipe.recipe.cook_time_amount,
+							data.recipe.recipe.cook_time_unit
+						)}
+					{/if}
 				</h3>
 			</div>
 
 			{#if data.recipe.recipe.image_url}
-				<div class="h-96 w-lg">
+				<div class="mx-auto mt-6">
 					<img
 						src={data.recipe.recipe.image_url}
 						alt="cover"
-						class="h-full w-full object-cover object-center"
+						class="h-full max-h-96 object-cover"
 					/>
 				</div>
 			{/if}

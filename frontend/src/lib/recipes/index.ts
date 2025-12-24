@@ -390,3 +390,38 @@ export async function deleteStepImage(
 		options
 	);
 }
+
+export type UploadRecipeImageRequest = {
+	recipe_id: number;
+	image: File;
+};
+
+export type UploadRecipeImageResponse = Recipe;
+
+export async function uploadRecipeImage(
+	fetch: FetchType,
+	request: UploadRecipeImageRequest,
+	options?: Options
+): Promise<UploadRecipeImageResponse> {
+	const form = new FormData();
+	form.append('image', request.image);
+	const res = await fetch
+		.post(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/image`, {
+			...options,
+			body: form
+		})
+		.json();
+	return RecipeSchema.parse(res);
+}
+
+export type DeleteRecipeImageRequest = {
+	recipe_id: number;
+};
+
+export async function deleteRecipeImage(
+	fetch: FetchType,
+	request: DeleteRecipeImageRequest,
+	options?: Options
+): Promise<void> {
+	await fetch.delete(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/image`, options);
+}

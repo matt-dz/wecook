@@ -1,3 +1,5 @@
+import type { TimeUnitType } from '$lib/recipes';
+
 export function toMinutes(amount: number, unit: 'minutes' | 'hours' | 'days'): number {
 	switch (unit) {
 		case 'minutes':
@@ -8,7 +10,19 @@ export function toMinutes(amount: number, unit: 'minutes' | 'hours' | 'days'): n
 			return amount * 60 * 24;
 	}
 }
-export function formatDuration(minutes: number): string {
+export function formatDuration(amount: number, unit: TimeUnitType): string {
+	let minutes = 0;
+	switch (unit) {
+		case 'hours':
+			minutes = amount * 60;
+			break;
+		case 'days':
+			minutes = amount * 60 * 24;
+			break;
+		case 'minutes':
+			minutes = amount;
+			break;
+	}
 	if (minutes < 60) {
 		return plural(minutes, 'minute');
 	}
