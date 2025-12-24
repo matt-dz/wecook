@@ -698,6 +698,10 @@ func TestGetApiRecipes(t *testing.T) {
 							LastName:       "Doe",
 						},
 					}, nil)
+
+				mockFS.EXPECT().
+					FileURL("recipe1.jpg").
+					Return("http://test-host/recipe1.jpg")
 			},
 			wantStatus: 200,
 			wantError:  false,
@@ -723,8 +727,8 @@ func TestGetApiRecipes(t *testing.T) {
 				if recipe1.Recipe.Description == nil || *recipe1.Recipe.Description != "First recipe" {
 					t.Errorf("expected description 'First recipe', got %v", recipe1.Recipe.Description)
 				}
-				if recipe1.Recipe.ImageUrl == nil || *recipe1.Recipe.ImageUrl != "recipe1.jpg" {
-					t.Errorf("expected image URL 'recipe1.jpg', got %v", recipe1.Recipe.ImageUrl)
+				if recipe1.Recipe.ImageUrl == nil || *recipe1.Recipe.ImageUrl != "http://test-host/recipe1.jpg" {
+					t.Errorf("expected image URL 'http://test-host/recipe1.jpg', got %v", recipe1.Recipe.ImageUrl)
 				}
 				if !recipe1.Recipe.Published {
 					t.Errorf("expected recipe to be published")
@@ -916,6 +920,10 @@ func TestGetApiRecipesPublic(t *testing.T) {
 							LastName:       "Doe",
 						},
 					}, nil)
+
+				mockFS.EXPECT().
+					FileURL("recipe1.jpg").
+					Return("http://test-host/recipe1.jpg")
 			},
 			wantStatus: 200,
 			wantError:  false,
@@ -941,8 +949,8 @@ func TestGetApiRecipesPublic(t *testing.T) {
 				if recipe1.Recipe.Description == nil || *recipe1.Recipe.Description != "First recipe" {
 					t.Errorf("expected description 'First recipe', got %v", recipe1.Recipe.Description)
 				}
-				if recipe1.Recipe.ImageUrl == nil || *recipe1.Recipe.ImageUrl != "recipe1.jpg" {
-					t.Errorf("expected image URL 'recipe1.jpg', got %v", recipe1.Recipe.ImageUrl)
+				if recipe1.Recipe.ImageUrl == nil || *recipe1.Recipe.ImageUrl != "http://test-host/recipe1.jpg" {
+					t.Errorf("expected image URL 'http://test-host/recipe1.jpg', got %v", recipe1.Recipe.ImageUrl)
 				}
 				if !recipe1.Recipe.Published {
 					t.Errorf("expected recipe to be published")
@@ -2133,6 +2141,10 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					WriteIngredientImage(int64(123), int64(456), ".png", validPNGImage).
 					Return("files/ingredients/123/456.png", len(validPNGImage), nil)
 
+				mockFS.EXPECT().
+					FileURL("files/ingredients/123/456.png").
+					Return("http://test-host/files/ingredients/123/456.png")
+
 				mockDB.EXPECT().
 					UpdateRecipeIngredient(gomock.Any(), gomock.Any()).
 					Return(database.RecipeIngredient{
@@ -2157,8 +2169,8 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 				if v.ImageUrl == nil {
 					t.Errorf("expected non-nil image_url")
 				}
-				if *v.ImageUrl != "files/ingredients/123/456.png" {
-					t.Errorf("expected image_url 'files/ingredients/123/456.png', got %s", *v.ImageUrl)
+				if *v.ImageUrl != "http://test-host/files/ingredients/123/456.png" {
+					t.Errorf("expected image_url 'http://test-host/files/ingredients/123/456.png', got %s", *v.ImageUrl)
 				}
 			},
 		},
@@ -2191,6 +2203,10 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					WriteIngredientImage(int64(123), int64(456), ".jpg", validJPEGImage).
 					Return("files/ingredients/123/456.jpg", len(validJPEGImage), nil)
 
+				mockFS.EXPECT().
+					FileURL("files/ingredients/123/456.jpg").
+					Return("http://test-host/files/ingredients/123/456.jpg")
+
 				mockDB.EXPECT().
 					UpdateRecipeIngredient(gomock.Any(), gomock.Any()).
 					Return(database.RecipeIngredient{
@@ -2212,8 +2228,8 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 				if v.ImageUrl == nil {
 					t.Errorf("expected non-nil image_url")
 				}
-				if *v.ImageUrl != "files/ingredients/123/456.jpg" {
-					t.Errorf("expected image_url 'files/ingredients/123/456.jpg', got %s", *v.ImageUrl)
+				if *v.ImageUrl != "http://test-host/files/ingredients/123/456.jpg" {
+					t.Errorf("expected image_url 'http://test-host/files/ingredients/123/456.jpg', got %s", *v.ImageUrl)
 				}
 			},
 		},
@@ -2827,7 +2843,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 		request    PostApiRecipesRecipeIDStepsRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier)
+		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -2840,7 +2856,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -2883,7 +2899,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -2926,7 +2942,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     0,
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier) {},
+			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -2951,7 +2967,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -2983,7 +2999,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -3018,7 +3034,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -3057,8 +3073,9 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
-			tt.setup(mockDB)
+			tt.setup(mockDB, mockFS)
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
@@ -3070,6 +3087,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 				Database: &database.Database{
 					Querier: mockDB,
 				},
+				FileStore: mockFS,
 			})
 
 			server := NewServer()
@@ -3097,7 +3115,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 		request    PatchApiRecipesRecipeIDStepsStepIDRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier)
+		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -3114,7 +3132,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3173,7 +3191,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3230,7 +3248,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3241,6 +3259,10 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 						},
 					}).
 					Return(true, nil)
+
+				mockFS.EXPECT().
+					FileURL("files/steps/123/456.png").
+					Return("http://test-host/files/steps/123/456.png")
 
 				mockDB.EXPECT().
 					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
@@ -3284,8 +3306,8 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 				if v.StepNumber != 2 {
 					t.Errorf("expected step_number 2, got %d", v.StepNumber)
 				}
-				if v.ImageUrl == nil || *v.ImageUrl != "files/steps/123/456.png" {
-					t.Errorf("expected image_url 'files/steps/123/456.png', got %v", v.ImageUrl)
+				if v.ImageUrl == nil || *v.ImageUrl != "http://test-host/files/steps/123/456.png" {
+					t.Errorf("expected image_url 'http://test-host/files/steps/123/456.png', got %v", v.ImageUrl)
 				}
 			},
 		},
@@ -3298,7 +3320,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3347,7 +3369,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     0,
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier) {},
+			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -3376,7 +3398,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3413,7 +3435,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3453,7 +3475,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3491,8 +3513,9 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
-			tt.setup(mockDB)
+			tt.setup(mockDB, mockFS)
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
@@ -3504,6 +3527,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 				Database: &database.Database{
 					Querier: mockDB,
 				},
+				FileStore: mockFS,
 			})
 
 			server := NewServer()
@@ -3579,6 +3603,10 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					WriteStepImage(int64(123), int64(456), ".png", validPNGImage).
 					Return("files/steps/123/456.png", len(validPNGImage), nil)
 
+				mockFS.EXPECT().
+					FileURL("files/steps/123/456.png").
+					Return("http://test-host/files/steps/123/456.png")
+
 				mockDB.EXPECT().
 					UpdateRecipeStep(gomock.Any(), gomock.Any()).
 					Return(database.UpdateRecipeStepRow{
@@ -3601,8 +3629,8 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 				if v.Id != 456 {
 					t.Errorf("expected id 456, got %d", v.Id)
 				}
-				if v.ImageUrl == nil || *v.ImageUrl != "files/steps/123/456.png" {
-					t.Errorf("expected image_url 'files/steps/123/456.png', got %v", v.ImageUrl)
+				if v.ImageUrl == nil || *v.ImageUrl != "http://test-host/files/steps/123/456.png" {
+					t.Errorf("expected image_url 'http://test-host/files/steps/123/456.png', got %v", v.ImageUrl)
 				}
 			},
 		},
@@ -3635,6 +3663,10 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					WriteStepImage(int64(123), int64(456), ".jpg", validJPEGImage).
 					Return("files/steps/123/456.jpg", len(validJPEGImage), nil)
 
+				mockFS.EXPECT().
+					FileURL("files/steps/123/456.jpg").
+					Return("http://test-host/files/steps/123/456.jpg")
+
 				mockDB.EXPECT().
 					UpdateRecipeStep(gomock.Any(), gomock.Any()).
 					Return(database.UpdateRecipeStepRow{
@@ -3658,8 +3690,8 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					t.Errorf("expected 200 response, got %T", resp)
 					return
 				}
-				if v.ImageUrl == nil || *v.ImageUrl != "files/steps/123/456.jpg" {
-					t.Errorf("expected image_url 'files/steps/123/456.jpg', got %v", v.ImageUrl)
+				if v.ImageUrl == nil || *v.ImageUrl != "http://test-host/files/steps/123/456.jpg" {
+					t.Errorf("expected image_url 'http://test-host/files/steps/123/456.jpg', got %v", v.ImageUrl)
 				}
 				if v.Instruction == nil || *v.Instruction != "Mix ingredients" {
 					t.Errorf("expected instruction 'Mix ingredients', got %v", v.Instruction)
@@ -4968,7 +5000,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 		request    PatchApiRecipesRecipeIDRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier)
+		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -4991,7 +5023,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5001,6 +5033,10 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 						},
 					}).
 					Return(true, nil)
+
+				mockFS.EXPECT().
+					FileURL("recipe.jpg").
+					Return("http://test-host/recipe.jpg")
 
 				mockDB.EXPECT().
 					UpdateRecipe(gomock.Any(), gomock.Any()).
@@ -5061,7 +5097,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5108,7 +5144,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5150,7 +5186,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 				Body:     &PatchApiRecipesRecipeIDJSONRequestBody{},
 			},
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier) {},
+			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -5175,7 +5211,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5210,7 +5246,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5245,7 +5281,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier) {
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5282,9 +5318,10 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 			server := NewServer()
 
-			tt.setup(mockDB)
+			tt.setup(mockDB, mockFS)
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
@@ -5296,6 +5333,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 				Database: &database.Database{
 					Querier: mockDB,
 				},
+				FileStore: mockFS,
 			})
 
 			resp, err := server.PatchApiRecipesRecipeID(ctx, tt.request)

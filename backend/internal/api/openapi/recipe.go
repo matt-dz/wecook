@@ -606,7 +606,8 @@ func (Server) PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context
 		res.Unit = &row.Unit.String
 	}
 	if row.ImageUrl.Valid {
-		res.ImageUrl = &row.ImageUrl.String
+		imageURL := env.FileStore.FileURL(row.ImageUrl.String)
+		res.ImageUrl = &imageURL
 	}
 	return res, nil
 }
@@ -750,7 +751,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Con
 		}, nil
 	}
 
-	imageURL := ingredient.ImageUrl.String
+	imageURL := env.FileStore.FileURL(ingredient.ImageUrl.String)
 	res := PostApiRecipesRecipeIDIngredientsIngredientIDImage200JSONResponse{
 		Id:       ingredient.ID,
 		ImageUrl: &imageURL,
@@ -1012,7 +1013,7 @@ func (Server) PatchApiRecipesRecipeIDStepsStepID(ctx context.Context,
 		res.Instruction = &inst
 	}
 	if step.ImageUrl.Valid {
-		url := step.ImageUrl.String
+		url := env.FileStore.FileURL(step.ImageUrl.String)
 		res.ImageUrl = &url
 	}
 	return res, nil
@@ -1157,7 +1158,7 @@ func (Server) PostApiRecipesRecipeIDStepsStepIDImage(ctx context.Context,
 		}, nil
 	}
 
-	imageURL := step.ImageUrl.String
+	imageURL := env.FileStore.FileURL(step.ImageUrl.String)
 	res := PostApiRecipesRecipeIDStepsStepIDImage200JSONResponse{
 		Id:         step.ID,
 		StepNumber: step.StepNumber,
@@ -1401,7 +1402,8 @@ func (Server) GetApiRecipesPublic(ctx context.Context,
 			r.Description = &recipe.Description.String
 		}
 		if recipe.ImageUrl.Valid {
-			r.ImageUrl = &recipe.ImageUrl.String
+			url := env.FileStore.FileURL(recipe.ImageUrl.String)
+			r.ImageUrl = &url
 		}
 		if recipe.PrepTimeAmount.Valid {
 			r.PrepTimeAmount = &recipe.PrepTimeAmount.Int32
@@ -1573,7 +1575,8 @@ func (Server) GetApiRecipes(ctx context.Context,
 			r.Description = &recipe.Description.String
 		}
 		if recipe.ImageUrl.Valid {
-			r.ImageUrl = &recipe.ImageUrl.String
+			url := env.FileStore.FileURL(recipe.ImageUrl.String)
+			r.ImageUrl = &url
 		}
 		if recipe.PrepTimeAmount.Valid {
 			r.PrepTimeAmount = &recipe.PrepTimeAmount.Int32
@@ -1725,7 +1728,7 @@ func (Server) PatchApiRecipesRecipeID(ctx context.Context,
 		resp.Description = &desc
 	}
 	if rec.ImageUrl.Valid {
-		imageURL := rec.ImageUrl.String
+		imageURL := env.FileStore.FileURL(rec.ImageUrl.String)
 		resp.ImageUrl = &imageURL
 	}
 
