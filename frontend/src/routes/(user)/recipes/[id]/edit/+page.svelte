@@ -13,7 +13,9 @@
 		deleteIngredient,
 		deleteStep,
 		uploadIngredientImage,
-		deleteIngredientImage
+		deleteIngredientImage,
+		uploadStepImage,
+		deleteStepImage
 	} from '$lib/recipes';
 	import fetch from '$lib/http';
 	import Input from '$lib/components/input/Input.svelte';
@@ -123,8 +125,7 @@
 				ingredient_id: ingredientID,
 				image
 			});
-			const idx = ingredients.findIndex((i) => i.id === ingredientID);
-			ingredients = [...ingredients.slice(0, idx), res, ...ingredients.slice(idx + 1)];
+			ingredients = ingredients.map((i) => (i.id !== ingredientID ? i : res));
 		} catch (e) {
 			if (e instanceof HTTPError) {
 				console.error('failed to upload image', e.message);
@@ -144,6 +145,41 @@
 			ingredients = ingredients.map((i) =>
 				i.id !== ingredientID ? i : { ...i, image_url: undefined }
 			);
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to delete image', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to delete image. try again later.');
+		}
+	};
+
+	const onStepImageUpload = async (stepID: number, image: File) => {
+		try {
+			const res = await uploadStepImage(fetch, {
+				recipe_id: data.recipe.recipe.id,
+				step_id: stepID,
+				image
+			});
+			steps = steps.map((s) => (s.id !== stepID ? s : res));
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to upload image', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to upload image. try again later.');
+		}
+	};
+
+	const onStepImageDeletion = async (stepID: number) => {
+		try {
+			await deleteStepImage(fetch, {
+				recipe_id: data.recipe.recipe.id,
+				step_id: stepID
+			});
+			steps = steps.map((s) => (s.id !== stepID ? s : { ...s, image_url: undefined }));
 		} catch (e) {
 			if (e instanceof HTTPError) {
 				console.error('failed to delete image', e.message);
@@ -342,8 +378,10 @@
 					<div class="w-full">
 						<StepInput
 							bind:step={steps[i]}
-							onInstructionChange={() => onStepInstructionChange(step.id)}
-							onDelete={() => handleDeleteStep(step.id)}
+							onInstructionChange={onStepInstructionChange}
+							onDelete={handleDeleteStep}
+							onImageUpload={onStepImageUpload}
+							onImageDeletion={onStepImageDeletion}
 						/>
 					</div>
 				{/each}
