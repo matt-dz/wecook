@@ -11,7 +11,7 @@
 </script>
 
 <div class="relative inline-block">
-	<img {src} {alt} class="h-32 rounded-lg object-cover" />
+	<img {src} {alt} class="h-full max-h-96 object-cover" />
 	{#if onRemove}
 		<button
 			onclick={onRemove}

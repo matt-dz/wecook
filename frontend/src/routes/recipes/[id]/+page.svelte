@@ -81,11 +81,22 @@
 					defaultValue={1}
 				/>
 			</div>
-			<ul class="list-inside list-disc">
+			<ul class="list-inside list-disc space-y-2">
 				{#each ingredients as ingredient (ingredient.id)}
 					<li>
-						{formatLocale(ingredient.quantity, 3)}{ingredient.unit && ` ${ingredient.unit} of`}
-						{ingredient.name}
+						<div class="inline-block">
+							{formatLocale(ingredient.quantity, 3)}{ingredient.unit && ` ${ingredient.unit} of`}
+							{ingredient.name}
+						</div>
+						{#if ingredient.image_url}
+							<div class="mt-2 ml-6">
+								<img
+									src={ingredient.image_url}
+									alt={ingredient.name || 'Ingredient'}
+									class="h-full max-h-96 object-cover"
+								/>
+							</div>
+						{/if}
 					</li>
 				{/each}
 			</ul>
@@ -93,9 +104,20 @@
 
 		{#if data.recipe.recipe.steps}
 			<h1 class="mt-12 mb-2 text-3xl">Steps</h1>
-			<ol class="list-inside list-decimal">
+			<ol class="list-inside list-decimal space-y-2">
 				{#each data.recipe.recipe.steps as step (step.id)}
-					<li>{step.instruction}</li>
+					<li>
+						<div class="inline-block">{step.instruction}</div>
+						{#if step.image_url}
+							<div class="mt-2 ml-6">
+								<img
+									src={step.image_url}
+									alt={`Step ${step.step_number}`}
+									class="h-full max-h-96 object-cover"
+								/>
+							</div>
+						{/if}
+					</li>
 				{/each}
 			</ol>
 		{/if}
