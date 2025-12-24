@@ -11,7 +11,9 @@
 		type UpdateStepRequest,
 		createStep,
 		deleteIngredient,
-		deleteStep
+		deleteStep,
+		uploadIngredientImage,
+		deleteIngredientImage
 	} from '$lib/recipes';
 	import fetch from '$lib/http';
 	import Input from '$lib/components/input/Input.svelte';
@@ -22,7 +24,6 @@
 	import Button from '$lib/components/button/Button.svelte';
 	import { debounce } from '$lib/debounce';
 	import { HTTPError } from 'ky';
-	import { X, EllipsisVertical } from '@lucide/svelte';
 	import clsx from 'clsx';
 
 	let { data }: PageProps = $props();
@@ -113,6 +114,44 @@
 		const step = steps.find((s) => s.id === stepID);
 		if (!step) return;
 		updateStepField(stepID, 'instruction', step.instruction);
+	};
+
+	const onIngredientImageUpload = async (ingredientID: number, image: File) => {
+		try {
+			const res = await uploadIngredientImage(fetch, {
+				recipe_id: data.recipe.recipe.id,
+				ingredient_id: ingredientID,
+				image
+			});
+			const idx = ingredients.findIndex((i) => i.id === ingredientID);
+			ingredients = [...ingredients.slice(0, idx), res, ...ingredients.slice(idx + 1)];
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to upload image', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to upload image. try again later.');
+		}
+	};
+
+	const onIngredientImageDeletion = async (ingredientID: number) => {
+		try {
+			await deleteIngredientImage(fetch, {
+				recipe_id: data.recipe.recipe.id,
+				ingredient_id: ingredientID
+			});
+			ingredients = ingredients.map((i) =>
+				i.id !== ingredientID ? i : { ...i, image_url: undefined }
+			);
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to delete image', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to delete image. try again later.');
+		}
 	};
 
 	const togglePublish = async () => {
@@ -282,10 +321,12 @@
 				{#each ingredients as ingredient, idx (ingredient.id)}
 					<IngredientInput
 						bind:ingredient={ingredients[idx]}
-						onQuantityChange={() => onIngredientQuantityChange(ingredient.id)}
-						onUnitChange={() => onIngredientUnitChange(ingredient.id)}
-						onNameChange={() => onIngredientNameChange(ingredient.id)}
-						onDelete={() => handleDeleteIngredient(ingredient.id)}
+						onQuantityChange={onIngredientQuantityChange}
+						onUnitChange={onIngredientUnitChange}
+						onNameChange={onIngredientNameChange}
+						onDelete={handleDeleteIngredient}
+						onImageUpload={onIngredientImageUpload}
+						onImageDeletion={onIngredientImageDeletion}
 					/>
 				{/each}
 			</div>

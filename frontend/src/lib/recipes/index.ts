@@ -307,3 +307,46 @@ export async function deleteStep(
 		options
 	);
 }
+
+export type UploadIngredientImageRequest = {
+	recipe_id: number;
+	ingredient_id: number;
+	image: File;
+};
+
+export type UploadIngredientImageResponse = Ingredient;
+
+export async function uploadIngredientImage(
+	fetch: FetchType,
+	request: UploadIngredientImageRequest,
+	options?: Options
+): Promise<UploadIngredientImageResponse> {
+	const form = new FormData();
+	form.append('image', request.image);
+	const res = await fetch
+		.post(
+			`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}/image`,
+			{
+				...options,
+				body: form
+			}
+		)
+		.json();
+	return IngredientSchema.parse(res);
+}
+
+export type DeleteIngredientImageRequest = {
+	recipe_id: number;
+	ingredient_id: number;
+};
+
+export async function deleteIngredientImage(
+	fetch: FetchType,
+	request: DeleteIngredientImageRequest,
+	options?: Options
+): Promise<void> {
+	await fetch.delete(
+		`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}/image`,
+		options
+	);
+}
