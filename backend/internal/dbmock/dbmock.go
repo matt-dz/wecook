@@ -436,6 +436,21 @@ func (mr *MockQuerierMockRecorder) GetRecipeAndOwner(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeAndOwner", reflect.TypeOf((*MockQuerier)(nil).GetRecipeAndOwner), ctx, id)
 }
 
+// GetRecipeImageURL mocks base method.
+func (m *MockQuerier) GetRecipeImageURL(ctx context.Context, id int64) (pgtype.Text, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRecipeImageURL", ctx, id)
+	ret0, _ := ret[0].(pgtype.Text)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRecipeImageURL indicates an expected call of GetRecipeImageURL.
+func (mr *MockQuerierMockRecorder) GetRecipeImageURL(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeImageURL", reflect.TypeOf((*MockQuerier)(nil).GetRecipeImageURL), ctx, id)
+}
+
 // GetRecipeIngredientExistence mocks base method.
 func (m *MockQuerier) GetRecipeIngredientExistence(ctx context.Context, id int64) (bool, error) {
 	m.ctrl.T.Helper()

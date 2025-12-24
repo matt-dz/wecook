@@ -466,3 +466,11 @@ SET
   image_url = NULL
 WHERE
   id = $1;
+
+-- name: GetRecipeImageURL :one
+SELECT
+  image_url
+FROM
+  recipes
+WHERE
+  id = $1;

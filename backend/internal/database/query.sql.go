@@ -592,6 +592,22 @@ func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAnd
 	return i, err
 }
 
+const getRecipeImageURL = `-- name: GetRecipeImageURL :one
+SELECT
+  image_url
+FROM
+  recipes
+WHERE
+  id = $1
+`
+
+func (q *Queries) GetRecipeImageURL(ctx context.Context, id int64) (pgtype.Text, error) {
+	row := q.db.QueryRow(ctx, getRecipeImageURL, id)
+	var image_url pgtype.Text
+	err := row.Scan(&image_url)
+	return image_url, err
+}
+
 const getRecipeIngredientExistence = `-- name: GetRecipeIngredientExistence :one
 SELECT
   EXISTS (

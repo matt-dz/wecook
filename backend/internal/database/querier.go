@@ -38,6 +38,7 @@ type Querier interface {
 	GetPublicRecipes(ctx context.Context) ([]GetPublicRecipesRow, error)
 	GetPublishedRecipeAndOwner(ctx context.Context, id int64) (GetPublishedRecipeAndOwnerRow, error)
 	GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAndOwnerRow, error)
+	GetRecipeImageURL(ctx context.Context, id int64) (pgtype.Text, error)
 	GetRecipeIngredientExistence(ctx context.Context, id int64) (bool, error)
 	GetRecipeIngredientIDs(ctx context.Context, recipeID int64) ([]int64, error)
 	GetRecipeIngredientImageURL(ctx context.Context, id int64) (pgtype.Text, error)
