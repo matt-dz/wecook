@@ -3,7 +3,7 @@
 	import Button from '$lib/components/button/Button.svelte';
 	import fetch, { parseError } from '$lib/http';
 	import { login } from '$lib/auth';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { HTTPError } from 'ky';
 
@@ -23,6 +23,7 @@
 				email: email,
 				password: password
 			});
+			await invalidateAll();
 			goto(resolve('/home'));
 		} catch (e) {
 			if (e instanceof HTTPError) {

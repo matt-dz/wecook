@@ -3,8 +3,10 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import Header from '$lib/components/header/Header.svelte';
 	import Footer from '$lib/components/footer/Footer.svelte';
+	import type { LayoutData } from './$types';
+	import type { Snippet } from 'svelte';
 
-	let { children } = $props();
+	let { children, data }: { children: Snippet; data: LayoutData } = $props();
 </script>
 
 <svelte:head>
@@ -19,6 +21,6 @@
 	/>
 </svelte:head>
 
-<Header />
+<Header isLoggedIn={data.isLoggedIn} />
 {@render children()}
 <Footer />

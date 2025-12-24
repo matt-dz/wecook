@@ -1,9 +1,30 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import clsx from 'clsx';
+
+	interface Props {
+		isLoggedIn: boolean;
+	}
+
+	let { isLoggedIn }: Props = $props();
 </script>
 
 <header class="flex justify-center px-6 pt-8">
-	<div class="w-full max-w-5xl">
+	<div class="flex w-full max-w-5xl items-center justify-between">
 		<a href={resolve('/')} class="text-3xl">WeCook</a>
+
+		<nav class="flex gap-4">
+			{#if isLoggedIn}
+				<a
+					href={resolve('/home')}
+					class={clsx('hover:underline', page.route.id === '/(user)/home' && 'underline')}
+					>My Recipes</a
+				>
+				<a href={resolve('/logout')} class="hover:underline">Logout</a>
+			{:else}
+				<a href={resolve('/login')} class="hover:underline">Login</a>
+			{/if}
+		</nav>
 	</div>
 </header>
