@@ -21,6 +21,10 @@
 	/>
 </svelte:head>
 
-<Header isLoggedIn={data.isLoggedIn} />
-{@render children()}
-<Footer />
+<div class="flex h-full min-h-dvh flex-col">
+	<Header isLoggedIn={data.isLoggedIn} />
+	{@render children()}
+	<div class="flex grow flex-col justify-end">
+		<Footer />
+	</div>
+</div>
