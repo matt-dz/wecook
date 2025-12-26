@@ -10,9 +10,10 @@
 		recipe: RecipeAndOwner;
 		className?: string;
 		editable?: boolean;
+		personal?: boolean;
 	}
 
-	let { recipe, className, editable = false }: Props = $props();
+	let { recipe, className, editable = false, personal = false }: Props = $props();
 
 	const totalCookTime =
 		(recipe.recipe?.cook_time_amount && recipe.recipe?.cook_time_unit

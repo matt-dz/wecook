@@ -2,6 +2,7 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import Header from '$lib/components/header/Header.svelte';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import Footer from '$lib/components/footer/Footer.svelte';
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
@@ -21,10 +22,12 @@
 	/>
 </svelte:head>
 
-<div class="flex h-full min-h-dvh flex-col">
-	<Header isLoggedIn={data.isLoggedIn} />
-	{@render children()}
-	<div class="flex grow flex-col justify-end">
-		<Footer />
+<Dialog.Root>
+	<div class="flex h-full min-h-dvh flex-col">
+		<Header isLoggedIn={data.isLoggedIn} />
+		{@render children()}
+		<div class="flex grow flex-col justify-end">
+			<Footer />
+		</div>
 	</div>
-</div>
+</Dialog.Root>

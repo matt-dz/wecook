@@ -20,6 +20,8 @@
 		deleteRecipeImage
 	} from '$lib/recipes';
 	import fetch from '$lib/http';
+	import UnpublishDialog from '$lib/components/unpublish-diaglog/Dialog.svelte';
+	import PublishDialog from '$lib/components/publish-dialog/Dialog.svelte';
 	import Input from '$lib/components/input/Input.svelte';
 	import StepInput from '$lib/components/step/Input.svelte';
 	import IngredientInput from '$lib/components/ingredient/Input.svelte';
@@ -29,7 +31,6 @@
 	import ImagePreview from '$lib/components/image/ImagePreview.svelte';
 	import { debounce } from '$lib/debounce';
 	import { HTTPError } from 'ky';
-	import clsx from 'clsx';
 
 	let { data }: PageProps = $props();
 
@@ -461,14 +462,10 @@
 			</div>
 			<Button onclick={handleCreateStep} className="font-medium text-sm mt-4">Add Step</Button>
 		</div>
-
-		<Button
-			onclick={togglePublish}
-			className={clsx(
-				'text-sm font-medium w-fit mt-6',
-				!published && 'from-green-300 to-green-200 hover:from-green-200 hover:to-green-100',
-				published && 'from-red-300 to-red-200 hover:from-red-200 hover:to-red-100'
-			)}>{published ? 'Unpublish' : 'Publish'}</Button
-		>
+		{#if published}
+			<UnpublishDialog onConfirmation={togglePublish} />
+		{:else}
+			<PublishDialog onConfirmation={togglePublish} />
+		{/if}
 	</div>
 </div>

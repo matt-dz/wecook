@@ -32,9 +32,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			patchCookies(res.headers.getSetCookie());
 		} catch (e) {
 			console.error('failed to refresh session', e);
-			if (event.route.id !== '/login') {
-				redirect(303, '/login');
-			}
+			redirect(303, '/login');
 		}
 	}
 
