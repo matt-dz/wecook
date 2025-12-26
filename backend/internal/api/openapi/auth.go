@@ -196,7 +196,7 @@ func (Server) PostApiAuthRefresh(ctx context.Context,
 		return PostApiAuthRefresh401JSONResponse{
 			Status:  apiError.InvalidRefreshToken.StatusCode(),
 			Code:    apiError.InvalidRefreshToken.String(),
-			Message: "refresh token not provied",
+			Message: "refresh token not provided",
 			ErrorId: requestID,
 		}, nil
 	}
