@@ -22,7 +22,7 @@
 						<p class="text-sm text-red-600">{page.error?.status}</p>
 					</div>
 				{/if}
-				{#if page.error?.status}
+				{#if page.error?.errorId}
 					<div>
 						<h2 class="font-semibold">Error ID</h2>
 						<p class="text-sm text-red-600">{page.error?.errorId}</p>
