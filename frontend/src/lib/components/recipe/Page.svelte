@@ -72,7 +72,7 @@
 				<Tooltip.Root>
 					<Tooltip.Trigger>
 						<button
-							class="mt-2 cursor-pointer rounded-lg bg-gray-200 p-1.5"
+							class="mt-2 cursor-pointer rounded-lg bg-gray-100 p-1.5 hover:bg-gray-200"
 							onclick={() => (shareDialogOpen = true)}
 						>
 							<Share2 size={20} strokeWidth={1.5} />

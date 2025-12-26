@@ -30,8 +30,7 @@
 			<AlertDialog.Header>
 				<AlertDialog.Title class="text-blue-600">Share Recipe</AlertDialog.Title>
 				<AlertDialog.Description>
-					Share this recipe so others can view and cook it. You can update or revoke access at any
-					time.
+					Share this recipe so others can view and cook it.
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<div class="flex items-center rounded-lg">
