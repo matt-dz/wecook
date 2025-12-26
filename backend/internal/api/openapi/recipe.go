@@ -757,6 +757,10 @@ func (Server) PostApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Con
 	env.Logger.DebugContext(ctx, "update image in database")
 	ingredient, err := env.Database.UpdateRecipeIngredient(ctx, database.UpdateRecipeIngredientParams{
 		ID: request.IngredientID,
+		UpdateImageUrl: pgtype.Bool{
+			Bool:  true,
+			Valid: true,
+		},
 		ImageUrl: pgtype.Text{
 			String: urlpath,
 			Valid:  true,
@@ -1170,6 +1174,10 @@ func (Server) PostApiRecipesRecipeIDStepsStepIDImage(ctx context.Context,
 	env.Logger.DebugContext(ctx, "update image in database")
 	step, err := env.Database.UpdateRecipeStep(ctx, database.UpdateRecipeStepParams{
 		ID: request.StepID,
+		UpdateImageUrl: pgtype.Bool{
+			Bool:  true,
+			Valid: true,
+		},
 		ImageUrl: pgtype.Text{
 			String: urlpath,
 			Valid:  true,
@@ -1932,6 +1940,10 @@ func (Server) PostApiRecipesRecipeIDImage(ctx context.Context,
 	env.Logger.DebugContext(ctx, "update image in database")
 	rec, err := env.Database.UpdateRecipe(ctx, database.UpdateRecipeParams{
 		ID: request.RecipeID,
+		UpdateImageUrl: pgtype.Bool{
+			Bool:  true,
+			Valid: true,
+		},
 		ImageUrl: pgtype.Text{
 			String: urlpath,
 			Valid:  true,

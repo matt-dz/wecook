@@ -2227,7 +2227,17 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return("http://test-host/files/ingredients/123/456.png")
 
 				mockDB.EXPECT().
-					UpdateRecipeIngredient(gomock.Any(), gomock.Any()).
+					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
+						ID: 456,
+						UpdateImageUrl: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						ImageUrl: pgtype.Text{
+							String: "files/ingredients/123/456.png",
+							Valid:  true,
+						},
+					}).
 					Return(database.RecipeIngredient{
 						ID: 456,
 						ImageUrl: pgtype.Text{
@@ -2289,7 +2299,17 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return("http://test-host/files/ingredients/123/456.jpg")
 
 				mockDB.EXPECT().
-					UpdateRecipeIngredient(gomock.Any(), gomock.Any()).
+					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
+						ID: 456,
+						UpdateImageUrl: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						ImageUrl: pgtype.Text{
+							String: "files/ingredients/123/456.jpg",
+							Valid:  true,
+						},
+					}).
 					Return(database.RecipeIngredient{
 						ID: 456,
 						ImageUrl: pgtype.Text{
@@ -2540,7 +2560,17 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return("files/ingredients/123/456.png", len(validPNGImage), nil)
 
 				mockDB.EXPECT().
-					UpdateRecipeIngredient(gomock.Any(), gomock.Any()).
+					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
+						ID: 456,
+						UpdateImageUrl: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						ImageUrl: pgtype.Text{
+							String: "files/ingredients/123/456.png",
+							Valid:  true,
+						},
+					}).
 					Return(database.RecipeIngredient{}, errors.New("database error"))
 			},
 			wantStatus: 500,
@@ -3757,7 +3787,17 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return("http://test-host/files/steps/123/456.png")
 
 				mockDB.EXPECT().
-					UpdateRecipeStep(gomock.Any(), gomock.Any()).
+					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
+						ID: 456,
+						UpdateImageUrl: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						ImageUrl: pgtype.Text{
+							String: "files/steps/123/456.png",
+							Valid:  true,
+						},
+					}).
 					Return(database.UpdateRecipeStepRow{
 						ID: 456,
 						ImageUrl: pgtype.Text{
@@ -3817,7 +3857,17 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return("http://test-host/files/steps/123/456.jpg")
 
 				mockDB.EXPECT().
-					UpdateRecipeStep(gomock.Any(), gomock.Any()).
+					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
+						ID: 456,
+						UpdateImageUrl: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						ImageUrl: pgtype.Text{
+							String: "files/steps/123/456.jpg",
+							Valid:  true,
+						},
+					}).
 					Return(database.UpdateRecipeStepRow{
 						ID: 456,
 						ImageUrl: pgtype.Text{
@@ -4073,7 +4123,17 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return("files/steps/123/456.png", len(validPNGImage), nil)
 
 				mockDB.EXPECT().
-					UpdateRecipeStep(gomock.Any(), gomock.Any()).
+					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
+						ID: 456,
+						UpdateImageUrl: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						ImageUrl: pgtype.Text{
+							String: "files/steps/123/456.png",
+							Valid:  true,
+						},
+					}).
 					Return(database.UpdateRecipeStepRow{}, errors.New("database error"))
 			},
 			wantStatus: 500,
