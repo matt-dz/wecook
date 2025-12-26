@@ -4,9 +4,11 @@
 	import type { PageProps } from './$types';
 	import { CreateRecipe } from '$lib/recipes';
 	import fetch, { isRetryable } from '$lib/http';
+	import * as Empty from '$lib/components/ui/empty/index.js';
 	import { HTTPError, TimeoutError } from 'ky';
 	import { refreshTokenExpired } from '$lib/errors/api';
 	import { goto } from '$app/navigation';
+	import { CookingPot } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 
 	let { data }: PageProps = $props();
@@ -38,12 +40,16 @@
 <div class="mt-8 mb-4 flex justify-center px-6">
 	<div class="flex w-full max-w-5xl justify-between border-b border-solid border-gray-300 pb-2">
 		<h1 class="text-xl">Your Recipes</h1>
-		<Button onclick={createNewRecipe} className="text-sm">New Recipe</Button>
+		<Button
+			onclick={createNewRecipe}
+			className="text-sm from-blue-300 to-blue-200 hover:from-blue-200 hover:to-blue-100"
+			>New Recipe</Button
+		>
 	</div>
 </div>
 
 <div class="flex justify-center">
-	{#if data.recipes?.recipes}
+	{#if data.recipes?.recipes.length > 0}
 		<div
 			class="grid w-full max-w-5xl grid-cols-1 place-items-center items-center gap-4 min-[650px]:grid-cols-2 min-[900px]:grid-cols-3"
 		>
@@ -52,10 +58,26 @@
 					className="h-[60vw] w-[90vw] min-[650px]:h-[25vw] min-[650px]:w-[40vw] min-[900px]:h-[20vw] min-[900px]:w-[30vw] min-[900px]:max-h-[196px] min-[900px]:max-w-[296px]"
 					{recipe}
 					editable={true}
+					personal={true}
 				/>
 			{/each}
 		</div>
 	{:else}
-		<h1 class="mt-4 text-gray-500">No Recipes Yet!</h1>
+		<Empty.Root>
+			<Empty.Header>
+				<Empty.Media variant="icon">
+					<CookingPot />
+				</Empty.Media>
+				<Empty.Title>No Recipes</Empty.Title>
+				<Empty.Description>No recipes found. Create your first recipe!</Empty.Description>
+			</Empty.Header>
+			<Empty.Content>
+				<Button
+					onclick={createNewRecipe}
+					className="text-sm from-blue-300 to-blue-200 hover:from-blue-200 hover:to-blue-100"
+					>Create Recipe</Button
+				>
+			</Empty.Content>
+		</Empty.Root>
 	{/if}
 </div>

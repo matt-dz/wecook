@@ -425,3 +425,15 @@ export async function deleteRecipeImage(
 ): Promise<void> {
 	await fetch.delete(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/image`, options);
 }
+
+export type DeleteRecipeRequest = {
+	recipe_id: number;
+};
+
+export async function deleteRecipe(
+	fetch: FetchType,
+	request: DeleteRecipeRequest,
+	options?: Options
+): Promise<void> {
+	await fetch.delete(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}`, options);
+}

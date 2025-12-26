@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import Recipe from '$lib/components/recipe/Recipe.svelte';
+	import * as Empty from '$lib/components/ui/empty';
+	import { CookingPot } from '@lucide/svelte';
 
 	let { data }: PageProps = $props();
 	const recipes = data.recipes;
@@ -25,6 +27,14 @@
 			{/each}
 		</div>
 	{:else}
-		<h1 class="mt-4 text-gray-500">No Recipes Yet!</h1>
+		<Empty.Root>
+			<Empty.Header>
+				<Empty.Media variant="icon">
+					<CookingPot />
+				</Empty.Media>
+				<Empty.Title>No Recipes</Empty.Title>
+				<Empty.Description>No recipes found. Check back later!</Empty.Description>
+			</Empty.Header>
+		</Empty.Root>
 	{/if}
 </div>

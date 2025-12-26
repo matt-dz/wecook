@@ -2,10 +2,10 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import Header from '$lib/components/header/Header.svelte';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import Footer from '$lib/components/footer/Footer.svelte';
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
+	import { Toaster } from '$lib/components/ui/sonner/index.js';
 
 	let { children, data }: { children: Snippet; data: LayoutData } = $props();
 </script>
@@ -22,12 +22,11 @@
 	/>
 </svelte:head>
 
-<Dialog.Root>
-	<div class="flex h-full min-h-dvh flex-col">
-		<Header isLoggedIn={data.isLoggedIn} />
-		{@render children()}
-		<div class="flex grow flex-col justify-end">
-			<Footer />
-		</div>
+<Toaster position="top-center" richColors />
+<div class="flex h-full min-h-dvh flex-col">
+	<Header isLoggedIn={data.isLoggedIn} />
+	{@render children()}
+	<div class="flex grow flex-col justify-end">
+		<Footer />
 	</div>
-</Dialog.Root>
+</div>

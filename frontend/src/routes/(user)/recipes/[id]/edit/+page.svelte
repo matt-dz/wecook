@@ -17,8 +17,10 @@
 		uploadStepImage,
 		deleteStepImage,
 		uploadRecipeImage,
-		deleteRecipeImage
+		deleteRecipeImage,
+		deleteRecipe
 	} from '$lib/recipes';
+	import { toast } from 'svelte-sonner';
 	import fetch from '$lib/http';
 	import UnpublishDialog from '$lib/components/unpublish-diaglog/Dialog.svelte';
 	import PublishDialog from '$lib/components/publish-dialog/Dialog.svelte';
@@ -29,8 +31,11 @@
 	import TimeunitMenu from '$lib/components/timeunit-menu/TimeunitMenu.svelte';
 	import Button from '$lib/components/button/Button.svelte';
 	import ImagePreview from '$lib/components/image/ImagePreview.svelte';
+	import DeleteDialog from '$lib/components/delete-recipe-dialog/Dialog.svelte';
 	import { debounce } from '$lib/debounce';
 	import { HTTPError } from 'ky';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let { data }: PageProps = $props();
 
@@ -249,6 +254,7 @@
 				published: !published
 			});
 			published = !published;
+			toast.success(`Recipe ${published ? '' : 'un'}published successfully.`);
 		} catch (e) {
 			if (e instanceof HTTPError) {
 				console.error('failed to publish recipe', e.message);
@@ -327,12 +333,30 @@
 		}
 	};
 
+	const handleDeleteRecipe = async () => {
+		try {
+			await deleteRecipe(fetch, { recipe_id: data.recipe.recipe.id });
+			toast.success('Recipe has been deleted');
+			goto(resolve('/home'));
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to delete recipe', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to delete recipe. try again later.');
+		}
+	};
+
 	const onlyPositiveNumbers = (e: KeyboardEvent) => {
 		const invalid = ['e', 'E', '+', '-'];
 		if (invalid.includes(e.key)) e.preventDefault();
 	};
 </script>
 
+<svelte:head>
+	<title>Edit Recipe</title>
+</svelte:head>
 <div class="mt-16 mb-12 flex w-full justify-center px-6">
 	<div class="flex w-full max-w-md flex-col gap-8">
 		<div class="flex flex-col gap-1">
@@ -462,10 +486,13 @@
 			</div>
 			<Button onclick={handleCreateStep} className="font-medium text-sm mt-4">Add Step</Button>
 		</div>
-		{#if published}
-			<UnpublishDialog onConfirmation={togglePublish} />
-		{:else}
-			<PublishDialog onConfirmation={togglePublish} />
-		{/if}
+		<div class="flex flex-col items-start gap-2">
+			{#if published}
+				<UnpublishDialog onConfirmation={togglePublish} />
+			{:else}
+				<PublishDialog onConfirmation={togglePublish} />
+			{/if}
+			<DeleteDialog onConfirmation={handleDeleteRecipe} />
+		</div>
 	</div>
 </div>

@@ -17,7 +17,7 @@ const config = {
 		adapter: isNode ? nodeAdapter({ out: 'build' }) : adapter()
 	},
 	optimizeDeps: {
-		exclude: ['bits-ui']
+		exclude: ['bits-ui', 'svelte-sonnar']
 	}
 };
 

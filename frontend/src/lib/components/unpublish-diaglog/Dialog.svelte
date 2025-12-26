@@ -8,10 +8,10 @@
 	let { onConfirmation, onDenial }: Props = $props();
 </script>
 
-<div class="flex">
+<Dialog.Root>
 	<Dialog.Trigger>
 		<Button
-			className="text-sm font-medium w-fit mt-6 from-red-300 to-red-200 hover:from-red-200 hover:to-red-100"
+			className="text-sm font-medium w-fit from-red-300 to-red-200 hover:from-red-200 hover:to-red-100"
 			>Unpublish</Button
 		>
 	</Dialog.Trigger>
@@ -35,4 +35,4 @@
 			</Dialog.Footer>
 		</Dialog.Header>
 	</Dialog.Content>
-</div>
+</Dialog.Root>

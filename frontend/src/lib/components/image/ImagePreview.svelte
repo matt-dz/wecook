@@ -15,7 +15,7 @@
 	{#if onRemove}
 		<button
 			onclick={onRemove}
-			class="absolute -top-2 -right-2 rounded-full bg-red-400 p-1 text-white hover:bg-red-600"
+			class="absolute -top-2 -right-2 cursor-pointer rounded-full bg-red-400 p-1 text-white hover:bg-red-600"
 			type="button"
 		>
 			<X size={16} />
