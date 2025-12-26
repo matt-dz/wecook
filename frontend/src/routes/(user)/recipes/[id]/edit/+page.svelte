@@ -20,6 +20,8 @@
 		deleteRecipeImage,
 		deleteRecipe
 	} from '$lib/recipes';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import { EllipsisVertical } from '@lucide/svelte';
 	import Status from '$lib/components/status/Status.svelte';
 	import { toast } from 'svelte-sonner';
 	import fetch from '$lib/http';
@@ -54,6 +56,9 @@
 
 	let recipeFileInput: HTMLInputElement;
 	let saveState: 'saved' | 'saving' | 'failed' | 'loading' = $state('saved');
+	let deleteDialogOpen = $state(false);
+	let publishDialogOpen = $state(false);
+	let unpublishDialogOpen = $state(false);
 
 	const debounceDelay = 200;
 
@@ -408,10 +413,54 @@
 <svelte:head>
 	<title>Edit Recipe</title>
 </svelte:head>
+
 <div class="relative mt-12 mb-12 flex w-full flex-col items-center px-6">
 	<div class="sticky top-0 z-50 flex w-full justify-center bg-white">
-		<div class="mt-4 w-full max-w-md pb-4">
+		<div class="mt-4 flex w-full max-w-md items-center justify-between pb-4">
 			<Status status={saveState} />
+
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					<div class="rounded-lg p-1 hover:bg-gray-200">
+						<EllipsisVertical />
+					</div>
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content>
+					<DropdownMenu.Item class="p-0"
+						><a
+							class="w-full px-2 py-1.5"
+							href={resolve(`/recipes/${data.recipe.recipe.id}/preview`)}>Preview</a
+						></DropdownMenu.Item
+					>
+					<DropdownMenu.Separator />
+					{#if published}
+						<DropdownMenu.Item
+							onSelect={(e) => {
+								e.preventDefault();
+								unpublishDialogOpen = true;
+							}}>Unpublish</DropdownMenu.Item
+						>
+					{:else}
+						<DropdownMenu.Item
+							onSelect={(e) => {
+								e.preventDefault();
+								publishDialogOpen = true;
+							}}>Publish</DropdownMenu.Item
+						>
+					{/if}
+					<DropdownMenu.Item
+						class="text-red-500 data-highlighted:bg-red-100 data-highlighted:text-red-500"
+						onSelect={(e) => {
+							e.preventDefault();
+							deleteDialogOpen = true;
+						}}>Delete</DropdownMenu.Item
+					>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+
+			<DeleteDialog bind:open={deleteDialogOpen} onConfirmation={handleDeleteRecipe} />
+			<PublishDialog bind:open={publishDialogOpen} onConfirmation={togglePublish} />
+			<UnpublishDialog bind:open={unpublishDialogOpen} onConfirmation={togglePublish} />
 		</div>
 	</div>
 	<div class="flex w-full max-w-md flex-col gap-8">
@@ -522,7 +571,9 @@
 					/>
 				{/each}
 			</div>
-			<Button onclick={handleCreateIngredient} className="font-medium text-sm mt-4"
+			<Button
+				onclick={handleCreateIngredient}
+				className="font-medium text-sm mt-4 from-blue-300 to-blue-200 hover:to-blue-100 hover:from-blue-200"
 				>Add Ingredient</Button
 			>
 		</div>
@@ -542,15 +593,11 @@
 					</div>
 				{/each}
 			</div>
-			<Button onclick={handleCreateStep} className="font-medium text-sm mt-4">Add Step</Button>
-		</div>
-		<div class="flex flex-col items-start gap-2">
-			{#if published}
-				<UnpublishDialog onConfirmation={togglePublish} />
-			{:else}
-				<PublishDialog onConfirmation={togglePublish} />
-			{/if}
-			<DeleteDialog onConfirmation={handleDeleteRecipe} />
+			<Button
+				onclick={handleCreateStep}
+				className="font-medium text-sm mt-4 from-blue-300 to-blue-200 hover:to-blue-100 hover:from-blue-200"
+				>Add Step</Button
+			>
 		</div>
 	</div>
 </div>

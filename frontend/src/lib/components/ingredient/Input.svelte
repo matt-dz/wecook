@@ -73,19 +73,23 @@
 			oninput={() => onNameChange?.(ingredient.id)}
 		/>
 		<DropdownMenu.Root>
-			<DropdownMenu.Trigger class="-mr-1 rounded-full p-1 hover:bg-gray-200">
+			<DropdownMenu.Trigger class="-mr-1 rounded-lg p-1 hover:bg-gray-200">
 				<EllipsisVertical strokeWidth={1.5} size={20} fill="black" />
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content>
 				<DropdownMenu.Group>
-					<DropdownMenu.Item>
-						<button onclick={openFilePicker} class="w-full text-left">Add Image</button>
+					<DropdownMenu.Item class="p-0">
+						<button onclick={openFilePicker} class="h-full w-full px-2 py-1.5 text-left"
+							>Add Image</button
+						>
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
+				<DropdownMenu.Separator />
 				<DropdownMenu.Group>
-					<DropdownMenu.Item>
-						<button onclick={() => onDelete?.(ingredient.id)} class="w-full text-left text-red-500"
-							>Delete</button
+					<DropdownMenu.Item class="p-0">
+						<button
+							onclick={() => onDelete?.(ingredient.id)}
+							class="w-full px-2 py-1.5 text-left text-red-500">Delete</button
 						>
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>

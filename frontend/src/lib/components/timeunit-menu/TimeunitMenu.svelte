@@ -14,12 +14,12 @@
 </script>
 
 <Select.Root type="single" bind:value {onValueChange}>
-	<Select.Trigger class="w-24 border-gray-400 bg-gray-200/50 font-inter">
+	<Select.Trigger class="w-24 border-gray-400 bg-gray-200/50">
 		{value ? capitalize(value) : 'Unit'}
 	</Select.Trigger>
 	<Select.Content class="border-gray-400 bg-gray-200">
 		{#each Object.keys(TimeUnit.enum) as v (v)}
-			<Select.Item class="font-inter" value={v} label={capitalize(v)} />
+			<Select.Item value={v} label={capitalize(v)} />
 		{/each}
 	</Select.Content>
 </Select.Root>

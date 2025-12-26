@@ -28,9 +28,7 @@
 
 <a
 	class="h-fit w-fit rounded-3xl border-solid border-gray-400/50 p-3 shadow-none transition-shadow duration-250 hover:shadow-[0_0_12px_rgba(0,0,0,0.5)]"
-	href={resolve(
-		personal ? `/recipes/${recipe.recipe.id}/personal` : `/recipes/${recipe.recipe.id}`
-	)}
+	href={resolve(personal ? `/recipes/${recipe.recipe.id}/preview` : `/recipes/${recipe.recipe.id}`)}
 >
 	{#if recipe.recipe.image_url !== undefined}
 		<div

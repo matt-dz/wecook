@@ -14,7 +14,7 @@
 	bind:value
 	class={twMerge(
 		clsx(
-			'rounded-md border border-solid border-gray-400 bg-gray-200/50 p-2 py-[3px] font-inter placeholder:text-sm focus:ring focus:outline-none disabled:cursor-not-allowed disabled:text-gray-500',
+			'rounded-md border border-solid border-gray-400 bg-gray-200/50 p-2 py-[3px] placeholder:text-sm focus:ring focus:outline-none disabled:cursor-not-allowed disabled:text-gray-500',
 			className
 		)
 	)}
