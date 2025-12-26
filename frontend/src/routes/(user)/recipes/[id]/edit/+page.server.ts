@@ -1,19 +1,18 @@
 import type { PageServerLoad } from './$types';
 import fetch from '$lib/http';
 import { redirect } from '@sveltejs/kit';
-import { HTTPError } from 'ky';
-import { refreshTokenExpired } from '$lib/errors/api';
 import { GetPersonalRecipe } from '$lib/recipes';
 import { error } from '@sveltejs/kit';
-import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/auth';
+import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from '$lib/auth';
 import * as z from 'zod';
 
 export const load: PageServerLoad = async ({ cookies, params }) => {
 	const accessToken = cookies.get(ACCESS_TOKEN_COOKIE_NAME);
 	if (!accessToken) {
 		console.log('no access token available, sending user back to login.');
-		redirect(307, '/login');
+		redirect(303, '/login');
 	}
+	const refreshToken = cookies.get(REFRESH_TOKEN_COOKIE_NAME);
 
 	const res = z.string().regex(/^\d+$/).safeParse(params.id);
 	if (!res.success) {
@@ -28,23 +27,12 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 		});
 	}
 
-	try {
-		const recipe = await GetPersonalRecipe(fetch, recipeID, {
-			headers: {
-				Cookie: `${ACCESS_TOKEN_COOKIE_NAME}=${accessToken}`
-			}
-		});
-		return {
-			recipe
-		};
-	} catch (e) {
-		if (e instanceof HTTPError) {
-			if (await refreshTokenExpired(e.response)) {
-				redirect(303, '/login');
-			}
+	const recipe = await GetPersonalRecipe(fetch, recipeID, {
+		headers: {
+			Cookie: `${ACCESS_TOKEN_COOKIE_NAME}=${accessToken}; ${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`
 		}
-		// TODO: handle unexpected errors
-		console.error(e);
-		throw e;
-	}
+	});
+	return {
+		recipe
+	};
 };

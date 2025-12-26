@@ -2,8 +2,8 @@ import { verifySession, refreshSession, ACCESS_TOKEN_COOKIE_NAME } from '$lib/au
 import ky, { HTTPError, type Options } from 'ky';
 import { baseOptions } from '$lib/http';
 import { REFRESH_TOKEN_COOKIE_NAME } from '$lib/auth';
-import { accessTokenExpired, refreshTokenExpired } from '$lib/errors/api';
-import { redirect, type Handle } from '@sveltejs/kit';
+import { accessTokenExpired, parseError, refreshTokenExpired } from '$lib/errors/api';
+import { redirect, type Handle, type HandleServerError } from '@sveltejs/kit';
 import * as setCookie from 'set-cookie-parser';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -17,13 +17,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 		});
 	};
 
-	if (event.route.id === '/login') {
-		return await resolve(event);
+	const accessToken = event.cookies.get(ACCESS_TOKEN_COOKIE_NAME);
+	const refreshToken = event.cookies.get(REFRESH_TOKEN_COOKIE_NAME);
+
+	// Base case when no auth is provided
+	if (!accessToken && !refreshToken) {
+		if (event.route.id === '/login') {
+			return await resolve(event);
+		}
 	}
 
 	// Refresh session if necessary
-	const accessToken = event.cookies.get(ACCESS_TOKEN_COOKIE_NAME);
-	const refreshToken = event.cookies.get(REFRESH_TOKEN_COOKIE_NAME);
 	if (!accessToken && refreshToken) {
 		try {
 			const res = await refreshSession({
@@ -32,7 +36,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 			patchCookies(res.headers.getSetCookie());
 		} catch (e) {
 			console.error('failed to refresh session', e);
-			redirect(303, '/login');
+			if (e instanceof HTTPError && e.response.status === 401) {
+				console.error('invalid refresh token');
+				event.cookies.delete(REFRESH_TOKEN_COOKIE_NAME, { path: '/' });
+				redirect(303, '/login');
+			}
+			// TODO: render 500 screen
+			redirect(303, '/');
 		}
 	}
 
@@ -117,6 +127,31 @@ export const handle: Handle = async ({ event, resolve }) => {
 		redirect(303, '/');
 	}
 
-	const response = await resolve(event);
-	return response;
+	return await resolve(event);
+};
+
+export const handleError: HandleServerError = async ({ error, status, message }) => {
+	if (error instanceof HTTPError) {
+		if (await refreshTokenExpired(error.response)) {
+			redirect(303, '/login');
+		}
+		const err = await parseError(error.response);
+		if (!err.success) {
+			return {
+				message,
+				status: error.response.status
+			};
+		}
+		return {
+			message: err.data.message,
+			errorId: err.data.error_id,
+			code: err.data.code,
+			status: err.data.status
+		};
+	}
+
+	return {
+		message,
+		status
+	};
 };

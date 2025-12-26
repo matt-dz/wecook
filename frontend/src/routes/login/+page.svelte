@@ -38,13 +38,17 @@
 	}
 </script>
 
-<div class="flex h-screen w-full items-center justify-center">
+<div class="absolute inset-0 flex w-full items-center justify-center">
 	<form
-		class="flex w-full max-w-[250px] flex-col items-center gap-2 rounded-lg border border-solid border-gray-400 p-4 shadow-lg"
+		class="flex w-full max-w-[300px] flex-col gap-2 rounded-2xl border border-solid border-gray-400 p-4 shadow-lg"
 		onsubmit={onSubmit}
 	>
-		<h1 class="text-2xl">WeCook Login</h1>
+		<div class="mb-2">
+			<h1 class="text-left text-lg">Login</h1>
+			<p class="text-sm text-gray-500">Don't have credentials? Ask the owner for an invitation.</p>
+		</div>
 		<div class="flex w-full flex-col space-y-1">
+			<label for="email" class="text-sm">Email</label>
 			<Input
 				disabled={loading}
 				className="text-sm"
@@ -63,6 +67,7 @@
 		</div>
 
 		<div class="mt-1 flex w-full flex-col space-y-1">
+			<label for="email" class="text-sm">Password</label>
 			<Input
 				disabled={loading}
 				className="text-sm"
@@ -88,7 +93,11 @@
 			{error}
 		</p>
 
-		<Button className="from-blue-300 to-blue-200 border-blue-400" type="submit" disabled={loading}>
+		<Button
+			className="from-blue-300 to-blue-200 border-blue-400 hover:from-blue-200 hover:to-blue-100"
+			type="submit"
+			disabled={loading}
+		>
 			<p class="text-sm font-medium">Login</p>
 		</Button>
 	</form>

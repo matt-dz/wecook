@@ -38,9 +38,9 @@ export class RefreshTokenExpiredError extends Error {
 
 export { ApiErrorCodes };
 
-export async function parseError(response: KyResponse): Promise<z.infer<typeof ApiError>> {
-	const clone = response.clone();
-	return ApiError.parse(await clone.json());
+export async function parseError(response: KyResponse) {
+	const json = await response.clone().json();
+	return ApiError.safeParse(json);
 }
 
 export async function accessTokenExpired(response: KyResponse) {
@@ -56,8 +56,7 @@ export async function accessTokenExpired(response: KyResponse) {
 
 		return (
 			ApiErrorCodes.ExpiredAccessToken === res.data.code ||
-			ApiErrorCodes.InvalidAccessToken === res.data.code ||
-			ApiErrorCodes.InvalidCredentials === res.data.code
+			ApiErrorCodes.InvalidAccessToken === res.data.code
 		);
 	} catch {
 		return false;
@@ -66,14 +65,13 @@ export async function accessTokenExpired(response: KyResponse) {
 
 export async function refreshTokenExpired(response: KyResponse) {
 	try {
-		const clone = response.clone();
-		const res = ApiError.safeParse(await clone.json());
-		if (!res.success) {
+		const res = await parseError(response);
+		if (!res.success || response.status !== 401) {
 			return false;
 		}
 		return (
-			(res.data.code === ApiErrorCodes.ExpiredRefreshToken && clone.status === 401) ||
-			(res.data.code === ApiErrorCodes.InvalidRefreshToken && clone.status === 401)
+			res.data.code === ApiErrorCodes.ExpiredRefreshToken ||
+			res.data.code === ApiErrorCodes.InvalidRefreshToken
 		);
 	} catch {
 		return false;
