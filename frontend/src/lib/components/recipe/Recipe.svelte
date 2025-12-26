@@ -1,9 +1,16 @@
 <script lang="ts">
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import { updatePersonalRecipe } from '$lib/recipes';
 	import { formatDuration, toMinutes } from '$lib/time';
+	import fetch from '$lib/http';
 	import { resolve } from '$app/paths';
+	import { HTTPError } from 'ky';
+	import { toast } from 'svelte-sonner';
 	import { twMerge } from 'tailwind-merge';
 	import { EllipsisVertical } from '@lucide/svelte';
+	import PublishDialog from '$lib/components/publish-dialog/Dialog.svelte';
+	import UnpublishDialog from '$lib/components/unpublish-diaglog/Dialog.svelte';
+	import ShareDialog from '$lib/components/share-dialog/Dialog.svelte';
 	import clsx from 'clsx';
 	import type { RecipeAndOwner } from '$lib/recipes';
 	interface Props {
@@ -15,6 +22,11 @@
 
 	let { recipe, className, editable = false, personal = false }: Props = $props();
 
+	let published = $state(recipe.recipe.published);
+	let publishDialogOpen = $state(false);
+	let unpublishDialogOpen = $state(false);
+	let shareDialogOpen = $state(false);
+
 	const totalCookTime =
 		(recipe.recipe?.cook_time_amount && recipe.recipe?.cook_time_unit
 			? toMinutes(recipe.recipe.cook_time_amount, recipe.recipe.cook_time_unit)
@@ -24,6 +36,24 @@
 			: 0);
 	const title =
 		recipe.recipe.title.trim().length > 0 ? recipe.recipe.title.trim() : 'Untitled Recipe';
+
+	const togglePublish = async () => {
+		try {
+			await updatePersonalRecipe(fetch, {
+				recipe_id: recipe.recipe.id,
+				published: !published
+			});
+			published = !published;
+			toast.success(`Recipe ${published ? '' : 'un'}published successfully.`);
+		} catch (e) {
+			if (e instanceof HTTPError) {
+				console.error('failed to publish recipe', e.message);
+			} else {
+				console.error(e);
+			}
+			alert('failed to publish recipe. try again later.');
+		}
+	};
 </script>
 
 <a
@@ -62,7 +92,7 @@
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger>
 				{#snippet child({ props })}
-					<button {...props} class="-mr-2 rounded-full p-1 hover:bg-gray-200">
+					<button {...props} class="rounded-lg p-1 hover:bg-gray-200">
 						<EllipsisVertical />
 					</button>
 				{/snippet}
@@ -73,11 +103,37 @@
 						<DropdownMenu.Item>
 							<a class="w-full" href={resolve(`/recipes/${recipe.recipe.id}/edit`)}> Edit </a>
 						</DropdownMenu.Item>
-						<DropdownMenu.Item>Publish</DropdownMenu.Item>
+						{#if !published}
+							<DropdownMenu.Item
+								onSelect={(e) => {
+									e.preventDefault();
+									publishDialogOpen = true;
+								}}>Publish</DropdownMenu.Item
+							>
+						{:else}
+							<DropdownMenu.Item
+								onSelect={(e) => {
+									e.preventDefault();
+									unpublishDialogOpen = true;
+								}}>Unpublish</DropdownMenu.Item
+							>
+						{/if}
 					{/if}
-					<DropdownMenu.Item>Share</DropdownMenu.Item>
 				</DropdownMenu.Group>
+				{#if published}
+					<DropdownMenu.Group>
+						<DropdownMenu.Item
+							onSelect={(e) => {
+								e.preventDefault();
+								shareDialogOpen = true;
+							}}>Share</DropdownMenu.Item
+						>
+					</DropdownMenu.Group>
+				{/if}
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
+		<PublishDialog bind:open={publishDialogOpen} onConfirmation={togglePublish} />
+		<UnpublishDialog bind:open={unpublishDialogOpen} onConfirmation={togglePublish} />
+		<ShareDialog bind:open={shareDialogOpen} recipeId={recipe.recipe.id} />
 	</div>
 </a>

@@ -1,7 +1,5 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(tail:*)"
-    ]
-  }
+	"permissions": {
+		"allow": ["Bash(tail:*)"]
+	}
 }
