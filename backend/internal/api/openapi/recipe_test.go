@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/oapi-codegen/nullable"
 	"go.uber.org/mock/gomock"
 
 	apiError "github.com/matt-dz/wecook/internal/api/error"
@@ -1590,9 +1591,9 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				RecipeID:     123,
 				IngredientID: 456,
 				Body: &UpdateIngredientBody{
-					Name:     stringPtr("Salt"),
-					Quantity: float32Ptr(2.5),
-					Unit:     stringPtr("tablespoons"),
+					Name:     nullableString("Salt"),
+					Quantity: nullableFloat32(2.5),
+					Unit:     nullableString("tablespoons"),
 				},
 			},
 			userID:     789,
@@ -1612,13 +1613,25 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
 						ID: 456,
+						UpdateName: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
 						Name: pgtype.Text{
 							String: "Salt",
 							Valid:  true,
 						},
+						UpdateQuantity: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
 						Quantity: pgtype.Float4{
 							Float32: 2.5,
 							Valid:   true,
+						},
+						UpdateUnit: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
 						},
 						Unit: pgtype.Text{
 							String: "tablespoons",
@@ -1670,7 +1683,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				RecipeID:     123,
 				IngredientID: 456,
 				Body: &UpdateIngredientBody{
-					Name: stringPtr("Pepper"),
+					Name: nullableString("Pepper"),
 				},
 			},
 			userID:     789,
@@ -1690,6 +1703,10 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
 						ID: 456,
+						UpdateName: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
 						Name: pgtype.Text{
 							String: "Pepper",
 							Valid:  true,
@@ -1731,7 +1748,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				RecipeID:     123,
 				IngredientID: 456,
 				Body: &UpdateIngredientBody{
-					Quantity: float32Ptr(3.0),
+					Quantity: nullableFloat32(3.0),
 				},
 			},
 			userID:     789,
@@ -1751,6 +1768,10 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
 						ID: 456,
+						UpdateQuantity: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
 						Quantity: pgtype.Float4{
 							Float32: 3.0,
 							Valid:   true,
@@ -1788,7 +1809,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				RecipeID:     123,
 				IngredientID: 456,
 				Body: &UpdateIngredientBody{
-					Unit: stringPtr("cups"),
+					Unit: nullableString("cups"),
 				},
 			},
 			userID:     789,
@@ -1808,6 +1829,10 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
 						ID: 456,
+						UpdateUnit: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
 						Unit: pgtype.Text{
 							String: "cups",
 							Valid:  true,
@@ -1892,7 +1917,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				RecipeID:     123,
 				IngredientID: 456,
 				Body: &UpdateIngredientBody{
-					Name: stringPtr("Salt"),
+					Name: nullableString("Salt"),
 				},
 			},
 			injectUser: false,
@@ -1907,7 +1932,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				RecipeID:     123,
 				IngredientID: 456,
 				Body: &UpdateIngredientBody{
-					Name: stringPtr("Salt"),
+					Name: nullableString("Salt"),
 				},
 			},
 			userID:     789,
@@ -1934,7 +1959,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				RecipeID:     123,
 				IngredientID: 456,
 				Body: &UpdateIngredientBody{
-					Name: stringPtr("Salt"),
+					Name: nullableString("Salt"),
 				},
 			},
 			userID:     789,
@@ -1961,7 +1986,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				RecipeID:     123,
 				IngredientID: 999,
 				Body: &UpdateIngredientBody{
-					Name: stringPtr("Salt"),
+					Name: nullableString("Salt"),
 				},
 			},
 			userID:     789,
@@ -1987,12 +2012,73 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			wantError:  false,
 		},
 		{
+			name: "successful update with null values to unset fields",
+			request: PatchApiRecipesRecipeIDIngredientsIngredientIDRequestObject{
+				RecipeID:     123,
+				IngredientID: 456,
+				Body: &UpdateIngredientBody{
+					Name:     nullNullableString(),
+					Quantity: nullNullableFloat32(),
+					Unit:     nullNullableString(),
+				},
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func() {
+				mockDB.EXPECT().
+					CheckIngredientOwnership(gomock.Any(), database.CheckIngredientOwnershipParams{
+						RecipeID:     123,
+						IngredientID: 456,
+						UserID: pgtype.Int8{
+							Int64: 789,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
+						ID: 456,
+						UpdateName: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						Name: pgtype.Text{
+							Valid: false,
+						},
+						UpdateQuantity: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						Quantity: pgtype.Float4{
+							Valid: false,
+						},
+						UpdateUnit: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						Unit: pgtype.Text{
+							Valid: false,
+						},
+					}).
+					Return(database.RecipeIngredient{
+						ID:       456,
+						RecipeID: 123,
+						Name:     pgtype.Text{Valid: false},
+						Quantity: pgtype.Float4{Valid: false},
+						Unit:     pgtype.Text{Valid: false},
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+		},
+		{
 			name: "database error on update",
 			request: PatchApiRecipesRecipeIDIngredientsIngredientIDRequestObject{
 				RecipeID:     123,
 				IngredientID: 456,
 				Body: &UpdateIngredientBody{
-					Name: stringPtr("Salt"),
+					Name: nullableString("Salt"),
 				},
 			},
 			userID:     789,
@@ -2075,11 +2161,6 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			}
 		})
 	}
-}
-
-// Helper function for creating float32 pointers.
-func float32Ptr(f float32) *float32 {
-	return &f
 }
 
 func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
@@ -3104,11 +3185,6 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 	}
 }
 
-// Helper function for creating int32 pointers.
-func int32Ptr(i int32) *int32 {
-	return &i
-}
-
 func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -3127,7 +3203,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 				RecipeID: 123,
 				StepID:   456,
 				Body: &UpdateStepRequest{
-					Instruction: stringPtr("Mix all ingredients together"),
+					Instruction: nullableString("Mix all ingredients together"),
 				},
 			},
 			userID:     789,
@@ -3147,6 +3223,10 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
 						ID: 456,
+						UpdateInstruction: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
 						Instruction: pgtype.Text{
 							String: "Mix all ingredients together",
 							Valid:  true,
@@ -3206,6 +3286,10 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
 						ID: 456,
+						UpdateStepNumber: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
 						StepNumber: pgtype.Int4{
 							Int32: 3,
 							Valid: true,
@@ -3242,7 +3326,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 				RecipeID: 123,
 				StepID:   456,
 				Body: &UpdateStepRequest{
-					Instruction: stringPtr("Bake for 30 minutes"),
+					Instruction: nullableString("Bake for 30 minutes"),
 					StepNumber:  int32Ptr(2),
 				},
 			},
@@ -3267,9 +3351,17 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
 						ID: 456,
+						UpdateInstruction: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
 						Instruction: pgtype.Text{
 							String: "Bake for 30 minutes",
 							Valid:  true,
+						},
+						UpdateStepNumber: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
 						},
 						StepNumber: pgtype.Int4{
 							Int32: 2,
@@ -3364,7 +3456,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 				RecipeID: 123,
 				StepID:   456,
 				Body: &UpdateStepRequest{
-					Instruction: stringPtr("Some instruction"),
+					Instruction: nullableString("Some instruction"),
 				},
 			},
 			userID:     0,
@@ -3393,7 +3485,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 				RecipeID: 123,
 				StepID:   456,
 				Body: &UpdateStepRequest{
-					Instruction: stringPtr("Some instruction"),
+					Instruction: nullableString("Some instruction"),
 				},
 			},
 			userID:     789,
@@ -3430,7 +3522,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 				RecipeID: 123,
 				StepID:   456,
 				Body: &UpdateStepRequest{
-					Instruction: stringPtr("Some instruction"),
+					Instruction: nullableString("Some instruction"),
 				},
 			},
 			userID:     789,
@@ -3465,12 +3557,69 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 		},
 		{
+			name: "successful update with null instruction to unset field",
+			request: PatchApiRecipesRecipeIDStepsStepIDRequestObject{
+				RecipeID: 123,
+				StepID:   456,
+				Body: &UpdateStepRequest{
+					Instruction: nullNullableString(),
+				},
+			},
+			userID:     789,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
+						RecipeID: 123,
+						StepID:   456,
+						UserID: pgtype.Int8{
+							Int64: 789,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
+						ID: 456,
+						UpdateInstruction: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						Instruction: pgtype.Text{
+							Valid: false,
+						},
+					}).
+					Return(database.UpdateRecipeStepRow{
+						ID:          456,
+						Instruction: pgtype.Text{Valid: false},
+						StepNumber:  1,
+						ImageUrl:    pgtype.Text{Valid: false},
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDStepsStepIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeIDStepsStepID200JSONResponse)
+				if !ok {
+					t.Errorf("expected 200 response, got %T", resp)
+					return
+				}
+				if v.Instruction != nil {
+					t.Errorf("expected instruction to be nil (unset), got %v", v.Instruction)
+				}
+				if v.StepNumber != 1 {
+					t.Errorf("expected step number 1, got %d", v.StepNumber)
+				}
+			},
+		},
+		{
 			name: "database error on update",
 			request: PatchApiRecipesRecipeIDStepsStepIDRequestObject{
 				RecipeID: 123,
 				StepID:   456,
 				Body: &UpdateStepRequest{
-					Instruction: stringPtr("Some instruction"),
+					Instruction: nullableString("Some instruction"),
 				},
 			},
 			userID:     789,
@@ -5012,12 +5161,12 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 				RecipeID: 123,
 				Body: &PatchApiRecipesRecipeIDJSONRequestBody{
 					Title:          stringPtr("Updated Recipe"),
-					Description:    stringPtr("An updated description"),
-					Servings:       float32Ptr(6.0),
-					CookTimeAmount: int32Ptr(45),
-					CookTimeUnit:   timeUnitPtr(Minutes),
-					PrepTimeAmount: int32Ptr(20),
-					PrepTimeUnit:   timeUnitPtr(Minutes),
+					Description:    nullableString("An updated description"),
+					Servings:       nullableFloat32(6.0),
+					CookTimeAmount: nullableInt32(45),
+					CookTimeUnit:   nullableTimeUnit(Minutes),
+					PrepTimeAmount: nullableInt32(20),
+					PrepTimeUnit:   nullableTimeUnit(Minutes),
 					Published:      boolPtr(true),
 				},
 			},
@@ -5139,7 +5288,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			request: PatchApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
 				Body: &PatchApiRecipesRecipeIDJSONRequestBody{
-					Description: stringPtr("Just updating description"),
+					Description: nullableString("Just updating description"),
 				},
 			},
 			userID:     456,
@@ -5272,6 +5421,123 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 		},
 		{
+			name: "successful update with null values to unset fields",
+			request: PatchApiRecipesRecipeIDRequestObject{
+				RecipeID: 123,
+				Body: &PatchApiRecipesRecipeIDJSONRequestBody{
+					Description:    nullNullableString(),
+					Servings:       nullNullableFloat32(),
+					CookTimeAmount: nullableInt32(0),
+					CookTimeUnit:   nullNullableTimeUnit(),
+					PrepTimeAmount: nullableInt32(0),
+					PrepTimeUnit:   nullNullableTimeUnit(),
+				},
+			},
+			userID:     456,
+			injectUser: true,
+			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+				mockDB.EXPECT().
+					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
+						ID: 123,
+						UserID: pgtype.Int8{
+							Int64: 456,
+							Valid: true,
+						},
+					}).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					UpdateRecipe(gomock.Any(), database.UpdateRecipeParams{
+						ID: 123,
+						UpdateDescription: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						Description: pgtype.Text{
+							Valid: false,
+						},
+						UpdateServings: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						Servings: pgtype.Float4{
+							Valid: false,
+						},
+						UpdateCookTimeAmount: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						CookTimeAmount: pgtype.Int4{
+							Int32: 0,
+							Valid: true,
+						},
+						UpdateCookTimeUnit: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						CookTimeUnit: database.NullTimeUnit{
+							Valid: false,
+						},
+						UpdatePrepTimeAmount: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						PrepTimeAmount: pgtype.Int4{
+							Int32: 0,
+							Valid: true,
+						},
+						UpdatePrepTimeUnit: pgtype.Bool{
+							Bool:  true,
+							Valid: true,
+						},
+						PrepTimeUnit: database.NullTimeUnit{
+							Valid: false,
+						},
+					}).
+					Return(database.UpdateRecipeRow{
+						ID:             123,
+						Title:          "Recipe Title",
+						Description:    pgtype.Text{Valid: false},
+						Servings:       pgtype.Float4{Valid: false},
+						CookTimeAmount: pgtype.Int4{Int32: 0, Valid: true},
+						CookTimeUnit:   database.NullTimeUnit{Valid: false},
+						PrepTimeAmount: pgtype.Int4{Int32: 0, Valid: true},
+						PrepTimeUnit:   database.NullTimeUnit{Valid: false},
+						Published:      false,
+						CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
+						UpdatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
+						ImageUrl:       pgtype.Text{Valid: false},
+					}, nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+			validate: func(t *testing.T, resp PatchApiRecipesRecipeIDResponseObject) {
+				v, ok := resp.(PatchApiRecipesRecipeID200JSONResponse)
+				if !ok {
+					t.Errorf("expected PatchApiRecipesRecipeID200JSONResponse, got %T", resp)
+					return
+				}
+				if v.Description != nil {
+					t.Errorf("expected description to be nil (unset), got %v", v.Description)
+				}
+				if v.Servings != nil {
+					t.Errorf("expected servings to be nil (unset), got %v", v.Servings)
+				}
+				if v.CookTimeAmount == nil || *v.CookTimeAmount != 0 {
+					t.Errorf("expected cook time amount 0, got %v", v.CookTimeAmount)
+				}
+				if v.CookTimeUnit != nil {
+					t.Errorf("expected cook time unit to be nil (unset), got %v", v.CookTimeUnit)
+				}
+				if v.PrepTimeAmount == nil || *v.PrepTimeAmount != 0 {
+					t.Errorf("expected prep time amount 0, got %v", v.PrepTimeAmount)
+				}
+				if v.PrepTimeUnit != nil {
+					t.Errorf("expected prep time unit to be nil (unset), got %v", v.PrepTimeUnit)
+				}
+			},
+		},
+		{
 			name: "database error on update",
 			request: PatchApiRecipesRecipeIDRequestObject{
 				RecipeID: 123,
@@ -5349,10 +5615,41 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 	}
 }
 
-func timeUnitPtr(t TimeUnit) *TimeUnit {
-	return &t
-}
-
 func boolPtr(b bool) *bool {
 	return &b
+}
+
+// Helper functions for creating nullable values.
+func nullableString(s string) nullable.Nullable[string] {
+	return nullable.NewNullableWithValue(s)
+}
+
+func nullableFloat32(f float32) nullable.Nullable[float32] {
+	return nullable.NewNullableWithValue(f)
+}
+
+func nullableInt32(i int32) nullable.Nullable[int32] {
+	return nullable.NewNullableWithValue(i)
+}
+
+// Helper function for creating int32 pointers.
+func int32Ptr(i int32) *int32 {
+	return &i
+}
+
+func nullableTimeUnit(t TimeUnit) nullable.Nullable[TimeUnit] {
+	return nullable.NewNullableWithValue(t)
+}
+
+// Helper functions for creating null nullable values.
+func nullNullableString() nullable.Nullable[string] {
+	return nullable.NewNullNullable[string]()
+}
+
+func nullNullableFloat32() nullable.Nullable[float32] {
+	return nullable.NewNullNullable[float32]()
+}
+
+func nullNullableTimeUnit() nullable.Nullable[TimeUnit] {
+	return nullable.NewNullNullable[TimeUnit]()
 }

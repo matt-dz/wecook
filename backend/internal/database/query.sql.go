@@ -975,15 +975,51 @@ const updateRecipe = `-- name: UpdateRecipe :one
 UPDATE
   recipes
 SET
-  image_url = coalesce($2, image_url),
-  title = coalesce($3, title),
-  description = coalesce($4, description),
-  published = coalesce($5, published),
-  cook_time_amount = coalesce($6, cook_time_amount),
-  cook_time_unit = coalesce($7, cook_time_unit),
-  prep_time_amount = coalesce($8, prep_time_amount),
-  prep_time_unit = coalesce($9, prep_time_unit),
-  servings = coalesce($10, servings)
+  image_url = CASE WHEN $2::boolean THEN
+    $3
+  ELSE
+    image_url
+  END,
+  title = CASE WHEN $4::boolean THEN
+    $5
+  ELSE
+    title
+  END,
+  description = CASE WHEN $6::boolean THEN
+    $7
+  ELSE
+    description
+  END,
+  published = CASE WHEN $8::boolean THEN
+    $9
+  ELSE
+    published
+  END,
+  cook_time_amount = CASE WHEN $10::boolean THEN
+    $11
+  ELSE
+    cook_time_amount
+  END,
+  cook_time_unit = CASE WHEN $12::boolean THEN
+    $13
+  ELSE
+    cook_time_unit
+  END,
+  prep_time_amount = CASE WHEN $14::boolean THEN
+    $15
+  ELSE
+    prep_time_amount
+  END,
+  prep_time_unit = CASE WHEN $16::boolean THEN
+    $17
+  ELSE
+    prep_time_unit
+  END,
+  servings = CASE WHEN $18::boolean THEN
+    $19
+  ELSE
+    servings
+  END
 WHERE
   id = $1
 RETURNING
@@ -1002,16 +1038,25 @@ RETURNING
 `
 
 type UpdateRecipeParams struct {
-	ID             int64
-	ImageUrl       pgtype.Text
-	Title          pgtype.Text
-	Description    pgtype.Text
-	Published      pgtype.Bool
-	CookTimeAmount pgtype.Int4
-	CookTimeUnit   NullTimeUnit
-	PrepTimeAmount pgtype.Int4
-	PrepTimeUnit   NullTimeUnit
-	Servings       pgtype.Float4
+	ID                   int64
+	UpdateImageUrl       pgtype.Bool
+	ImageUrl             pgtype.Text
+	UpdateTitle          pgtype.Bool
+	Title                pgtype.Text
+	UpdateDescription    pgtype.Bool
+	Description          pgtype.Text
+	UpdatePublished      pgtype.Bool
+	Published            pgtype.Bool
+	UpdateCookTimeAmount pgtype.Bool
+	CookTimeAmount       pgtype.Int4
+	UpdateCookTimeUnit   pgtype.Bool
+	CookTimeUnit         NullTimeUnit
+	UpdatePrepTimeAmount pgtype.Bool
+	PrepTimeAmount       pgtype.Int4
+	UpdatePrepTimeUnit   pgtype.Bool
+	PrepTimeUnit         NullTimeUnit
+	UpdateServings       pgtype.Bool
+	Servings             pgtype.Float4
 }
 
 type UpdateRecipeRow struct {
@@ -1032,14 +1077,23 @@ type UpdateRecipeRow struct {
 func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (UpdateRecipeRow, error) {
 	row := q.db.QueryRow(ctx, updateRecipe,
 		arg.ID,
+		arg.UpdateImageUrl,
 		arg.ImageUrl,
+		arg.UpdateTitle,
 		arg.Title,
+		arg.UpdateDescription,
 		arg.Description,
+		arg.UpdatePublished,
 		arg.Published,
+		arg.UpdateCookTimeAmount,
 		arg.CookTimeAmount,
+		arg.UpdateCookTimeUnit,
 		arg.CookTimeUnit,
+		arg.UpdatePrepTimeAmount,
 		arg.PrepTimeAmount,
+		arg.UpdatePrepTimeUnit,
 		arg.PrepTimeUnit,
+		arg.UpdateServings,
 		arg.Servings,
 	)
 	var i UpdateRecipeRow
@@ -1083,10 +1137,26 @@ const updateRecipeIngredient = `-- name: UpdateRecipeIngredient :one
 UPDATE
   recipe_ingredients
 SET
-  quantity = coalesce($2, quantity),
-  unit = coalesce($3, unit),
-  name = coalesce($4, name),
-  image_url = coalesce($5, image_url)
+  quantity = CASE WHEN $2::boolean THEN
+    $3
+  ELSE
+    quantity
+  END,
+  unit = CASE WHEN $4::boolean THEN
+    $5
+  ELSE
+    unit
+  END,
+  name = CASE WHEN $6::boolean THEN
+    $7
+  ELSE
+    name
+  END,
+  image_url = CASE WHEN $8::boolean THEN
+    $9
+  ELSE
+    image_url
+  END
 WHERE
   id = $1
 RETURNING
@@ -1094,19 +1164,27 @@ RETURNING
 `
 
 type UpdateRecipeIngredientParams struct {
-	ID       int64
-	Quantity pgtype.Float4
-	Unit     pgtype.Text
-	Name     pgtype.Text
-	ImageUrl pgtype.Text
+	ID             int64
+	UpdateQuantity pgtype.Bool
+	Quantity       pgtype.Float4
+	UpdateUnit     pgtype.Bool
+	Unit           pgtype.Text
+	UpdateName     pgtype.Bool
+	Name           pgtype.Text
+	UpdateImageUrl pgtype.Bool
+	ImageUrl       pgtype.Text
 }
 
 func (q *Queries) UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) (RecipeIngredient, error) {
 	row := q.db.QueryRow(ctx, updateRecipeIngredient,
 		arg.ID,
+		arg.UpdateQuantity,
 		arg.Quantity,
+		arg.UpdateUnit,
 		arg.Unit,
+		arg.UpdateName,
 		arg.Name,
+		arg.UpdateImageUrl,
 		arg.ImageUrl,
 	)
 	var i RecipeIngredient
@@ -1146,9 +1224,21 @@ const updateRecipeStep = `-- name: UpdateRecipeStep :one
 UPDATE
   recipe_steps
 SET
-  instruction = coalesce($2, instruction),
-  step_number = coalesce($3, step_number),
-  image_url = coalesce($4, image_url)
+  instruction = CASE WHEN $2::boolean THEN
+    $3
+  ELSE
+    instruction
+  END,
+  step_number = CASE WHEN $4::boolean THEN
+    $5
+  ELSE
+    step_number
+  END,
+  image_url = CASE WHEN $6::boolean THEN
+    $7
+  ELSE
+    image_url
+  END
 WHERE
   id = $1
 RETURNING
@@ -1159,10 +1249,13 @@ RETURNING
 `
 
 type UpdateRecipeStepParams struct {
-	ID          int64
-	Instruction pgtype.Text
-	StepNumber  pgtype.Int4
-	ImageUrl    pgtype.Text
+	ID                int64
+	UpdateInstruction pgtype.Bool
+	Instruction       pgtype.Text
+	UpdateStepNumber  pgtype.Bool
+	StepNumber        pgtype.Int4
+	UpdateImageUrl    pgtype.Bool
+	ImageUrl          pgtype.Text
 }
 
 type UpdateRecipeStepRow struct {
@@ -1175,8 +1268,11 @@ type UpdateRecipeStepRow struct {
 func (q *Queries) UpdateRecipeStep(ctx context.Context, arg UpdateRecipeStepParams) (UpdateRecipeStepRow, error) {
 	row := q.db.QueryRow(ctx, updateRecipeStep,
 		arg.ID,
+		arg.UpdateInstruction,
 		arg.Instruction,
+		arg.UpdateStepNumber,
 		arg.StepNumber,
+		arg.UpdateImageUrl,
 		arg.ImageUrl,
 	)
 	var i UpdateRecipeStepRow

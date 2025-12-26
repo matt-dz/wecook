@@ -6,3 +6,5 @@ generate:
   client: true
   strict-server: true
   chi-server: true
+output-options:
+  nullable-type: true

@@ -1399,24 +1399,32 @@ components:
           type: string
         description:
           type: string
+          nullable: true
         published:
           type: boolean
         servings:
           type: number
           minimum: 0
           exclusiveMinimum: true
+          nullable: true
         cook_time_amount:
           type: integer
           format: int32
           minimum: 0
+          nullable: true
         cook_time_unit:
-          $ref: "#/components/schemas/TimeUnit"
+          allOf:
+            - $ref: "#/components/schemas/TimeUnit"
+          nullable: true
         prep_time_amount:
           type: integer
           format: int32
           minimum: 0
+          nullable: true
         prep_time_unit:
-          $ref: "#/components/schemas/TimeUnit"
+          allOf:
+            - $ref: "#/components/schemas/TimeUnit"
+          nullable: true
 
     TimeUnit:
       type: string
@@ -1493,10 +1501,13 @@ components:
           type: number
           minimum: 0
           exclusiveMinimum: true
+          nullable: true
         name:
           type: string
+          nullable: true
         unit:
           type: string
+          nullable: true
 
     UpdateIngredientImageForm:
       type: object
@@ -1555,6 +1566,7 @@ components:
           minimum: 1
         instruction:
           type: string
+          nullable: true
 
     UpdateStepResponse:
       type: object

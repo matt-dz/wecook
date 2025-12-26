@@ -328,9 +328,21 @@ WHERE id = $1;
 UPDATE
   recipe_steps
 SET
-  instruction = coalesce(sqlc.narg ('instruction'), instruction),
-  step_number = coalesce(sqlc.narg ('step_number'), step_number),
-  image_url = coalesce(sqlc.narg ('image_url'), image_url)
+  instruction = CASE WHEN sqlc.narg ('update_instruction')::boolean THEN
+    sqlc.narg ('instruction')
+  ELSE
+    instruction
+  END,
+  step_number = CASE WHEN sqlc.narg ('update_step_number')::boolean THEN
+    sqlc.narg ('step_number')
+  ELSE
+    step_number
+  END,
+  image_url = CASE WHEN sqlc.narg ('update_image_url')::boolean THEN
+    sqlc.narg ('image_url')
+  ELSE
+    image_url
+  END
 WHERE
   id = $1
 RETURNING
@@ -343,10 +355,26 @@ RETURNING
 UPDATE
   recipe_ingredients
 SET
-  quantity = coalesce(sqlc.narg ('quantity'), quantity),
-  unit = coalesce(sqlc.narg ('unit'), unit),
-  name = coalesce(sqlc.narg ('name'), name),
-  image_url = coalesce(sqlc.narg ('image_url'), image_url)
+  quantity = CASE WHEN sqlc.narg ('update_quantity')::boolean THEN
+    sqlc.narg ('quantity')
+  ELSE
+    quantity
+  END,
+  unit = CASE WHEN sqlc.narg ('update_unit')::boolean THEN
+    sqlc.narg ('unit')
+  ELSE
+    unit
+  END,
+  name = CASE WHEN sqlc.narg ('update_name')::boolean THEN
+    sqlc.narg ('name')
+  ELSE
+    name
+  END,
+  image_url = CASE WHEN sqlc.narg ('update_image_url')::boolean THEN
+    sqlc.narg ('image_url')
+  ELSE
+    image_url
+  END
 WHERE
   id = $1
 RETURNING
@@ -356,15 +384,51 @@ RETURNING
 UPDATE
   recipes
 SET
-  image_url = coalesce(sqlc.narg ('image_url'), image_url),
-  title = coalesce(sqlc.narg ('title'), title),
-  description = coalesce(sqlc.narg ('description'), description),
-  published = coalesce(sqlc.narg ('published'), published),
-  cook_time_amount = coalesce(sqlc.narg ('cook_time_amount'), cook_time_amount),
-  cook_time_unit = coalesce(sqlc.narg ('cook_time_unit'), cook_time_unit),
-  prep_time_amount = coalesce(sqlc.narg ('prep_time_amount'), prep_time_amount),
-  prep_time_unit = coalesce(sqlc.narg ('prep_time_unit'), prep_time_unit),
-  servings = coalesce(sqlc.narg ('servings'), servings)
+  image_url = CASE WHEN sqlc.narg ('update_image_url')::boolean THEN
+    sqlc.narg ('image_url')
+  ELSE
+    image_url
+  END,
+  title = CASE WHEN sqlc.narg ('update_title')::boolean THEN
+    sqlc.narg ('title')
+  ELSE
+    title
+  END,
+  description = CASE WHEN sqlc.narg ('update_description')::boolean THEN
+    sqlc.narg ('description')
+  ELSE
+    description
+  END,
+  published = CASE WHEN sqlc.narg ('update_published')::boolean THEN
+    sqlc.narg ('published')
+  ELSE
+    published
+  END,
+  cook_time_amount = CASE WHEN sqlc.narg ('update_cook_time_amount')::boolean THEN
+    sqlc.narg ('cook_time_amount')
+  ELSE
+    cook_time_amount
+  END,
+  cook_time_unit = CASE WHEN sqlc.narg ('update_cook_time_unit')::boolean THEN
+    sqlc.narg ('cook_time_unit')
+  ELSE
+    cook_time_unit
+  END,
+  prep_time_amount = CASE WHEN sqlc.narg ('update_prep_time_amount')::boolean THEN
+    sqlc.narg ('prep_time_amount')
+  ELSE
+    prep_time_amount
+  END,
+  prep_time_unit = CASE WHEN sqlc.narg ('update_prep_time_unit')::boolean THEN
+    sqlc.narg ('prep_time_unit')
+  ELSE
+    prep_time_unit
+  END,
+  servings = CASE WHEN sqlc.narg ('update_servings')::boolean THEN
+    sqlc.narg ('servings')
+  ELSE
+    servings
+  END
 WHERE
   id = $1
 RETURNING

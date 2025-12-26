@@ -564,17 +564,38 @@ func (Server) PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context
 	updateParams := database.UpdateRecipeIngredientParams{
 		ID: request.IngredientID,
 	}
-	if request.Body.Name != nil {
-		updateParams.Name.String = *request.Body.Name
-		updateParams.Name.Valid = true
+	// Name - nullable
+	if request.Body.Name.IsSpecified() {
+		updateParams.UpdateName.Bool = true
+		updateParams.UpdateName.Valid = true
+		if request.Body.Name.IsNull() {
+			updateParams.Name.Valid = false
+		} else {
+			updateParams.Name.String = request.Body.Name.MustGet()
+			updateParams.Name.Valid = true
+		}
 	}
-	if request.Body.Quantity != nil {
-		updateParams.Quantity.Float32 = *request.Body.Quantity
-		updateParams.Quantity.Valid = true
+	// Quantity - nullable
+	if request.Body.Quantity.IsSpecified() {
+		updateParams.UpdateQuantity.Bool = true
+		updateParams.UpdateQuantity.Valid = true
+		if request.Body.Quantity.IsNull() {
+			updateParams.Quantity.Valid = false
+		} else {
+			updateParams.Quantity.Float32 = request.Body.Quantity.MustGet()
+			updateParams.Quantity.Valid = true
+		}
 	}
-	if request.Body.Unit != nil {
-		updateParams.Unit.String = *request.Body.Unit
-		updateParams.Unit.Valid = true
+	// Unit - nullable
+	if request.Body.Unit.IsSpecified() {
+		updateParams.UpdateUnit.Bool = true
+		updateParams.UpdateUnit.Valid = true
+		if request.Body.Unit.IsNull() {
+			updateParams.Unit.Valid = false
+		} else {
+			updateParams.Unit.String = request.Body.Unit.MustGet()
+			updateParams.Unit.Valid = true
+		}
 	}
 	row, err := env.Database.UpdateRecipeIngredient(ctx, updateParams)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -980,17 +1001,23 @@ func (Server) PatchApiRecipesRecipeIDStepsStepID(ctx context.Context,
 	updateParams := database.UpdateRecipeStepParams{
 		ID: request.StepID,
 	}
-	if request.Body.Instruction != nil {
-		updateParams.Instruction = pgtype.Text{
-			String: *request.Body.Instruction,
-			Valid:  true,
+	// Instruction - nullable
+	if request.Body.Instruction.IsSpecified() {
+		updateParams.UpdateInstruction.Bool = true
+		updateParams.UpdateInstruction.Valid = true
+		if request.Body.Instruction.IsNull() {
+			updateParams.Instruction.Valid = false
+		} else {
+			updateParams.Instruction.String = request.Body.Instruction.MustGet()
+			updateParams.Instruction.Valid = true
 		}
 	}
+	// StepNumber - pointer (not nullable)
 	if request.Body.StepNumber != nil {
-		updateParams.StepNumber = pgtype.Int4{
-			Int32: *request.Body.StepNumber,
-			Valid: true,
-		}
+		updateParams.UpdateStepNumber.Bool = true
+		updateParams.UpdateStepNumber.Valid = true
+		updateParams.StepNumber.Int32 = *request.Body.StepNumber
+		updateParams.StepNumber.Valid = true
 	}
 	step, err := env.Database.UpdateRecipeStep(ctx, updateParams)
 	if err != nil {
@@ -1652,37 +1679,85 @@ func (Server) PatchApiRecipesRecipeID(ctx context.Context,
 	updateParams := database.UpdateRecipeParams{
 		ID: request.RecipeID,
 	}
-	if request.Body.Description != nil {
-		updateParams.Description.String = *request.Body.Description
-		updateParams.Description.Valid = true
+	// Title - pointer (not nullable)
+	if request.Body.Title != nil {
+		updateParams.UpdateTitle.Bool = true
+		updateParams.UpdateTitle.Valid = true
+		updateParams.Title.String = *request.Body.Title
+		updateParams.Title.Valid = true
 	}
-	if request.Body.Servings != nil {
-		updateParams.Servings.Float32 = *request.Body.Servings
-		updateParams.Servings.Valid = true
+	// Description - nullable
+	if request.Body.Description.IsSpecified() {
+		updateParams.UpdateDescription.Bool = true
+		updateParams.UpdateDescription.Valid = true
+		if request.Body.Description.IsNull() {
+			updateParams.Description.Valid = false
+		} else {
+			updateParams.Description.String = request.Body.Description.MustGet()
+			updateParams.Description.Valid = true
+		}
 	}
-	if request.Body.PrepTimeAmount != nil {
-		updateParams.PrepTimeAmount.Int32 = *request.Body.PrepTimeAmount
-		updateParams.PrepTimeAmount.Valid = true
-	}
-	if request.Body.PrepTimeUnit != nil {
-		updateParams.PrepTimeUnit.TimeUnit = database.TimeUnit(*request.Body.PrepTimeUnit)
-		updateParams.PrepTimeUnit.Valid = true
-	}
-	if request.Body.CookTimeAmount != nil {
-		updateParams.CookTimeAmount.Int32 = *request.Body.CookTimeAmount
-		updateParams.CookTimeAmount.Valid = true
-	}
-	if request.Body.CookTimeUnit != nil {
-		updateParams.CookTimeUnit.TimeUnit = database.TimeUnit(*request.Body.CookTimeUnit)
-		updateParams.CookTimeUnit.Valid = true
-	}
+	// Published - pointer (not nullable)
 	if request.Body.Published != nil {
+		updateParams.UpdatePublished.Bool = true
+		updateParams.UpdatePublished.Valid = true
 		updateParams.Published.Bool = *request.Body.Published
 		updateParams.Published.Valid = true
 	}
-	if request.Body.Title != nil {
-		updateParams.Title.String = *request.Body.Title
-		updateParams.Title.Valid = true
+	// Servings - nullable
+	if request.Body.Servings.IsSpecified() {
+		updateParams.UpdateServings.Bool = true
+		updateParams.UpdateServings.Valid = true
+		if request.Body.Servings.IsNull() {
+			updateParams.Servings.Valid = false
+		} else {
+			updateParams.Servings.Float32 = request.Body.Servings.MustGet()
+			updateParams.Servings.Valid = true
+		}
+	}
+	// PrepTimeAmount - nullable
+	if request.Body.PrepTimeAmount.IsSpecified() {
+		updateParams.UpdatePrepTimeAmount.Bool = true
+		updateParams.UpdatePrepTimeAmount.Valid = true
+		if request.Body.PrepTimeAmount.IsNull() {
+			updateParams.PrepTimeAmount.Valid = false
+		} else {
+			updateParams.PrepTimeAmount.Int32 = request.Body.PrepTimeAmount.MustGet()
+			updateParams.PrepTimeAmount.Valid = true
+		}
+	}
+	// PrepTimeUnit - nullable
+	if request.Body.PrepTimeUnit.IsSpecified() {
+		updateParams.UpdatePrepTimeUnit.Bool = true
+		updateParams.UpdatePrepTimeUnit.Valid = true
+		if request.Body.PrepTimeUnit.IsNull() {
+			updateParams.PrepTimeUnit.Valid = false
+		} else {
+			updateParams.PrepTimeUnit.TimeUnit = database.TimeUnit(request.Body.PrepTimeUnit.MustGet())
+			updateParams.PrepTimeUnit.Valid = true
+		}
+	}
+	// CookTimeAmount - nullable
+	if request.Body.CookTimeAmount.IsSpecified() {
+		updateParams.UpdateCookTimeAmount.Bool = true
+		updateParams.UpdateCookTimeAmount.Valid = true
+		if request.Body.CookTimeAmount.IsNull() {
+			updateParams.CookTimeAmount.Valid = false
+		} else {
+			updateParams.CookTimeAmount.Int32 = request.Body.CookTimeAmount.MustGet()
+			updateParams.CookTimeAmount.Valid = true
+		}
+	}
+	// CookTimeUnit - nullable
+	if request.Body.CookTimeUnit.IsSpecified() {
+		updateParams.UpdateCookTimeUnit.Bool = true
+		updateParams.UpdateCookTimeUnit.Valid = true
+		if request.Body.CookTimeUnit.IsNull() {
+			updateParams.CookTimeUnit.Valid = false
+		} else {
+			updateParams.CookTimeUnit.TimeUnit = database.TimeUnit(request.Body.CookTimeUnit.MustGet())
+			updateParams.CookTimeUnit.Valid = true
+		}
 	}
 	rec, err := env.Database.UpdateRecipe(ctx, updateParams)
 	if err != nil {

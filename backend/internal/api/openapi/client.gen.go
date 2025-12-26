@@ -18,6 +18,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/oapi-codegen/nullable"
 	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -191,9 +192,9 @@ type TimeUnit string
 
 // UpdateIngredientBody defines model for UpdateIngredientBody.
 type UpdateIngredientBody struct {
-	Name     *string  `json:"name,omitempty"`
-	Quantity *float32 `json:"quantity,omitempty"`
-	Unit     *string  `json:"unit,omitempty"`
+	Name     nullable.Nullable[string]  `json:"name,omitempty"`
+	Quantity nullable.Nullable[float32] `json:"quantity,omitempty"`
+	Unit     nullable.Nullable[string]  `json:"unit,omitempty"`
 }
 
 // UpdateIngredientImageForm defines model for UpdateIngredientImageForm.
@@ -212,14 +213,14 @@ type UpdateIngredientResponse struct {
 
 // UpdateRecipe defines model for UpdateRecipe.
 type UpdateRecipe struct {
-	CookTimeAmount *int32    `json:"cook_time_amount,omitempty"`
-	CookTimeUnit   *TimeUnit `json:"cook_time_unit,omitempty"`
-	Description    *string   `json:"description,omitempty"`
-	PrepTimeAmount *int32    `json:"prep_time_amount,omitempty"`
-	PrepTimeUnit   *TimeUnit `json:"prep_time_unit,omitempty"`
-	Published      *bool     `json:"published,omitempty"`
-	Servings       *float32  `json:"servings,omitempty"`
-	Title          *string   `json:"title,omitempty"`
+	CookTimeAmount nullable.Nullable[int32]    `json:"cook_time_amount,omitempty"`
+	CookTimeUnit   nullable.Nullable[TimeUnit] `json:"cook_time_unit,omitempty"`
+	Description    nullable.Nullable[string]   `json:"description,omitempty"`
+	PrepTimeAmount nullable.Nullable[int32]    `json:"prep_time_amount,omitempty"`
+	PrepTimeUnit   nullable.Nullable[TimeUnit] `json:"prep_time_unit,omitempty"`
+	Published      *bool                       `json:"published,omitempty"`
+	Servings       nullable.Nullable[float32]  `json:"servings,omitempty"`
+	Title          *string                     `json:"title,omitempty"`
 }
 
 // UpdateRecipeImageForm defines model for UpdateRecipeImageForm.
@@ -234,8 +235,8 @@ type UpdateStepImageForm struct {
 
 // UpdateStepRequest defines model for UpdateStepRequest.
 type UpdateStepRequest struct {
-	Instruction *string `json:"instruction,omitempty"`
-	StepNumber  *int32  `json:"step_number,omitempty"`
+	Instruction nullable.Nullable[string] `json:"instruction,omitempty"`
+	StepNumber  *int32                    `json:"step_number,omitempty"`
 }
 
 // UpdateStepResponse defines model for UpdateStepResponse.
