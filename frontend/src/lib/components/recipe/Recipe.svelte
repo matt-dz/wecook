@@ -22,6 +22,8 @@
 		(recipe.recipe?.prep_time_amount && recipe.recipe?.prep_time_unit
 			? toMinutes(recipe.recipe.prep_time_amount, recipe.recipe.prep_time_unit)
 			: 0);
+	const title =
+		recipe.recipe.title.trim().length > 0 ? recipe.recipe.title.trim() : 'Untitled Recipe';
 </script>
 
 <a
@@ -55,7 +57,7 @@
 
 	<div class="mt-1 flex items-start">
 		<div class="flex-1">
-			<h1 class="text-lg font-semibold">{recipe.recipe.title}</h1>
+			<h1 class="text-lg font-semibold">{title}</h1>
 			<h2 class="text-sm capitalize">{recipe.owner.first_name} {recipe.owner.last_name}</h2>
 			<h3 class="text-sm text-gray-400">{formatDuration(totalCookTime, 'minutes')}</h3>
 		</div>

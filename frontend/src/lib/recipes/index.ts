@@ -159,13 +159,13 @@ export async function GetPersonalRecipe(
 export type UpdateRecipeRequest = {
 	recipe_id: number;
 	title?: string;
-	description?: string;
+	description?: string | null;
 	published?: boolean;
-	servings?: number;
-	cook_time_amount?: number;
-	cook_time_unit?: TimeUnitType;
-	prep_time_amount?: number;
-	prep_time_unit?: TimeUnitType;
+	servings?: number | null;
+	cook_time_amount?: number | null;
+	cook_time_unit?: TimeUnitType | null;
+	prep_time_amount?: number | null;
+	prep_time_unit?: TimeUnitType | null;
 };
 
 export type UpdateRecipeResponse = Recipe;

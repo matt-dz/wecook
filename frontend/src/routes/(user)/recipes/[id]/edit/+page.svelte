@@ -119,17 +119,12 @@
 	);
 
 	const onTitleChange = () => title !== undefined && updateRecipeField('title', title);
-	const onDescriptionChange = () =>
-		description !== undefined && updateRecipeField('description', description);
-	const onServingsChange = () => servings !== undefined && updateRecipeField('servings', servings);
-	const onPrepTimeChange = () =>
-		prepTime !== undefined && updateRecipeField('prep_time_amount', prepTime);
-	const onPrepTimeUnitChange = () =>
-		prepTimeUnit !== undefined && updateRecipeField('prep_time_unit', prepTimeUnit);
-	const onCookTimeChange = () =>
-		cookTime !== undefined && updateRecipeField('cook_time_amount', cookTime);
-	const onCookTimeUnitChange = () =>
-		cookTimeUnit !== undefined && updateRecipeField('cook_time_unit', cookTimeUnit);
+	const onDescriptionChange = () => updateRecipeField('description', description ?? null);
+	const onServingsChange = () => updateRecipeField('servings', servings ?? null);
+	const onPrepTimeChange = () => updateRecipeField('prep_time_amount', prepTime ?? null);
+	const onPrepTimeUnitChange = () => updateRecipeField('prep_time_unit', prepTimeUnit ?? null);
+	const onCookTimeChange = () => updateRecipeField('cook_time_amount', cookTime ?? null);
+	const onCookTimeUnitChange = () => updateRecipeField('cook_time_unit', cookTimeUnit ?? null);
 
 	const onIngredientQuantityChange = (ingredientID: number) => {
 		const ingredient = ingredients.find((i) => i.id === ingredientID);
@@ -427,6 +422,7 @@
 				bind:value={title}
 				className="font-IowanOldStyleBT"
 				oninput={onTitleChange}
+				placeholder="Untitled Recipe"
 			/>
 		</div>
 
@@ -437,6 +433,7 @@
 				bind:value={description}
 				className="font-IowanOldStyleBT"
 				oninput={onDescriptionChange}
+				placeholder="Write a description."
 			/>
 		</div>
 
@@ -471,9 +468,9 @@
 					onkeydown={onlyPositiveNumbers}
 					type="number"
 					className="w-32"
-					defaultValue={1}
 					bind:value={servings}
 					oninput={onServingsChange}
+					placeholder="1"
 				/>
 			</div>
 			<div class="flex gap-8">

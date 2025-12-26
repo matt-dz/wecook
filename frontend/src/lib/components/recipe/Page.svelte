@@ -28,6 +28,9 @@
 			maximumFractionDigits: decimals
 		}).format(n);
 	};
+
+	const title =
+		recipe.recipe.title.trim().length > 0 ? recipe.recipe.title.trim() : 'Untitled Recipe';
 </script>
 
 <svelte:head>
@@ -38,7 +41,7 @@
 	<div class="w-full max-w-3xl">
 		<div class="mb-12 flex flex-col justify-between">
 			<div>
-				<h1 class="text-3xl font-semibold">{recipe.recipe.title}</h1>
+				<h1 class="text-3xl font-semibold">{title}</h1>
 				<h2 class="text-lg capitalize">
 					{recipe.owner.first_name}
 					{recipe.owner.last_name}

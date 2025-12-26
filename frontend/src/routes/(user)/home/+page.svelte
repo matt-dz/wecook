@@ -49,7 +49,7 @@
 </div>
 
 <div class="flex justify-center">
-	{#if data.recipes?.recipes.length > 0}
+	{#if data.recipes?.recipes.length && data.recipes.recipes.length > 0}
 		<div
 			class="grid w-full max-w-5xl grid-cols-1 place-items-center items-center gap-4 min-[650px]:grid-cols-2 min-[900px]:grid-cols-3"
 		>
