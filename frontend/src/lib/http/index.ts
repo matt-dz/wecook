@@ -9,7 +9,9 @@ import { refreshSession } from '$lib/auth';
 const retryCodes = [408, 413, 429, 500, 502, 503, 504];
 
 const baseOptions: Options = {
+	timeout: 15 * 1000,
 	retry: {
+		retryOnTimeout: true,
 		limit: 4,
 		backoffLimit: 10 * 1000, // 10 seconds,
 		shouldRetry: async (s) => {

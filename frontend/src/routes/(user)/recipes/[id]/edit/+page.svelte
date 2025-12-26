@@ -20,6 +20,7 @@
 		deleteRecipeImage,
 		deleteRecipe
 	} from '$lib/recipes';
+	import Status from '$lib/components/status/Status.svelte';
 	import { toast } from 'svelte-sonner';
 	import fetch from '$lib/http';
 	import UnpublishDialog from '$lib/components/unpublish-diaglog/Dialog.svelte';
@@ -52,15 +53,23 @@
 	let recipeImageUrl = $state<string | undefined>(data.recipe.recipe.image_url);
 
 	let recipeFileInput: HTMLInputElement;
+	let saveState: 'saved' | 'saving' | 'failed' | 'loading' = $state('saved');
 
 	const debounceDelay = 200;
 
 	const updateRecipeField = debounce(
 		async (field: keyof UpdateRecipeRequest, value: UpdateRecipeRequest[typeof field]) => {
-			await updatePersonalRecipe(fetch, {
-				[field]: value,
-				recipe_id: data.recipe.recipe.id
-			});
+			try {
+				saveState = 'saving';
+				await updatePersonalRecipe(fetch, {
+					[field]: value,
+					recipe_id: data.recipe.recipe.id
+				});
+				saveState = 'saved';
+			} catch (e) {
+				console.error('failed to update recipe field', e);
+				saveState = 'failed';
+			}
 		},
 		debounceDelay
 	);
@@ -71,11 +80,18 @@
 			field: keyof UpdateIngredientRequest,
 			value: UpdateIngredientRequest[typeof field]
 		) => {
-			await updateIngredient(fetch, {
-				[field]: value,
-				recipe_id: data.recipe.recipe.id,
-				ingredient_id: ingredientID
-			});
+			try {
+				saveState = 'saving';
+				await updateIngredient(fetch, {
+					[field]: value,
+					recipe_id: data.recipe.recipe.id,
+					ingredient_id: ingredientID
+				});
+				saveState = 'saved';
+			} catch (e) {
+				console.error('failed to update ingredient', e);
+				saveState = 'failed';
+			}
 		},
 		debounceDelay
 	);
@@ -86,11 +102,18 @@
 			field: keyof UpdateStepRequest,
 			value: UpdateStepRequest[typeof field]
 		) => {
-			await updateStep(fetch, {
-				[field]: value,
-				recipe_id: data.recipe.recipe.id,
-				step_id: stepID
-			});
+			try {
+				saveState = 'saving';
+				await updateStep(fetch, {
+					[field]: value,
+					recipe_id: data.recipe.recipe.id,
+					step_id: stepID
+				});
+				saveState = 'saved';
+			} catch (e) {
+				console.error('failed to update step field', e);
+				saveState = 'failed';
+			}
 		},
 		debounceDelay
 	);
@@ -132,13 +155,16 @@
 
 	const onIngredientImageUpload = async (ingredientID: number, image: File) => {
 		try {
+			saveState = 'saving';
 			const res = await uploadIngredientImage(fetch, {
 				recipe_id: data.recipe.recipe.id,
 				ingredient_id: ingredientID,
 				image
 			});
+			saveState = 'saved';
 			ingredients = ingredients.map((i) => (i.id !== ingredientID ? i : res));
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to upload image', e.message);
 			} else {
@@ -150,14 +176,17 @@
 
 	const onIngredientImageDeletion = async (ingredientID: number) => {
 		try {
+			saveState = 'saved';
 			await deleteIngredientImage(fetch, {
 				recipe_id: data.recipe.recipe.id,
 				ingredient_id: ingredientID
 			});
+			saveState = 'saved';
 			ingredients = ingredients.map((i) =>
 				i.id !== ingredientID ? i : { ...i, image_url: undefined }
 			);
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to delete image', e.message);
 			} else {
@@ -169,13 +198,16 @@
 
 	const onStepImageUpload = async (stepID: number, image: File) => {
 		try {
+			saveState = 'saving';
 			const res = await uploadStepImage(fetch, {
 				recipe_id: data.recipe.recipe.id,
 				step_id: stepID,
 				image
 			});
+			saveState = 'saved';
 			steps = steps.map((s) => (s.id !== stepID ? s : res));
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to upload image', e.message);
 			} else {
@@ -187,12 +219,15 @@
 
 	const onStepImageDeletion = async (stepID: number) => {
 		try {
+			saveState = 'saving';
 			await deleteStepImage(fetch, {
 				recipe_id: data.recipe.recipe.id,
 				step_id: stepID
 			});
+			saveState = 'saved';
 			steps = steps.map((s) => (s.id !== stepID ? s : { ...s, image_url: undefined }));
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to delete image', e.message);
 			} else {
@@ -204,12 +239,15 @@
 
 	const onRecipeImageUpload = async (image: File) => {
 		try {
+			saveState = 'saving';
 			const res = await uploadRecipeImage(fetch, {
 				recipe_id: data.recipe.recipe.id,
 				image
 			});
+			saveState = 'saved';
 			recipeImageUrl = res.image_url;
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to upload image', e.message);
 			} else {
@@ -221,11 +259,14 @@
 
 	const onRecipeImageDeletion = async () => {
 		try {
+			saveState = 'saving';
 			await deleteRecipeImage(fetch, {
 				recipe_id: data.recipe.recipe.id
 			});
+			saveState = 'saved';
 			recipeImageUrl = undefined;
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to delete image', e.message);
 			} else {
@@ -249,13 +290,16 @@
 
 	const togglePublish = async () => {
 		try {
+			saveState = 'saving';
 			await updatePersonalRecipe(fetch, {
 				recipe_id: data.recipe.recipe.id,
 				published: !published
 			});
+			saveState = 'saved';
 			published = !published;
 			toast.success(`Recipe ${published ? '' : 'un'}published successfully.`);
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to publish recipe', e.message);
 			} else {
@@ -267,9 +311,12 @@
 
 	const handleCreateIngredient = async () => {
 		try {
+			saveState = 'saving';
 			const newIngredient = await createIngredient(fetch, { recipe_id: data.recipe.recipe.id });
+			saveState = 'saved';
 			ingredients = [...ingredients, newIngredient];
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to create ingredient', e.message);
 			} else {
@@ -281,9 +328,12 @@
 
 	const handleCreateStep = async () => {
 		try {
+			saveState = 'saving';
 			const newStep = await createStep(fetch, { recipe_id: data.recipe.recipe.id });
+			saveState = 'saved';
 			steps = [...steps, newStep];
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to create step', e.message);
 			} else {
@@ -295,12 +345,15 @@
 
 	const handleDeleteIngredient = async (ingredientID: number) => {
 		try {
+			saveState = 'saving';
 			await deleteIngredient(fetch, {
 				recipe_id: data.recipe.recipe.id,
 				ingredient_id: ingredientID
 			});
+			saveState = 'saved';
 			ingredients = ingredients.filter((i) => i.id !== ingredientID);
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to delete ingredient', e.message);
 			} else {
@@ -312,10 +365,12 @@
 
 	const handleDeleteStep = async (stepID: number) => {
 		try {
+			saveState = 'saving';
 			await deleteStep(fetch, {
 				recipe_id: data.recipe.recipe.id,
 				step_id: stepID
 			});
+			saveState = 'saved';
 			const idx = steps.findIndex((s) => s.id === stepID);
 			if (idx !== -1) {
 				steps = [
@@ -324,6 +379,7 @@
 				];
 			}
 		} catch (e) {
+			saveState = 'failed';
 			if (e instanceof HTTPError) {
 				console.error('failed to delete step', e.message);
 			} else {
@@ -357,7 +413,12 @@
 <svelte:head>
 	<title>Edit Recipe</title>
 </svelte:head>
-<div class="mt-16 mb-12 flex w-full justify-center px-6">
+<div class="relative mt-12 mb-12 flex w-full flex-col items-center px-6">
+	<div class="sticky top-0 z-50 flex w-full justify-center bg-white">
+		<div class="mt-4 w-full max-w-md pb-4">
+			<Status status={saveState} />
+		</div>
+	</div>
 	<div class="flex w-full max-w-md flex-col gap-8">
 		<div class="flex flex-col gap-1">
 			<label for="title" class="text-lg">Title</label>

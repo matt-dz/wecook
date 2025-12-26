@@ -35,7 +35,7 @@ export const IngredientSchema = z.object({
 	id: z.int(),
 	image_url: z.string().optional(),
 	name: z.string().optional(),
-	quantity: z.int().optional(),
+	quantity: z.number().optional(),
 	recipe_id: z.int().optional(),
 	unit: z.string().optional()
 });
