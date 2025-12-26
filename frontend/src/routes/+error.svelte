@@ -7,7 +7,7 @@
 <div class="mt-16 flex items-center justify-center">
 	<div class="flex flex-col items-center">
 		<img src="/error.png" alt="error" width={128} height={128} />
-		<div class="mt-4 w-full max-w-3xl">
+		<div class="mt-4 w-full max-w-3xl px-4">
 			<h1 class="text-center text-xl">Uh-Oh! There was an error.</h1>
 			<div class="mt-4 flex flex-col gap-2">
 				{#if page.error?.code}
