@@ -96,6 +96,15 @@ func (ns NullTimeUnit) Value() (driver.Value, error) {
 	return string(ns.TimeUnit), nil
 }
 
+type InvitationCode struct {
+	ID        int64
+	CodeHash  string
+	InvitedBy pgtype.Int8
+	CreatedAt pgtype.Timestamptz
+	ExpiresAt pgtype.Timestamptz
+	UsedAt    pgtype.Timestamptz
+}
+
 type Recipe struct {
 	ID             int64
 	UserID         pgtype.Int8

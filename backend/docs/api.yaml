@@ -360,6 +360,46 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /api/user/invite:
+    post:
+      summary: Invite a user
+      tags:
+        - User
+      description: >
+        Invites a new user to the platform by sending them an
+        email. The email will contain a unique signup link that
+        they will signup with. The link will contain a code that
+        should be used to verify their invitation.
+      security:
+        - AccessTokenAdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteUserRequest"
+      responses:
+        "204":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized — missing or invalid access token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/recipes:
     post:
       summary: Create a new recipe
@@ -1719,6 +1759,16 @@ components:
       required:
         - users
         - cursor
+
+    InviteUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: idn-email
+          description: "Email Address"
+      required:
+        - email
 
   securitySchemes:
     AccessTokenUserBearer:

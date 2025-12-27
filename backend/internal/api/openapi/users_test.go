@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -13,7 +14,7 @@ import (
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/database"
-	"github.com/matt-dz/wecook/internal/dbmock"
+	"github.com/matt-dz/wecook/internal/email"
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/log"
 )
@@ -22,7 +23,7 @@ func TestGetApiUsers(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmock.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	tests := []struct {
@@ -246,15 +247,12 @@ func TestGetApiUsers(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
-			ctx = env.WithCtx(ctx, env.New(
-				log.NullLogger(),
-				&database.Database{
+			ctx = env.WithCtx(ctx, &env.Env{
+				Logger: log.NullLogger(),
+				Database: &database.Database{
 					Querier: mockDB,
 				},
-				nil,
-				nil,
-				nil,
-			))
+			})
 
 			resp, err := server.GetApiUsers(ctx, tt.request)
 			if (err != nil) != tt.wantError {
@@ -291,7 +289,7 @@ func TestGetApiUsers_UserFieldMapping(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmock.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	mockDB.EXPECT().
@@ -308,15 +306,12 @@ func TestGetApiUsers_UserFieldMapping(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = requestid.InjectRequestID(ctx, 12345)
-	ctx = env.WithCtx(ctx, env.New(
-		log.NullLogger(),
-		&database.Database{
+	ctx = env.WithCtx(ctx, &env.Env{
+		Logger: log.NullLogger(),
+		Database: &database.Database{
 			Querier: mockDB,
 		},
-		nil,
-		nil,
-		nil,
-	))
+	})
 
 	request := GetApiUsersRequestObject{
 		Params: GetApiUsersParams{},
@@ -358,7 +353,7 @@ func TestGetApiUsers_CursorCalculation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmock.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	tests := []struct {
@@ -409,15 +404,12 @@ func TestGetApiUsers_CursorCalculation(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
-			ctx = env.WithCtx(ctx, env.New(
-				log.NullLogger(),
-				&database.Database{
+			ctx = env.WithCtx(ctx, &env.Env{
+				Logger: log.NullLogger(),
+				Database: &database.Database{
 					Querier: mockDB,
 				},
-				nil,
-				nil,
-				nil,
-			))
+			})
 
 			request := GetApiUsersRequestObject{
 				Params: GetApiUsersParams{},
@@ -444,7 +436,7 @@ func TestGetApiUser(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmock.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	tests := []struct {
@@ -470,15 +462,12 @@ func TestGetApiUser(t *testing.T) {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
 				ctx = token.UserIDWithCtx(ctx, 123)
-				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					&database.Database{
+				ctx = env.WithCtx(ctx, &env.Env{
+					Logger: log.NullLogger(),
+					Database: &database.Database{
 						Querier: mockDB,
 					},
-					nil,
-					nil,
-					nil,
-				))
+				})
 				return ctx
 			},
 			wantStatus: 200,
@@ -500,15 +489,12 @@ func TestGetApiUser(t *testing.T) {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
 				ctx = token.UserIDWithCtx(ctx, 456)
-				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					&database.Database{
+				ctx = env.WithCtx(ctx, &env.Env{
+					Logger: log.NullLogger(),
+					Database: &database.Database{
 						Querier: mockDB,
 					},
-					nil,
-					nil,
-					nil,
-				))
+				})
 				return ctx
 			},
 			wantStatus: 200,
@@ -519,15 +505,12 @@ func TestGetApiUser(t *testing.T) {
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
-				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					&database.Database{
+				ctx = env.WithCtx(ctx, &env.Env{
+					Logger: log.NullLogger(),
+					Database: &database.Database{
 						Querier: mockDB,
 					},
-					nil,
-					nil,
-					nil,
-				))
+				})
 				return ctx
 			},
 			wantStatus: 500,
@@ -544,15 +527,12 @@ func TestGetApiUser(t *testing.T) {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
 				ctx = token.UserIDWithCtx(ctx, 999)
-				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					&database.Database{
+				ctx = env.WithCtx(ctx, &env.Env{
+					Logger: log.NullLogger(),
+					Database: &database.Database{
 						Querier: mockDB,
 					},
-					nil,
-					nil,
-					nil,
-				))
+				})
 				return ctx
 			},
 			wantStatus: 404,
@@ -569,15 +549,12 @@ func TestGetApiUser(t *testing.T) {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
 				ctx = token.UserIDWithCtx(ctx, 123)
-				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					&database.Database{
+				ctx = env.WithCtx(ctx, &env.Env{
+					Logger: log.NullLogger(),
+					Database: &database.Database{
 						Querier: mockDB,
 					},
-					nil,
-					nil,
-					nil,
-				))
+				})
 				return ctx
 			},
 			wantStatus: 500,
@@ -627,7 +604,7 @@ func TestGetApiUser_FieldMapping(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmock.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	tests := []struct {
@@ -703,15 +680,12 @@ func TestGetApiUser_FieldMapping(t *testing.T) {
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
 			ctx = token.UserIDWithCtx(ctx, tt.userID)
-			ctx = env.WithCtx(ctx, env.New(
-				log.NullLogger(),
-				&database.Database{
+			ctx = env.WithCtx(ctx, &env.Env{
+				Logger: log.NullLogger(),
+				Database: &database.Database{
 					Querier: mockDB,
 				},
-				nil,
-				nil,
-				nil,
-			))
+			})
 
 			request := GetApiUserRequestObject{}
 			resp, err := server.GetApiUser(ctx, request)
@@ -725,6 +699,163 @@ func TestGetApiUser_FieldMapping(t *testing.T) {
 			}
 
 			tt.wantUser(t, successResp)
+		})
+	}
+}
+
+func TestPostApiUserInvite(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := database.NewMockQuerier(ctrl)
+	mockSMTP := email.NewMockSender(ctrl)
+	server := NewServer()
+
+	tests := []struct {
+		name       string
+		request    PostApiUserInviteRequestObject
+		setup      func(ctx context.Context) context.Context
+		dbSetup    func()
+		smtpSetup  func()
+		wantStatus int
+		wantCode   string
+		wantError  bool
+	}{
+		{
+			name: "successful invite creation and email sending",
+			request: PostApiUserInviteRequestObject{
+				Body: &InviteUserRequest{
+					Email: "newuser@example.com",
+				},
+			},
+			setup: func(ctx context.Context) context.Context {
+				return token.UserIDWithCtx(ctx, 123)
+			},
+			dbSetup: func() {
+				mockDB.EXPECT().
+					CreateInviteCode(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, params database.CreateInviteCodeParams) (int64, error) {
+						if !params.InvitedBy.Valid || params.InvitedBy.Int64 != 123 {
+							t.Errorf("expected invited_by to be 123, got %v", params.InvitedBy)
+						}
+						if params.CodeHash == "" {
+							t.Error("expected non-empty code hash")
+						}
+						return int64(456), nil
+					})
+			},
+			smtpSetup: func() {
+				mockSMTP.EXPECT().
+					Send(gomock.Eq([]string{"newuser@example.com"}), gomock.Eq("WeCook Invitation"), gomock.Any()).
+					DoAndReturn(func(to []string, subject, body string) error {
+						if !strings.Contains(body, "http://localhost:5173/signup?code=") {
+							t.Errorf("expected invite link in email body, got: %s", body)
+						}
+						return nil
+					})
+			},
+			wantStatus: 204,
+			wantError:  false,
+		},
+		{
+			name: "missing user ID in context",
+			request: PostApiUserInviteRequestObject{
+				Body: &InviteUserRequest{
+					Email: "newuser@example.com",
+				},
+			},
+			setup: func(ctx context.Context) context.Context {
+				return ctx
+			},
+			dbSetup:    func() {},
+			smtpSetup:  func() {},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error creating invite code",
+			request: PostApiUserInviteRequestObject{
+				Body: &InviteUserRequest{
+					Email: "newuser@example.com",
+				},
+			},
+			setup: func(ctx context.Context) context.Context {
+				return token.UserIDWithCtx(ctx, 123)
+			},
+			dbSetup: func() {
+				mockDB.EXPECT().
+					CreateInviteCode(gomock.Any(), gomock.Any()).
+					Return(int64(0), errors.New("database connection error"))
+			},
+			smtpSetup:  func() {},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "email sending error",
+			request: PostApiUserInviteRequestObject{
+				Body: &InviteUserRequest{
+					Email: "newuser@example.com",
+				},
+			},
+			setup: func(ctx context.Context) context.Context {
+				return token.UserIDWithCtx(ctx, 123)
+			},
+			dbSetup: func() {
+				mockDB.EXPECT().
+					CreateInviteCode(gomock.Any(), gomock.Any()).
+					Return(int64(456), nil)
+			},
+			smtpSetup: func() {
+				mockSMTP.EXPECT().
+					Send(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(errors.New("SMTP connection failed"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.dbSetup()
+			tt.smtpSetup()
+
+			ctx := context.Background()
+			ctx = requestid.InjectRequestID(ctx, 12345)
+			ctx = tt.setup(ctx)
+			e := env.New(map[string]string{
+				"BASE_URL": "http://localhost:5173",
+			})
+			e.Logger = log.NullLogger()
+			e.Database = mockDB
+			e.SMTP = mockSMTP
+			ctx = env.WithCtx(ctx, e)
+
+			resp, err := server.PostApiUserInvite(ctx, tt.request)
+			if (err != nil) != tt.wantError {
+				t.Errorf("PostApiUserInvite() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			switch v := resp.(type) {
+			case PostApiUserInvite204Response:
+				if tt.wantStatus != 204 {
+					t.Errorf("expected status %d, got 204", tt.wantStatus)
+				}
+			case PostApiUserInvite500JSONResponse:
+				if tt.wantStatus != 500 {
+					t.Errorf("expected status %d, got 500", tt.wantStatus)
+				}
+				if tt.wantCode != "" && v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			default:
+				t.Errorf("unexpected response type: %T", v)
+			}
 		})
 	}
 }

@@ -62,8 +62,8 @@ clean:
 dbmock: sqlc
 	@echo "🤖 Generating database mock..."
 	mockgen -source=internal/database/querier.go \
-		-destination internal/dbmock/dbmock.go \
-		-package dbmock
+		-destination internal/database/databasemock.go \
+		-package database
 
 .PHONY: fileservermock
 fileservermock:
@@ -79,8 +79,14 @@ filestoremock:
 		-destination internal/filestore/filestoremock.go \
 		-package filestore
 
+smtpmock:
+	@echo "🤖 Generating smtp mock..."
+	mockgen -source=internal/email/email.go \
+		-destination internal/email/emailmock.go \
+		-package email
+
 .PHONY: mocks
-mocks: dbmock fileservermock filestoremock
+mocks: dbmock fileservermock filestoremock smtpmock
 
 .PHONY: test
 test: mocks

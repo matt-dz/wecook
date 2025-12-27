@@ -15,7 +15,6 @@ import (
 	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/argon2id"
 	"github.com/matt-dz/wecook/internal/database"
-	"github.com/matt-dz/wecook/internal/dbmock"
 	"github.com/matt-dz/wecook/internal/env"
 	mJwt "github.com/matt-dz/wecook/internal/jwt"
 	"github.com/matt-dz/wecook/internal/log"
@@ -26,7 +25,7 @@ func TestPostApiLogin(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmock.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	testPassword := "TestP@ssw0rd123!"
@@ -177,17 +176,12 @@ func TestPostApiLogin(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
-			ctx = env.WithCtx(ctx, env.New(
-				log.NullLogger(),
-				&database.Database{
-					Querier: mockDB,
-				},
-				nil,
-				nil,
-				map[string]string{
-					"APP_SECRET": "test-secret-key-for-jwt-signing",
-				},
-			))
+			e := env.New(map[string]string{
+				"APP_SECRET": "test-secret-key-for-jwt-signing",
+			})
+			e.Logger = log.NullLogger()
+			e.Database = mockDB
+			ctx = env.WithCtx(ctx, e)
 
 			resp, err := server.PostApiLogin(ctx, tt.request)
 			if (err != nil) != tt.wantError {
@@ -234,7 +228,7 @@ func TestPostApiLogin_AdminRole(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmock.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	testPassword := "AdminP@ssw0rd123!"
@@ -268,17 +262,14 @@ func TestPostApiLogin_AdminRole(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = requestid.InjectRequestID(ctx, 12345)
-	ctx = env.WithCtx(ctx, env.New(
-		log.NullLogger(),
-		&database.Database{
-			Querier: mockDB,
-		},
-		nil,
-		nil,
+	e := env.New(
 		map[string]string{
 			"APP_SECRET": "test-secret-key-for-jwt-signing",
 		},
-	))
+	)
+	e.Logger = log.NullLogger()
+	e.Database = mockDB
+	ctx = env.WithCtx(ctx, e)
 
 	request := PostApiLoginRequestObject{
 		Body: &UserLoginRequest{
@@ -318,7 +309,7 @@ func TestPostApiAuthRefresh(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmock.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	userID := int64(123)
@@ -597,17 +588,14 @@ func TestPostApiAuthRefresh(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
-			ctx = env.WithCtx(ctx, env.New(
-				log.NullLogger(),
-				&database.Database{
-					Querier: mockDB,
-				},
-				nil,
-				nil,
+			e := env.New(
 				map[string]string{
 					"APP_SECRET": "test-secret-key-for-jwt-signing",
 				},
-			))
+			)
+			e.Logger = log.NullLogger()
+			e.Database = mockDB
+			ctx = env.WithCtx(ctx, e)
 
 			resp, err := server.PostApiAuthRefresh(ctx, tt.request)
 			if (err != nil) != tt.wantError {
@@ -669,10 +657,6 @@ func TestGetApiAuthVerify(t *testing.T) {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
 				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					nil,
-					nil,
-					nil,
 					map[string]string{
 						"APP_SECRET": "test-secret-key-for-jwt-signing",
 					},
@@ -705,10 +689,6 @@ func TestGetApiAuthVerify(t *testing.T) {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
 				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					nil,
-					nil,
-					nil,
 					map[string]string{
 						"APP_SECRET": "test-secret-key-for-jwt-signing",
 					},
@@ -741,10 +721,6 @@ func TestGetApiAuthVerify(t *testing.T) {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
 				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					nil,
-					nil,
-					nil,
 					map[string]string{
 						"APP_SECRET": "test-secret-key-for-jwt-signing",
 					},
@@ -777,10 +753,6 @@ func TestGetApiAuthVerify(t *testing.T) {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
 				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					nil,
-					nil,
-					nil,
 					map[string]string{
 						"APP_SECRET": "test-secret-key-for-jwt-signing",
 					},
@@ -813,10 +785,6 @@ func TestGetApiAuthVerify(t *testing.T) {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
 				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					nil,
-					nil,
-					nil,
 					map[string]string{
 						"APP_SECRET": "test-secret-key-for-jwt-signing",
 					},
@@ -849,10 +817,6 @@ func TestGetApiAuthVerify(t *testing.T) {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
 				ctx = env.WithCtx(ctx, env.New(
-					log.NullLogger(),
-					nil,
-					nil,
-					nil,
 					map[string]string{
 						"APP_SECRET": "test-secret-key-for-jwt-signing",
 					},

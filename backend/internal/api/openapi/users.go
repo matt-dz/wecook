@@ -3,8 +3,10 @@ package client
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -12,8 +14,10 @@ import (
 	apiError "github.com/matt-dz/wecook/internal/api/error"
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/api/token"
+	"github.com/matt-dz/wecook/internal/argon2id"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/env"
+	"github.com/matt-dz/wecook/internal/invite"
 )
 
 func (Server) GetApiUsers(ctx context.Context, request GetApiUsersRequestObject) (GetApiUsersResponseObject, error) {
@@ -111,4 +115,88 @@ func (Server) GetApiUser(ctx context.Context, request GetApiUserRequestObject) (
 		LastName:  user.LastName,
 		Role:      Role(user.Role),
 	}, nil
+}
+
+func (Server) PostApiUserInvite(ctx context.Context,
+	request PostApiUserInviteRequestObject,
+) (PostApiUserInviteResponseObject, error) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		return PostApiUserInvite500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Create invite
+	const inviteCodeBytes = 16
+	env.Logger.DebugContext(ctx, "creating invite code")
+	code, err := token.CreateToken(inviteCodeBytes)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to create code", slog.Any("error", err))
+		return PostApiUserInvite500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	codeHash, err := argon2id.EncodeHash(code, argon2id.DefaultParams)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to hash code", slog.Any("error", err))
+		return PostApiUserInvite500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	inviteID, err := env.Database.CreateInviteCode(ctx, database.CreateInviteCodeParams{
+		CodeHash: codeHash,
+		InvitedBy: pgtype.Int8{
+			Int64: userID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to create invite code", slog.Any("error", err))
+		return PostApiUserInvite500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Encode invite
+	invite := invite.EncodeInvite(code, inviteID)
+	inviteLink := fmt.Sprintf("%s/signup?code=%s",
+		strings.TrimRight(env.Get("BASE_URL"), "/"), invite)
+
+	//nolint:lll
+	msg := fmt.Sprintf(`Hello!
+
+You have been invited to sign up for WeCook — a platform for creating and sharing recipes. Signup via the invite link below (note the link expires in 8 hours):
+
+%s`, inviteLink)
+
+	// Send invite
+	env.Logger.DebugContext(ctx, "sending invite")
+	err = env.SMTP.Send([]string{request.Body.Email}, "WeCook Invitation", msg)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to send invite", slog.Any("error", err))
+		return PostApiUserInvite500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	return PostApiUserInvite204Response{}, nil
 }

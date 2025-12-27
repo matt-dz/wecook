@@ -28,6 +28,18 @@ CREATE UNIQUE INDEX users_unique_email ON users (trim(lower(email)))
 WHERE
   email IS NOT NULL;
 
+CREATE TABLE invitation_codes (
+  id bigserial PRIMARY KEY,
+  code_hash text NOT NULL,
+  invited_by bigint REFERENCES users (id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT NOW(),
+  expires_at timestamptz NOT NULL DEFAULT (now() + interval '8 hours'),
+  used_at timestamptz
+);
+
+ALTER TABLE invitation_codes
+  ADD CONSTRAINT invitation_codes_expires_after_created CHECK (expires_at >= created_at);
+
 CREATE TABLE recipes (
   id bigserial PRIMARY KEY,
   user_id bigserial REFERENCES users (id) ON DELETE CASCADE,

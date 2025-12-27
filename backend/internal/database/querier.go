@@ -23,6 +23,7 @@ type Querier interface {
 	CheckUsersTableExists(ctx context.Context) (bool, error)
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (int64, error)
 	CreateEmptyRecipeIngredient(ctx context.Context, recipeID int64) (RecipeIngredient, error)
+	CreateInviteCode(ctx context.Context, arg CreateInviteCodeParams) (int64, error)
 	CreateRecipe(ctx context.Context, arg CreateRecipeParams) (int64, error)
 	CreateRecipeIngredient(ctx context.Context, arg CreateRecipeIngredientParams) (int64, error)
 	CreateRecipeStep(ctx context.Context, arg CreateRecipeStepParams) (CreateRecipeStepRow, error)
@@ -35,6 +36,7 @@ type Querier interface {
 	DeleteRecipeStepImageURL(ctx context.Context, id int64) error
 	DeleteRecipeStepsByIDs(ctx context.Context, arg DeleteRecipeStepsByIDsParams) error
 	GetAdminCount(ctx context.Context) (int64, error)
+	GetInvitationCode(ctx context.Context, id int64) (string, error)
 	GetPublicRecipes(ctx context.Context) ([]GetPublicRecipesRow, error)
 	GetPublishedRecipeAndOwner(ctx context.Context, id int64) (GetPublishedRecipeAndOwnerRow, error)
 	GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAndOwnerRow, error)
@@ -61,6 +63,7 @@ type Querier interface {
 	UpdateRecipeStep(ctx context.Context, arg UpdateRecipeStepParams) (UpdateRecipeStepRow, error)
 	UpdateRecipeStepImage(ctx context.Context, arg UpdateRecipeStepImageParams) error
 	UpdateUserRefreshTokenHash(ctx context.Context, arg UpdateUserRefreshTokenHashParams) error
+	UseInvitationCode(ctx context.Context, id int64) error
 }
 
 var _ Querier = (*Queries)(nil)

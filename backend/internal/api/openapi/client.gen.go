@@ -115,6 +115,12 @@ type GetUsersResponse struct {
 	Users  []User `json:"users"`
 }
 
+// InviteUserRequest defines model for InviteUserRequest.
+type InviteUserRequest struct {
+	// Email Email Address
+	Email string `json:"email"`
+}
+
 // LoginResponse defines model for LoginResponse.
 type LoginResponse struct {
 	// AccessToken JWT access token to use in the Authorization: Bearer header.
@@ -327,6 +333,9 @@ type PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody = UpdateStepRequest
 // PostApiRecipesRecipeIDStepsStepIDImageMultipartRequestBody defines body for PostApiRecipesRecipeIDStepsStepIDImage for multipart/form-data ContentType.
 type PostApiRecipesRecipeIDStepsStepIDImageMultipartRequestBody = UpdateStepImageForm
 
+// PostApiUserInviteJSONRequestBody defines body for PostApiUserInvite for application/json ContentType.
+type PostApiUserInviteJSONRequestBody = InviteUserRequest
+
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
 
@@ -494,6 +503,11 @@ type ClientInterface interface {
 
 	// GetApiUser request
 	GetApiUser(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiUserInviteWithBody request with any body
+	PostApiUserInviteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiUserInvite(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiUsers request
 	GetApiUsers(ctx context.Context, params *GetApiUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -897,6 +911,30 @@ func (c *Client) PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx context.Cont
 
 func (c *Client) GetApiUser(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiUserRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiUserInviteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiUserInviteRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiUserInvite(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiUserInviteRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1969,6 +2007,46 @@ func NewGetApiUserRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewPostApiUserInviteRequest calls the generic PostApiUserInvite builder with application/json body
+func NewPostApiUserInviteRequest(server string, body PostApiUserInviteJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiUserInviteRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiUserInviteRequestWithBody generates requests for PostApiUserInvite with any type of body
+func NewPostApiUserInviteRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/user/invite")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetApiUsersRequest generates requests for GetApiUsers
 func NewGetApiUsersRequest(server string, params *GetApiUsersParams) (*http.Request, error) {
 	var err error
@@ -2171,6 +2249,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetApiUserWithResponse request
 	GetApiUserWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiUserResponse, error)
+
+	// PostApiUserInviteWithBodyWithResponse request with any body
+	PostApiUserInviteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error)
+
+	PostApiUserInviteWithResponse(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error)
 
 	// GetApiUsersWithResponse request
 	GetApiUsersWithResponse(ctx context.Context, params *GetApiUsersParams, reqEditors ...RequestEditorFn) (*GetApiUsersResponse, error)
@@ -2836,6 +2919,30 @@ func (r GetApiUserResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiUserInviteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *Error
+	JSON401      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiUserInviteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiUserInviteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetApiUsersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -3158,6 +3265,23 @@ func (c *ClientWithResponses) GetApiUserWithResponse(ctx context.Context, reqEdi
 		return nil, err
 	}
 	return ParseGetApiUserResponse(rsp)
+}
+
+// PostApiUserInviteWithBodyWithResponse request with arbitrary body returning *PostApiUserInviteResponse
+func (c *ClientWithResponses) PostApiUserInviteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error) {
+	rsp, err := c.PostApiUserInviteWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiUserInviteResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiUserInviteWithResponse(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error) {
+	rsp, err := c.PostApiUserInvite(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiUserInviteResponse(rsp)
 }
 
 // GetApiUsersWithResponse request returning *GetApiUsersResponse
@@ -4333,6 +4457,46 @@ func ParseGetApiUserResponse(rsp *http.Response) (*GetApiUserResponse, error) {
 	return response, nil
 }
 
+// ParsePostApiUserInviteResponse parses an HTTP response from a PostApiUserInviteWithResponse call
+func ParsePostApiUserInviteResponse(rsp *http.Response) (*PostApiUserInviteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiUserInviteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetApiUsersResponse parses an HTTP response from a GetApiUsersWithResponse call
 func ParseGetApiUsersResponse(rsp *http.Response) (*GetApiUsersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -4463,6 +4627,9 @@ type ServerInterface interface {
 	// Get current user
 	// (GET /api/user)
 	GetApiUser(w http.ResponseWriter, r *http.Request)
+	// Invite a user
+	// (POST /api/user/invite)
+	PostApiUserInvite(w http.ResponseWriter, r *http.Request)
 	// Get users
 	// (GET /api/users)
 	GetApiUsers(w http.ResponseWriter, r *http.Request, params GetApiUsersParams)
@@ -4631,6 +4798,12 @@ func (_ Unimplemented) PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWri
 // Get current user
 // (GET /api/user)
 func (_ Unimplemented) GetApiUser(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Invite a user
+// (POST /api/user/invite)
+func (_ Unimplemented) PostApiUserInvite(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5449,6 +5622,26 @@ func (siw *ServerInterfaceWrapper) GetApiUser(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// PostApiUserInvite operation middleware
+func (siw *ServerInterfaceWrapper) PostApiUserInvite(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenAdminBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostApiUserInvite(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetApiUsers operation middleware
 func (siw *ServerInterfaceWrapper) GetApiUsers(w http.ResponseWriter, r *http.Request) {
 
@@ -5683,6 +5876,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/user", wrapper.GetApiUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/user/invite", wrapper.PostApiUserInvite)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/users", wrapper.GetApiUsers)
@@ -6843,6 +7039,49 @@ func (response GetApiUser500JSONResponse) VisitGetApiUserResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PostApiUserInviteRequestObject struct {
+	Body *PostApiUserInviteJSONRequestBody
+}
+
+type PostApiUserInviteResponseObject interface {
+	VisitPostApiUserInviteResponse(w http.ResponseWriter) error
+}
+
+type PostApiUserInvite204Response struct {
+}
+
+func (response PostApiUserInvite204Response) VisitPostApiUserInviteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type PostApiUserInvite400JSONResponse Error
+
+func (response PostApiUserInvite400JSONResponse) VisitPostApiUserInviteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiUserInvite401JSONResponse Error
+
+func (response PostApiUserInvite401JSONResponse) VisitPostApiUserInviteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiUserInvite500JSONResponse Error
+
+func (response PostApiUserInvite500JSONResponse) VisitPostApiUserInviteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetApiUsersRequestObject struct {
 	Params GetApiUsersParams
 }
@@ -6970,6 +7209,9 @@ type StrictServerInterface interface {
 	// Get current user
 	// (GET /api/user)
 	GetApiUser(ctx context.Context, request GetApiUserRequestObject) (GetApiUserResponseObject, error)
+	// Invite a user
+	// (POST /api/user/invite)
+	PostApiUserInvite(ctx context.Context, request PostApiUserInviteRequestObject) (PostApiUserInviteResponseObject, error)
 	// Get users
 	// (GET /api/users)
 	GetApiUsers(ctx context.Context, request GetApiUsersRequestObject) (GetApiUsersResponseObject, error)
@@ -7759,6 +8001,37 @@ func (sh *strictHandler) GetApiUser(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetApiUserResponseObject); ok {
 		if err := validResponse.VisitGetApiUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostApiUserInvite operation middleware
+func (sh *strictHandler) PostApiUserInvite(w http.ResponseWriter, r *http.Request) {
+	var request PostApiUserInviteRequestObject
+
+	var body PostApiUserInviteJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PostApiUserInvite(ctx, request.(PostApiUserInviteRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostApiUserInvite")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PostApiUserInviteResponseObject); ok {
+		if err := validResponse.VisitPostApiUserInviteResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

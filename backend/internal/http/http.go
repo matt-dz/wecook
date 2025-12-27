@@ -10,12 +10,21 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 )
 
+type HTTPDoer interface {
+	Do(*retryablehttp.Request) (*http.Response, error)
+}
+
 type HTTP struct {
 	*retryablehttp.Client
 }
 
-func New() *HTTP {
-	client := retryablehttp.NewClient()
+var _ HTTPDoer = (*retryablehttp.Client)(nil)
+
+func DefaultConfig() *retryablehttp.Client {
+	return retryablehttp.NewClient()
+}
+
+func New(client *retryablehttp.Client) *HTTP {
 	return &HTTP{
 		Client: client,
 	}

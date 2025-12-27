@@ -172,6 +172,25 @@ func (q *Queries) CreateEmptyRecipeIngredient(ctx context.Context, recipeID int6
 	return i, err
 }
 
+const createInviteCode = `-- name: CreateInviteCode :one
+INSERT INTO invitation_codes (code_hash, invited_by)
+  VALUES ($1, $2)
+RETURNING
+  id
+`
+
+type CreateInviteCodeParams struct {
+	CodeHash  string
+	InvitedBy pgtype.Int8
+}
+
+func (q *Queries) CreateInviteCode(ctx context.Context, arg CreateInviteCodeParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createInviteCode, arg.CodeHash, arg.InvitedBy)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createRecipe = `-- name: CreateRecipe :one
 INSERT INTO recipes (user_id, title)
   VALUES ($1, $2)
@@ -373,6 +392,24 @@ func (q *Queries) GetAdminCount(ctx context.Context) (int64, error) {
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const getInvitationCode = `-- name: GetInvitationCode :one
+SELECT
+  code_hash
+FROM
+  invitation_codes
+WHERE
+  id = $1
+  AND expires_at > now()
+  AND used_at <> NULL
+`
+
+func (q *Queries) GetInvitationCode(ctx context.Context, id int64) (string, error) {
+	row := q.db.QueryRow(ctx, getInvitationCode, id)
+	var code_hash string
+	err := row.Scan(&code_hash)
+	return code_hash, err
 }
 
 const getPublicRecipes = `-- name: GetPublicRecipes :many
@@ -1409,5 +1446,19 @@ type UpdateUserRefreshTokenHashParams struct {
 
 func (q *Queries) UpdateUserRefreshTokenHash(ctx context.Context, arg UpdateUserRefreshTokenHashParams) error {
 	_, err := q.db.Exec(ctx, updateUserRefreshTokenHash, arg.RefreshTokenHash, arg.ID)
+	return err
+}
+
+const useInvitationCode = `-- name: UseInvitationCode :exec
+UPDATE
+  invitation_codes
+SET
+  used_at = now()
+WHERE
+  id = $1
+`
+
+func (q *Queries) UseInvitationCode(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, useInvitationCode, id)
 	return err
 }

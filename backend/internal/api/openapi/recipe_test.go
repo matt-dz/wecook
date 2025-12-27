@@ -17,7 +17,6 @@ import (
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/database"
-	dbmoc "github.com/matt-dz/wecook/internal/dbmock"
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/fileserver"
 	"github.com/matt-dz/wecook/internal/filestore"
@@ -28,7 +27,7 @@ func TestPostApiRecipes(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmoc.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	tests := []struct {
@@ -140,7 +139,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 		request    GetApiRecipesRecipeIDRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -153,7 +152,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     0,
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -175,7 +174,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
 					Return(false, errors.New("database error"))
@@ -201,7 +200,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
 					Return(false, nil)
@@ -227,7 +226,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -342,7 +341,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -372,7 +371,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -402,7 +401,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -446,7 +445,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -494,7 +493,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -544,7 +543,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -586,7 +585,7 @@ func TestGetApiRecipes(t *testing.T) {
 		name       string
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -596,7 +595,7 @@ func TestGetApiRecipes(t *testing.T) {
 			name:       "missing user id in context",
 			userID:     0,
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -615,7 +614,7 @@ func TestGetApiRecipes(t *testing.T) {
 			name:       "database error on getting recipes",
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					GetRecipesByOwner(gomock.Any(), int64(456)).
 					Return(nil, errors.New("database connection failed"))
@@ -638,7 +637,7 @@ func TestGetApiRecipes(t *testing.T) {
 			name:       "successful retrieval with no recipes",
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					GetRecipesByOwner(gomock.Any(), int64(456)).
 					Return([]database.GetRecipesByOwnerRow{}, nil)
@@ -660,7 +659,7 @@ func TestGetApiRecipes(t *testing.T) {
 			name:       "successful retrieval with multiple recipes",
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					GetRecipesByOwner(gomock.Any(), int64(456)).
 					Return([]database.GetRecipesByOwnerRow{
@@ -785,7 +784,7 @@ func TestGetApiRecipes(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -827,7 +826,7 @@ func TestGetApiRecipesPublic(t *testing.T) {
 		name       string
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -837,7 +836,7 @@ func TestGetApiRecipesPublic(t *testing.T) {
 			name:       "database error on getting recipes",
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					GetPublicRecipes(gomock.Any()).
 					Return(nil, errors.New("database connection failed"))
@@ -860,7 +859,7 @@ func TestGetApiRecipesPublic(t *testing.T) {
 			name:       "successful retrieval with no recipes",
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					GetPublicRecipes(gomock.Any()).
 					Return([]database.GetPublicRecipesRow{}, nil)
@@ -882,7 +881,7 @@ func TestGetApiRecipesPublic(t *testing.T) {
 			name:       "successful retrieval with multiple recipes",
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					GetPublicRecipes(gomock.Any()).
 					Return([]database.GetPublicRecipesRow{
@@ -1007,7 +1006,7 @@ func TestGetApiRecipesPublic(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -1042,7 +1041,7 @@ func TestDeleteApiRecipesRecipeID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmoc.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	mockFS := filestore.NewMockFileStoreInterface(ctrl)
 	server := NewServer()
 
@@ -1393,7 +1392,7 @@ func TestPostApiRecipesRecipeIDIngredients(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmoc.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	tests := []struct {
@@ -1571,7 +1570,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmoc.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	tests := []struct {
@@ -2194,7 +2193,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 		userID     int64
 		injectUser bool
 		imageData  []byte
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -2209,7 +2208,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2274,7 +2273,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validJPEGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2343,7 +2342,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			userID:     0,
 			injectUser: false,
 			imageData:  validPNGImage,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -2367,7 +2366,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(false, errors.New("database error"))
@@ -2395,7 +2394,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(false, nil)
@@ -2423,7 +2422,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  invalidImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2451,7 +2450,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2479,7 +2478,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2514,7 +2513,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2546,7 +2545,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2590,7 +2589,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -2649,7 +2648,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 		request    DeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -2663,7 +2662,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), database.CheckIngredientOwnershipParams{
 						RecipeID:     123,
@@ -2707,7 +2706,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			},
 			userID:     0,
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -2730,7 +2729,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(false, errors.New("database error"))
@@ -2757,7 +2756,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(false, nil)
@@ -2784,7 +2783,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2811,7 +2810,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2845,7 +2844,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2879,7 +2878,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -2916,7 +2915,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -2954,7 +2953,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 		request    PostApiRecipesRecipeIDStepsRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -2967,7 +2966,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -3010,7 +3009,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -3053,7 +3052,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     0,
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -3078,7 +3077,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -3110,7 +3109,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -3145,7 +3144,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -3183,7 +3182,7 @@ func TestPostApiRecipesRecipeIDSteps(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -3221,7 +3220,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 		request    PatchApiRecipesRecipeIDStepsStepIDRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -3238,7 +3237,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3301,7 +3300,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3362,7 +3361,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3442,7 +3441,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3491,7 +3490,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     0,
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -3520,7 +3519,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3557,7 +3556,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3597,7 +3596,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3654,7 +3653,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -3691,7 +3690,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -3754,7 +3753,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 		userID     int64
 		injectUser bool
 		imageData  []byte
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -3769,7 +3768,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -3832,7 +3831,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validJPEGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -3906,7 +3905,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			userID:     0,
 			injectUser: false,
 			imageData:  validPNGImage,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -3930,7 +3929,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(false, errors.New("database error"))
@@ -3958,7 +3957,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(false, nil)
@@ -3986,7 +3985,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  invalidImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4014,7 +4013,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4042,7 +4041,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4077,7 +4076,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4109,7 +4108,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			userID:     789,
 			injectUser: true,
 			imageData:  validPNGImage,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4153,7 +4152,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -4212,7 +4211,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 		request    DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -4226,7 +4225,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -4270,7 +4269,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			},
 			userID:     0,
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -4293,7 +4292,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(false, errors.New("database error"))
@@ -4320,7 +4319,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(false, nil)
@@ -4347,7 +4346,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4374,7 +4373,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4408,7 +4407,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4442,7 +4441,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4479,7 +4478,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -4517,7 +4516,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 		request    DeleteApiRecipesRecipeIDIngredientsIngredientIDRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -4531,7 +4530,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), database.CheckIngredientOwnershipParams{
 						RecipeID:     123,
@@ -4568,7 +4567,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), database.CheckIngredientOwnershipParams{
 						RecipeID:     123,
@@ -4612,7 +4611,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), database.CheckIngredientOwnershipParams{
 						RecipeID:     123,
@@ -4656,7 +4655,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			},
 			userID:     0,
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -4679,7 +4678,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(false, errors.New("database error"))
@@ -4706,7 +4705,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(false, nil)
@@ -4733,7 +4732,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4760,7 +4759,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4794,7 +4793,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -4824,7 +4823,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -4862,7 +4861,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 		request    DeleteApiRecipesRecipeIDStepsStepIDRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -4876,7 +4875,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -4913,7 +4912,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -4957,7 +4956,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), database.CheckStepOwnershipParams{
 						RecipeID: 123,
@@ -5001,7 +5000,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     0,
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -5024,7 +5023,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(false, errors.New("database error"))
@@ -5051,7 +5050,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(false, nil)
@@ -5078,7 +5077,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -5105,7 +5104,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -5139,7 +5138,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			},
 			userID:     789,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
@@ -5169,7 +5168,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 
 			tt.setup(mockDB, mockFS)
@@ -5209,7 +5208,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 		request    PatchApiRecipesRecipeIDRequestObject
 		userID     int64
 		injectUser bool
-		setup      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface)
+		setup      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface)
 		wantStatus int
 		wantCode   string
 		wantError  bool
@@ -5232,7 +5231,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5306,7 +5305,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5353,7 +5352,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5395,7 +5394,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 				Body:     &PatchApiRecipesRecipeIDJSONRequestBody{},
 			},
 			injectUser: false,
-			setup:      func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
+			setup:      func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -5420,7 +5419,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5455,7 +5454,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5495,7 +5494,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5607,7 +5606,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			},
 			userID:     456,
 			injectUser: true,
-			setup: func(mockDB *dbmoc.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
+			setup: func(mockDB *database.MockQuerier, mockFS *filestore.MockFileStoreInterface) {
 				mockDB.EXPECT().
 					CheckRecipeOwnership(gomock.Any(), database.CheckRecipeOwnershipParams{
 						ID: 123,
@@ -5643,7 +5642,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockDB := dbmoc.NewMockQuerier(ctrl)
+			mockDB := database.NewMockQuerier(ctrl)
 			mockFS := filestore.NewMockFileStoreInterface(ctrl)
 			server := NewServer()
 

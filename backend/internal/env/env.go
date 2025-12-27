@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/matt-dz/wecook/internal/database"
+	"github.com/matt-dz/wecook/internal/email"
 	"github.com/matt-dz/wecook/internal/filestore"
 	"github.com/matt-dz/wecook/internal/http"
 	"github.com/matt-dz/wecook/internal/log"
@@ -18,8 +19,9 @@ var envKey envKeyType
 
 type Env struct {
 	Logger    *slog.Logger
-	Database  *database.Database
-	HTTP      *http.HTTP
+	Database  database.Querier
+	HTTP      http.HTTPDoer
+	SMTP      email.Sender
 	FileStore filestore.FileStoreInterface
 	vars      map[string]string
 }
@@ -35,20 +37,9 @@ func (e *Env) IsProd() bool {
 	return e.Get("ENV") == "PROD"
 }
 
-func New(logger *slog.Logger, database *database.Database,
-	http *http.HTTP, filestore filestore.FileStoreInterface,
-	vars map[string]string,
-) *Env {
-	if logger == nil {
-		logger = log.NullLogger()
-	}
-
+func New(vars map[string]string) *Env {
 	return &Env{
-		Logger:    logger,
-		Database:  database,
-		HTTP:      http,
-		FileStore: filestore,
-		vars:      vars,
+		vars: vars,
 	}
 }
 

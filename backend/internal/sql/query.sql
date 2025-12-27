@@ -565,3 +565,27 @@ FROM
   users
 WHERE
   id = $1;
+
+-- name: CreateInviteCode :one
+INSERT INTO invitation_codes (code_hash, invited_by)
+  VALUES ($1, $2)
+RETURNING
+  id;
+
+-- name: GetInvitationCode :one
+SELECT
+  code_hash
+FROM
+  invitation_codes
+WHERE
+  id = $1
+  AND expires_at > now()
+  AND used_at <> NULL;
+
+-- name: UseInvitationCode :exec
+UPDATE
+  invitation_codes
+SET
+  used_at = now()
+WHERE
+  id = $1;

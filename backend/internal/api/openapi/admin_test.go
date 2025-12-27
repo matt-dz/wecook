@@ -12,7 +12,6 @@ import (
 	apiError "github.com/matt-dz/wecook/internal/api/error"
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/database"
-	dbmoc "github.com/matt-dz/wecook/internal/dbmock"
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/log"
 )
@@ -21,7 +20,7 @@ func TestPostApiAdmin(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmoc.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	tests := []struct {
@@ -166,7 +165,7 @@ func TestPostApiAdminUser(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := dbmoc.NewMockQuerier(ctrl)
+	mockDB := database.NewMockQuerier(ctrl)
 	server := NewServer()
 
 	tests := []struct {
