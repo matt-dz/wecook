@@ -553,3 +553,15 @@ WHERE
 ORDER BY
   id
 LIMIT LEAST (100, GREATEST (1, coalesce(sqlc.narg ('limit')::int, 20)));
+
+-- name: GetUserById :one
+SELECT
+  id,
+  email,
+  first_name,
+  last_name,
+  ROLE
+FROM
+  users
+WHERE
+  id = $1;

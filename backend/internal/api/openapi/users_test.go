@@ -5,11 +5,13 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/mock/gomock"
 
 	apiError "github.com/matt-dz/wecook/internal/api/error"
 	"github.com/matt-dz/wecook/internal/api/requestid"
+	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/dbmock"
 	"github.com/matt-dz/wecook/internal/env"
@@ -434,6 +436,295 @@ func TestGetApiUsers_CursorCalculation(t *testing.T) {
 			if successResp.Cursor != tt.wantCursor {
 				t.Errorf("expected cursor %d, got %d", tt.wantCursor, successResp.Cursor)
 			}
+		})
+	}
+}
+
+func TestGetApiUser(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := dbmock.NewMockQuerier(ctrl)
+	server := NewServer()
+
+	tests := []struct {
+		name       string
+		setup      func() context.Context
+		wantStatus int
+		wantCode   string
+		wantError  bool
+	}{
+		{
+			name: "successful retrieval - user role",
+			setup: func() context.Context {
+				mockDB.EXPECT().
+					GetUserById(gomock.Any(), int64(123)).
+					Return(database.GetUserByIdRow{
+						ID:        123,
+						Email:     "user@example.com",
+						FirstName: "John",
+						LastName:  "Doe",
+						Role:      database.RoleUser,
+					}, nil)
+
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = token.UserIDWithCtx(ctx, 123)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					&database.Database{
+						Querier: mockDB,
+					},
+					nil,
+					nil,
+					nil,
+				))
+				return ctx
+			},
+			wantStatus: 200,
+			wantError:  false,
+		},
+		{
+			name: "successful retrieval - admin role",
+			setup: func() context.Context {
+				mockDB.EXPECT().
+					GetUserById(gomock.Any(), int64(456)).
+					Return(database.GetUserByIdRow{
+						ID:        456,
+						Email:     "admin@example.com",
+						FirstName: "Jane",
+						LastName:  "Smith",
+						Role:      database.RoleAdmin,
+					}, nil)
+
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = token.UserIDWithCtx(ctx, 456)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					&database.Database{
+						Querier: mockDB,
+					},
+					nil,
+					nil,
+					nil,
+				))
+				return ctx
+			},
+			wantStatus: 200,
+			wantError:  false,
+		},
+		{
+			name: "missing user id in context",
+			setup: func() context.Context {
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					&database.Database{
+						Querier: mockDB,
+					},
+					nil,
+					nil,
+					nil,
+				))
+				return ctx
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "user not found",
+			setup: func() context.Context {
+				mockDB.EXPECT().
+					GetUserById(gomock.Any(), int64(999)).
+					Return(database.GetUserByIdRow{}, pgx.ErrNoRows)
+
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = token.UserIDWithCtx(ctx, 999)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					&database.Database{
+						Querier: mockDB,
+					},
+					nil,
+					nil,
+					nil,
+				))
+				return ctx
+			},
+			wantStatus: 404,
+			wantCode:   apiError.UserNotFound.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error",
+			setup: func() context.Context {
+				mockDB.EXPECT().
+					GetUserById(gomock.Any(), int64(123)).
+					Return(database.GetUserByIdRow{}, errors.New("database connection error"))
+
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = token.UserIDWithCtx(ctx, 123)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					&database.Database{
+						Querier: mockDB,
+					},
+					nil,
+					nil,
+					nil,
+				))
+				return ctx
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := tt.setup()
+			request := GetApiUserRequestObject{}
+
+			resp, err := server.GetApiUser(ctx, request)
+			if (err != nil) != tt.wantError {
+				t.Errorf("GetApiUser() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			switch v := resp.(type) {
+			case GetApiUser200JSONResponse:
+				if tt.wantStatus != 200 {
+					t.Errorf("expected status %d, got 200", tt.wantStatus)
+				}
+			case GetApiUser404JSONResponse:
+				if tt.wantStatus != 404 {
+					t.Errorf("expected status %d, got 404", tt.wantStatus)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			case GetApiUser500JSONResponse:
+				if tt.wantStatus != 500 {
+					t.Errorf("expected status %d, got 500", tt.wantStatus)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			default:
+				t.Errorf("unexpected response type: %T", v)
+			}
+		})
+	}
+}
+
+func TestGetApiUser_FieldMapping(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := dbmock.NewMockQuerier(ctrl)
+	server := NewServer()
+
+	tests := []struct {
+		name     string
+		userID   int64
+		dbUser   database.GetUserByIdRow
+		wantUser func(t *testing.T, user GetApiUser200JSONResponse)
+	}{
+		{
+			name:   "user role with all fields",
+			userID: 123,
+			dbUser: database.GetUserByIdRow{
+				ID:        123,
+				Email:     "user@example.com",
+				FirstName: "John",
+				LastName:  "Doe",
+				Role:      database.RoleUser,
+			},
+			wantUser: func(t *testing.T, user GetApiUser200JSONResponse) {
+				if user.Id != 123 {
+					t.Errorf("expected user ID 123, got %d", user.Id)
+				}
+				if user.Email != "user@example.com" {
+					t.Errorf("expected email 'user@example.com', got %s", user.Email)
+				}
+				if user.FirstName != "John" {
+					t.Errorf("expected first name 'John', got %s", user.FirstName)
+				}
+				if user.LastName != "Doe" {
+					t.Errorf("expected last name 'Doe', got %s", user.LastName)
+				}
+				if user.Role != RoleUser {
+					t.Errorf("expected role User, got %s", user.Role)
+				}
+			},
+		},
+		{
+			name:   "admin role with all fields",
+			userID: 456,
+			dbUser: database.GetUserByIdRow{
+				ID:        456,
+				Email:     "admin@example.com",
+				FirstName: "Jane",
+				LastName:  "Smith",
+				Role:      database.RoleAdmin,
+			},
+			wantUser: func(t *testing.T, user GetApiUser200JSONResponse) {
+				if user.Id != 456 {
+					t.Errorf("expected user ID 456, got %d", user.Id)
+				}
+				if user.Email != "admin@example.com" {
+					t.Errorf("expected email 'admin@example.com', got %s", user.Email)
+				}
+				if user.FirstName != "Jane" {
+					t.Errorf("expected first name 'Jane', got %s", user.FirstName)
+				}
+				if user.LastName != "Smith" {
+					t.Errorf("expected last name 'Smith', got %s", user.LastName)
+				}
+				if user.Role != RoleAdmin {
+					t.Errorf("expected role Admin, got %s", user.Role)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDB.EXPECT().
+				GetUserById(gomock.Any(), tt.userID).
+				Return(tt.dbUser, nil)
+
+			ctx := context.Background()
+			ctx = requestid.InjectRequestID(ctx, 12345)
+			ctx = token.UserIDWithCtx(ctx, tt.userID)
+			ctx = env.WithCtx(ctx, env.New(
+				log.NullLogger(),
+				&database.Database{
+					Querier: mockDB,
+				},
+				nil,
+				nil,
+				nil,
+			))
+
+			request := GetApiUserRequestObject{}
+			resp, err := server.GetApiUser(ctx, request)
+			if err != nil {
+				t.Fatalf("GetApiUser() error = %v", err)
+			}
+
+			successResp, ok := resp.(GetApiUser200JSONResponse)
+			if !ok {
+				t.Fatalf("expected GetApiUser200JSONResponse, got %T", resp)
+			}
+
+			tt.wantUser(t, successResp)
 		})
 	}
 }

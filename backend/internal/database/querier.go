@@ -50,6 +50,7 @@ type Querier interface {
 	GetRecipeSteps(ctx context.Context, recipeID int64) ([]RecipeStep, error)
 	GetRecipesByOwner(ctx context.Context, id int64) ([]GetRecipesByOwnerRow, error)
 	GetUser(ctx context.Context, lower string) (GetUserRow, error)
+	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 	GetUserRefreshTokenHash(ctx context.Context, id int64) (GetUserRefreshTokenHashRow, error)
 	GetUserRole(ctx context.Context, id int64) (Role, error)
 	GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersRow, error)

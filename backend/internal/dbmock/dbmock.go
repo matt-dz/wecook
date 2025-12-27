@@ -616,6 +616,21 @@ func (mr *MockQuerierMockRecorder) GetUser(ctx, lower any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockQuerier)(nil).GetUser), ctx, lower)
 }
 
+// GetUserById mocks base method.
+func (m *MockQuerier) GetUserById(ctx context.Context, id int64) (database.GetUserByIdRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserById", ctx, id)
+	ret0, _ := ret[0].(database.GetUserByIdRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserById indicates an expected call of GetUserById.
+func (mr *MockQuerierMockRecorder) GetUserById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockQuerier)(nil).GetUserById), ctx, id)
+}
+
 // GetUserRefreshTokenHash mocks base method.
 func (m *MockQuerier) GetUserRefreshTokenHash(ctx context.Context, id int64) (database.GetUserRefreshTokenHashRow, error) {
 	m.ctrl.T.Helper()

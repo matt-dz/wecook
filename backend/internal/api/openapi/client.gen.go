@@ -492,6 +492,9 @@ type ClientInterface interface {
 	// PostApiRecipesRecipeIDStepsStepIDImageWithBody request with any body
 	PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetApiUser request
+	GetApiUser(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetApiUsers request
 	GetApiUsers(ctx context.Context, params *GetApiUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
@@ -882,6 +885,18 @@ func (c *Client) DeleteApiRecipesRecipeIDStepsStepIDImage(ctx context.Context, r
 
 func (c *Client) PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiRecipesRecipeIDStepsStepIDImageRequestWithBody(c.Server, recipeID, stepID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetApiUser(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiUserRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -1927,6 +1942,33 @@ func NewPostApiRecipesRecipeIDStepsStepIDImageRequestWithBody(server string, rec
 	return req, nil
 }
 
+// NewGetApiUserRequest generates requests for GetApiUser
+func NewGetApiUserRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/user")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetApiUsersRequest generates requests for GetApiUsers
 func NewGetApiUsersRequest(server string, params *GetApiUsersParams) (*http.Request, error) {
 	var err error
@@ -2126,6 +2168,9 @@ type ClientWithResponsesInterface interface {
 
 	// PostApiRecipesRecipeIDStepsStepIDImageWithBodyWithResponse request with any body
 	PostApiRecipesRecipeIDStepsStepIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsStepIDImageResponse, error)
+
+	// GetApiUserWithResponse request
+	GetApiUserWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiUserResponse, error)
 
 	// GetApiUsersWithResponse request
 	GetApiUsersWithResponse(ctx context.Context, params *GetApiUsersParams, reqEditors ...RequestEditorFn) (*GetApiUsersResponse, error)
@@ -2765,6 +2810,32 @@ func (r PostApiRecipesRecipeIDStepsStepIDImageResponse) StatusCode() int {
 	return 0
 }
 
+type GetApiUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *User
+	JSON400      *Error
+	JSON401      *Error
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetApiUsersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -3078,6 +3149,15 @@ func (c *ClientWithResponses) PostApiRecipesRecipeIDStepsStepIDImageWithBodyWith
 		return nil, err
 	}
 	return ParsePostApiRecipesRecipeIDStepsStepIDImageResponse(rsp)
+}
+
+// GetApiUserWithResponse request returning *GetApiUserResponse
+func (c *ClientWithResponses) GetApiUserWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiUserResponse, error) {
+	rsp, err := c.GetApiUser(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiUserResponse(rsp)
 }
 
 // GetApiUsersWithResponse request returning *GetApiUsersResponse
@@ -4199,6 +4279,60 @@ func ParsePostApiRecipesRecipeIDStepsStepIDImageResponse(rsp *http.Response) (*P
 	return response, nil
 }
 
+// ParseGetApiUserResponse parses an HTTP response from a GetApiUserWithResponse call
+func ParseGetApiUserResponse(rsp *http.Response) (*GetApiUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetApiUsersResponse parses an HTTP response from a GetApiUsersWithResponse call
 func ParseGetApiUsersResponse(rsp *http.Response) (*GetApiUsersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -4326,6 +4460,9 @@ type ServerInterface interface {
 	// Upload an image for a recipe step
 	// (POST /api/recipes/{recipeID}/steps/{stepID}/image)
 	PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64)
+	// Get current user
+	// (GET /api/user)
+	GetApiUser(w http.ResponseWriter, r *http.Request)
 	// Get users
 	// (GET /api/users)
 	GetApiUsers(w http.ResponseWriter, r *http.Request, params GetApiUsersParams)
@@ -4488,6 +4625,12 @@ func (_ Unimplemented) DeleteApiRecipesRecipeIDStepsStepIDImage(w http.ResponseW
 // Upload an image for a recipe step
 // (POST /api/recipes/{recipeID}/steps/{stepID}/image)
 func (_ Unimplemented) PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get current user
+// (GET /api/user)
+func (_ Unimplemented) GetApiUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5286,6 +5429,26 @@ func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDStepsStepIDImage(w http
 	handler.ServeHTTP(w, r)
 }
 
+// GetApiUser operation middleware
+func (siw *ServerInterfaceWrapper) GetApiUser(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetApiUser(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetApiUsers operation middleware
 func (siw *ServerInterfaceWrapper) GetApiUsers(w http.ResponseWriter, r *http.Request) {
 
@@ -5517,6 +5680,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/recipes/{recipeID}/steps/{stepID}/image", wrapper.PostApiRecipesRecipeIDStepsStepIDImage)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/user", wrapper.GetApiUser)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/users", wrapper.GetApiUsers)
@@ -6625,6 +6791,58 @@ func (response PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse) VisitPostA
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetApiUserRequestObject struct {
+}
+
+type GetApiUserResponseObject interface {
+	VisitGetApiUserResponse(w http.ResponseWriter) error
+}
+
+type GetApiUser200JSONResponse User
+
+func (response GetApiUser200JSONResponse) VisitGetApiUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiUser400JSONResponse Error
+
+func (response GetApiUser400JSONResponse) VisitGetApiUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiUser401JSONResponse Error
+
+func (response GetApiUser401JSONResponse) VisitGetApiUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiUser404JSONResponse Error
+
+func (response GetApiUser404JSONResponse) VisitGetApiUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiUser500JSONResponse Error
+
+func (response GetApiUser500JSONResponse) VisitGetApiUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetApiUsersRequestObject struct {
 	Params GetApiUsersParams
 }
@@ -6749,6 +6967,9 @@ type StrictServerInterface interface {
 	// Upload an image for a recipe step
 	// (POST /api/recipes/{recipeID}/steps/{stepID}/image)
 	PostApiRecipesRecipeIDStepsStepIDImage(ctx context.Context, request PostApiRecipesRecipeIDStepsStepIDImageRequestObject) (PostApiRecipesRecipeIDStepsStepIDImageResponseObject, error)
+	// Get current user
+	// (GET /api/user)
+	GetApiUser(ctx context.Context, request GetApiUserRequestObject) (GetApiUserResponseObject, error)
 	// Get users
 	// (GET /api/users)
 	GetApiUsers(ctx context.Context, request GetApiUsersRequestObject) (GetApiUsersResponseObject, error)
@@ -7514,6 +7735,30 @@ func (sh *strictHandler) PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseW
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiRecipesRecipeIDStepsStepIDImageResponseObject); ok {
 		if err := validResponse.VisitPostApiRecipesRecipeIDStepsStepIDImageResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetApiUser operation middleware
+func (sh *strictHandler) GetApiUser(w http.ResponseWriter, r *http.Request) {
+	var request GetApiUserRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetApiUser(ctx, request.(GetApiUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetApiUser")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetApiUserResponseObject); ok {
+		if err := validResponse.VisitGetApiUserResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

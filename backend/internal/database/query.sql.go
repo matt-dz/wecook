@@ -933,6 +933,40 @@ func (q *Queries) GetUser(ctx context.Context, lower string) (GetUserRow, error)
 	return i, err
 }
 
+const getUserById = `-- name: GetUserById :one
+SELECT
+  id,
+  email,
+  first_name,
+  last_name,
+  ROLE
+FROM
+  users
+WHERE
+  id = $1
+`
+
+type GetUserByIdRow struct {
+	ID        int64
+	Email     string
+	FirstName string
+	LastName  string
+	Role      Role
+}
+
+func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error) {
+	row := q.db.QueryRow(ctx, getUserById, id)
+	var i GetUserByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.FirstName,
+		&i.LastName,
+		&i.Role,
+	)
+	return i, err
+}
+
 const getUserRefreshTokenHash = `-- name: GetUserRefreshTokenHash :one
 SELECT
   refresh_token_hash,
