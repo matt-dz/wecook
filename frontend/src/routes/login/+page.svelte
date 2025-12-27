@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Input from '$lib/components/input/Input.svelte';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import Button from '$lib/components/button/Button.svelte';
 	import fetch from '$lib/http';
 	import { parseError } from '$lib/errors/api';
@@ -57,7 +57,7 @@
 			<label for="email" class="text-sm">Email</label>
 			<Input
 				disabled={loading}
-				className="text-sm"
+				class="text-sm"
 				bind:value={email}
 				id="email"
 				name="email"
@@ -76,7 +76,7 @@
 			<label for="email" class="text-sm">Password</label>
 			<Input
 				disabled={loading}
-				className="text-sm"
+				class="text-sm"
 				bind:value={password}
 				id="password"
 				name="password"

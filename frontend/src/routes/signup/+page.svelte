@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import Button from '$lib/components/button/Button.svelte';
-	import Input from '$lib/components/input/Input.svelte';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import fetch from '$lib/http';
 	import { parseError } from '$lib/errors/api';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -64,7 +64,7 @@
 			<label for="fname" class="text-sm">First Name</label>
 			<Input
 				disabled={loading}
-				className="text-sm"
+				class="text-sm"
 				bind:value={firstName}
 				id="fname"
 				name="fname"
@@ -80,7 +80,7 @@
 			<label for="lname" class="text-sm">Last Name</label>
 			<Input
 				disabled={loading}
-				className="text-sm"
+				class="text-sm"
 				bind:value={lastName}
 				id="lname"
 				name="lname"
@@ -96,7 +96,7 @@
 			<label for="email" class="text-sm">Email</label>
 			<Input
 				disabled={loading}
-				className="text-sm"
+				class="text-sm"
 				bind:value={email}
 				id="email"
 				name="email"
@@ -115,7 +115,7 @@
 			<label for="email" class="text-sm">Password</label>
 			<Input
 				disabled={loading}
-				className="text-sm"
+				class="text-sm"
 				bind:value={password}
 				id="password"
 				name="password"
@@ -139,7 +139,7 @@
 		</p>
 
 		<Button
-			className="from-blue-300 to-blue-200 border-blue-400 hover:from-blue-200 hover:to-blue-100"
+			className="border-blue-400 from-blue-300 to-blue-200 hover:from-blue-200 hover:to-blue-100"
 			type="submit"
 			disabled={loading}
 		>

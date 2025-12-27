@@ -1,7 +1,8 @@
 <script lang="ts">
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { EllipsisVertical } from '@lucide/svelte';
-	import TextArea from '../textarea/TextArea.svelte';
+	import { Textarea } from '$lib/components/ui/textarea/index.js';
+
 	import ImagePreview from '$lib/components/image/ImagePreview.svelte';
 	import type { Step } from '$lib/recipes';
 
@@ -62,10 +63,10 @@
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
 	</div>
-	<TextArea
+	<Textarea
 		bind:value={step.instruction}
 		name="step"
-		className="block w-full mt-1"
+		class="mt-1 block w-full"
 		placeholder="Enter instructions."
 		oninput={() => onInstructionChange?.(step.id)}
 	/>

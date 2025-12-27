@@ -27,10 +27,10 @@
 	import fetch from '$lib/http';
 	import UnpublishDialog from '$lib/components/unpublish-diaglog/Dialog.svelte';
 	import PublishDialog from '$lib/components/publish-dialog/Dialog.svelte';
-	import Input from '$lib/components/input/Input.svelte';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import StepInput from '$lib/components/step/Input.svelte';
 	import IngredientInput from '$lib/components/ingredient/Input.svelte';
-	import TextArea from '$lib/components/textarea/TextArea.svelte';
+	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import TimeunitMenu from '$lib/components/timeunit-menu/TimeunitMenu.svelte';
 	import Button from '$lib/components/button/Button.svelte';
 	import ImagePreview from '$lib/components/image/ImagePreview.svelte';
@@ -469,7 +469,7 @@
 			<Input
 				name="title"
 				bind:value={title}
-				className="font-IowanOldStyleBT"
+				class="font-IowanOldStyleBT"
 				oninput={onTitleChange}
 				placeholder="Untitled Recipe"
 			/>
@@ -477,10 +477,10 @@
 
 		<div class="flex flex-col gap-1">
 			<label for="description" class="text-lg">Description</label>
-			<TextArea
+			<Textarea
 				name="description"
 				bind:value={description}
-				className="font-IowanOldStyleBT"
+				class="font-IowanOldStyleBT"
 				oninput={onDescriptionChange}
 				placeholder="Write a description."
 			/>
@@ -516,7 +516,7 @@
 					name="servings"
 					onkeydown={onlyPositiveNumbers}
 					type="number"
-					className="w-32"
+					class="w-32"
 					bind:value={servings}
 					oninput={onServingsChange}
 					placeholder="1"
@@ -531,7 +531,7 @@
 							bind:value={prepTime}
 							onkeydown={onlyPositiveNumbers}
 							type="number"
-							className="w-16"
+							class="w-16"
 							placeholder="30"
 							oninput={onPrepTimeChange}
 						/>
@@ -545,7 +545,7 @@
 							name="cook time"
 							onkeydown={onlyPositiveNumbers}
 							type="number"
-							className="w-16"
+							class="w-16"
 							placeholder="30"
 							bind:value={cookTime}
 							oninput={onCookTimeChange}

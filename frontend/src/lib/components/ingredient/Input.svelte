@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Input from '$lib/components/input/Input.svelte';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import ImagePreview from '$lib/components/image/ImagePreview.svelte';
 	import { type Ingredient } from '$lib/recipes';
@@ -52,7 +52,7 @@
 <div class="space-y-2">
 	<div class="flex items-center gap-2">
 		<Input
-			className="w-20"
+			class="w-20"
 			placeholder="Quantity"
 			type="number"
 			onkeydown={onlyPositiveNumbers}
@@ -60,14 +60,14 @@
 			oninput={() => onQuantityChange?.(ingredient.id)}
 		/>
 		<Input
-			className="w-20"
+			class="w-20"
 			placeholder="Unit"
 			bind:value={ingredient.unit}
 			oninput={() => onUnitChange?.(ingredient.id)}
 		/>
 		<p class="inline-block">of</p>
 		<Input
-			className="w-60"
+			class="w-60"
 			bind:value={ingredient.name}
 			placeholder="Name"
 			oninput={() => onNameChange?.(ingredient.id)}

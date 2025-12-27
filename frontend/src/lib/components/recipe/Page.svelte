@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatDuration } from '$lib/time';
-	import Input from '$lib/components/input/Input.svelte';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import ShareDialog from '$lib/components/share-dialog/Dialog.svelte';
 	import type { RecipeWithStepsIngredientsAndOwner } from '$lib/recipes';
@@ -102,7 +102,7 @@
 						bind:value={portion}
 						name="portion"
 						onkeydown={onlyPositiveNumbers}
-						className="w-fit"
+						class="w-fit"
 						type="number"
 						min={1}
 						defaultValue={1}
