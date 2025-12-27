@@ -9,12 +9,13 @@
 	import { HTTPError } from 'ky';
 	import { signupRequest } from '$lib/users';
 	import { toast } from 'svelte-sonner';
+	import { Label } from '$lib/components/ui/label/index.js';
+	import Error from '$lib/components/error/Error.svelte';
 
-	const placeholderError = 'placeholder';
 	let loading = $state(false);
 	let firstName: string = $state('');
 	let lastName: string = $state('');
-	let error: string = $state(placeholderError);
+	let error: string = $state('');
 	let email: string = $state('');
 	let password: string = $state('');
 
@@ -22,7 +23,7 @@
 
 	const onSubmit = async (e: SubmitEvent) => {
 		e.preventDefault();
-		error = placeholderError;
+		error = '';
 		try {
 			loading = true;
 			await signupRequest(fetch, {
@@ -57,11 +58,12 @@
 		onsubmit={onSubmit}
 	>
 		<div class="mb-2">
-			<h1 class="text-left text-lg">Sign up</h1>
-			<p class="text-sm text-gray-500">Welcome to WeCook!</p>
+			<h1 class="text-left font-inter text-lg font-semibold">Sign up</h1>
+			<p class="font-inter text-sm text-gray-500">Welcome to WeCook!</p>
 		</div>
-		<div class="flex w-full flex-col space-y-1">
-			<label for="fname" class="text-sm">First Name</label>
+
+		<div class="flex w-full flex-col space-y-2">
+			<Label for="fname" class="font-inter">First Name</Label>
 			<Input
 				disabled={loading}
 				class="text-sm"
@@ -76,11 +78,11 @@
 			/>
 		</div>
 
-		<div class="flex w-full flex-col space-y-1">
-			<label for="lname" class="text-sm">Last Name</label>
+		<div class="mt-3 flex w-full flex-col space-y-2">
+			<Label for="lname" class="font-inter">Last Name</Label>
 			<Input
 				disabled={loading}
-				class="text-sm"
+				class="font-inter"
 				bind:value={lastName}
 				id="lname"
 				name="lname"
@@ -92,11 +94,11 @@
 			/>
 		</div>
 
-		<div class="flex w-full flex-col space-y-1">
-			<label for="email" class="text-sm">Email</label>
+		<div class="mt-3 flex w-full flex-col space-y-2">
+			<Label for="email" class="font-inter">Email</Label>
 			<Input
 				disabled={loading}
-				class="text-sm"
+				class="font-inter"
 				bind:value={email}
 				id="email"
 				name="email"
@@ -111,12 +113,12 @@
 			/>
 		</div>
 
-		<div class="mt-1 flex w-full flex-col space-y-1">
-			<label for="email" class="text-sm">Password</label>
+		<div class="mt-3 flex w-full flex-col space-y-2">
+			<Label for="email" class="font-inter">Password</Label>
 			<Input
 				disabled={loading}
-				class="text-sm"
 				bind:value={password}
+				class="font-inter"
 				id="password"
 				name="password"
 				type="password"
@@ -130,20 +132,14 @@
 			/>
 		</div>
 
-		<p
-			class="text-center text-sm text-red-600"
-			class:invisible={error === placeholderError}
-			class:visible={error !== placeholderError}
-		>
-			{error}
-		</p>
+		<Error {error} class="text-center font-inter" />
 
 		<Button
-			className="border-blue-400 from-blue-300 to-blue-200 hover:from-blue-200 hover:to-blue-100"
+			className="from-blue-300 to-blue-200 border-blue-400 hover:from-blue-200 hover:to-blue-100 font-inter text-sm py-1.5 rounded-lg mt-2"
 			type="submit"
 			disabled={loading}
 		>
-			<p class="font-medium">Sign up</p>
+			Sign up
 		</Button>
 	</form>
 </div>
