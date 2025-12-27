@@ -660,6 +660,21 @@ func (mr *MockQuerierMockRecorder) GetUserById(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockQuerier)(nil).GetUserById), ctx, id)
 }
 
+// GetUserPasswordHash mocks base method.
+func (m *MockQuerier) GetUserPasswordHash(ctx context.Context, id int64) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserPasswordHash", ctx, id)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserPasswordHash indicates an expected call of GetUserPasswordHash.
+func (mr *MockQuerierMockRecorder) GetUserPasswordHash(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserPasswordHash", reflect.TypeOf((*MockQuerier)(nil).GetUserPasswordHash), ctx, id)
+}
+
 // GetUserRefreshTokenHash mocks base method.
 func (m *MockQuerier) GetUserRefreshTokenHash(ctx context.Context, id int64) (GetUserRefreshTokenHashRow, error) {
 	m.ctrl.T.Helper()
@@ -805,6 +820,20 @@ func (m *MockQuerier) UpdateRecipeStepImage(ctx context.Context, arg UpdateRecip
 func (mr *MockQuerierMockRecorder) UpdateRecipeStepImage(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRecipeStepImage", reflect.TypeOf((*MockQuerier)(nil).UpdateRecipeStepImage), ctx, arg)
+}
+
+// UpdateUserPasswordHash mocks base method.
+func (m *MockQuerier) UpdateUserPasswordHash(ctx context.Context, arg UpdateUserPasswordHashParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserPasswordHash", ctx, arg)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateUserPasswordHash indicates an expected call of UpdateUserPasswordHash.
+func (mr *MockQuerierMockRecorder) UpdateUserPasswordHash(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPasswordHash", reflect.TypeOf((*MockQuerier)(nil).UpdateUserPasswordHash), ctx, arg)
 }
 
 // UpdateUserRefreshTokenHash mocks base method.

@@ -1320,3 +1320,251 @@ func TestPostApiSignup_ParameterValidation(t *testing.T) {
 		t.Fatalf("expected loginSuccessResponse, got %T", resp)
 	}
 }
+
+func TestPatchApiUserPassword(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := database.NewMockQuerier(ctrl)
+	server := NewServer()
+
+	// Create a valid current password hash for testing
+	currentPassword := "CurrentP@ssw0rd123"
+	currentPasswordHash, err := argon2id.EncodeHash(currentPassword, argon2id.DefaultParams)
+	if err != nil {
+		t.Fatalf("failed to create test password hash: %v", err)
+	}
+
+	// New valid password
+	newPassword := "NewP@ssw0rd456"
+
+	tests := []struct {
+		name       string
+		request    PatchApiUserPasswordRequestObject
+		setup      func(ctx context.Context) context.Context
+		dbSetup    func()
+		wantStatus int
+		wantCode   string
+		wantError  bool
+	}{
+		{
+			name: "successful password update",
+			request: PatchApiUserPasswordRequestObject{
+				Body: &UpdatePasswordRequest{
+					CurrentPassword: currentPassword,
+					NewPassword:     newPassword,
+				},
+			},
+			setup: func(ctx context.Context) context.Context {
+				return token.UserIDWithCtx(ctx, 123)
+			},
+			dbSetup: func() {
+				mockDB.EXPECT().GetUserPasswordHash(gomock.Any(), int64(123)).Return(currentPasswordHash, nil)
+				mockDB.EXPECT().UpdateUserPasswordHash(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			wantStatus: 204,
+		},
+		{
+			name: "missing user ID in context",
+			request: PatchApiUserPasswordRequestObject{
+				Body: &UpdatePasswordRequest{
+					CurrentPassword: currentPassword,
+					NewPassword:     newPassword,
+				},
+			},
+			setup: func(ctx context.Context) context.Context {
+				return ctx // No user ID in context
+			},
+			dbSetup:    func() {},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error getting current password",
+			request: PatchApiUserPasswordRequestObject{
+				Body: &UpdatePasswordRequest{
+					CurrentPassword: currentPassword,
+					NewPassword:     newPassword,
+				},
+			},
+			setup: func(ctx context.Context) context.Context {
+				return token.UserIDWithCtx(ctx, 123)
+			},
+			dbSetup: func() {
+				mockDB.EXPECT().GetUserPasswordHash(gomock.Any(), int64(123)).Return("", errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "incorrect current password",
+			request: PatchApiUserPasswordRequestObject{
+				Body: &UpdatePasswordRequest{
+					CurrentPassword: "WrongPassword123",
+					NewPassword:     newPassword,
+				},
+			},
+			setup: func(ctx context.Context) context.Context {
+				return token.UserIDWithCtx(ctx, 123)
+			},
+			dbSetup: func() {
+				mockDB.EXPECT().GetUserPasswordHash(gomock.Any(), int64(123)).Return(currentPasswordHash, nil)
+			},
+			wantStatus: 403,
+			wantCode:   apiError.InvalidPassword.String(),
+			wantError:  false,
+		},
+		{
+			name: "weak new password",
+			request: PatchApiUserPasswordRequestObject{
+				Body: &UpdatePasswordRequest{
+					CurrentPassword: currentPassword,
+					NewPassword:     "weak",
+				},
+			},
+			setup: func(ctx context.Context) context.Context {
+				return token.UserIDWithCtx(ctx, 123)
+			},
+			dbSetup: func() {
+				mockDB.EXPECT().GetUserPasswordHash(gomock.Any(), int64(123)).Return(currentPasswordHash, nil)
+			},
+			wantStatus: 422,
+			wantCode:   apiError.InvalidPassword.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error updating password",
+			request: PatchApiUserPasswordRequestObject{
+				Body: &UpdatePasswordRequest{
+					CurrentPassword: currentPassword,
+					NewPassword:     newPassword,
+				},
+			},
+			setup: func(ctx context.Context) context.Context {
+				return token.UserIDWithCtx(ctx, 123)
+			},
+			dbSetup: func() {
+				mockDB.EXPECT().GetUserPasswordHash(gomock.Any(), int64(123)).Return(currentPasswordHash, nil)
+				mockDB.EXPECT().UpdateUserPasswordHash(gomock.Any(), gomock.Any()).Return(errors.New("database error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.dbSetup()
+
+			ctx := context.Background()
+			ctx = requestid.InjectRequestID(ctx, 12345)
+			e := env.New(map[string]string{
+				"ENV":      "PROD",
+				"BASE_URL": "http://localhost:5173",
+			})
+			e.Logger = log.NullLogger()
+			e.Database = mockDB
+			ctx = env.WithCtx(ctx, e)
+			ctx = tt.setup(ctx)
+
+			resp, err := server.PatchApiUserPassword(ctx, tt.request)
+
+			if (err != nil) != tt.wantError {
+				t.Errorf("PatchApiUserPassword() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			switch v := resp.(type) {
+			case PatchApiUserPassword204Response:
+				if tt.wantStatus != 204 {
+					t.Errorf("expected status %d, got 204", tt.wantStatus)
+				}
+			case PatchApiUserPassword401JSONResponse:
+				if v.Status != tt.wantStatus {
+					t.Errorf("expected status %d, got %d", tt.wantStatus, v.Status)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			case PatchApiUserPassword422JSONResponse:
+				if v.Status != tt.wantStatus {
+					t.Errorf("expected status %d, got %d", tt.wantStatus, v.Status)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			case PatchApiUserPassword500JSONResponse:
+				if v.Status != tt.wantStatus {
+					t.Errorf("expected status %d, got %d", tt.wantStatus, v.Status)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			default:
+				t.Errorf("unexpected response type: %T", resp)
+			}
+		})
+	}
+}
+
+func TestPatchApiUserPassword_ParameterValidation(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := database.NewMockQuerier(ctrl)
+	server := NewServer()
+
+	currentPassword := "CurrentP@ssw0rd123"
+	currentPasswordHash, err := argon2id.EncodeHash(currentPassword, argon2id.DefaultParams)
+	if err != nil {
+		t.Fatalf("failed to create test password hash: %v", err)
+	}
+
+	newPassword := "NewP@ssw0rd456"
+
+	mockDB.EXPECT().GetUserPasswordHash(gomock.Any(), int64(123)).Return(currentPasswordHash, nil)
+	mockDB.EXPECT().UpdateUserPasswordHash(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, params database.UpdateUserPasswordHashParams) error {
+			if params.ID != 123 {
+				t.Errorf("expected user ID 123, got %d", params.ID)
+			}
+			if params.PasswordHash == "" {
+				t.Error("expected non-empty password hash")
+			}
+			if params.PasswordHash == currentPasswordHash {
+				t.Error("expected new password hash to be different from current hash")
+			}
+			return nil
+		})
+
+	ctx := context.Background()
+	ctx = requestid.InjectRequestID(ctx, 12345)
+	e := env.New(map[string]string{
+		"ENV":      "PROD",
+		"BASE_URL": "http://localhost:5173",
+	})
+	e.Logger = log.NullLogger()
+	e.Database = mockDB
+	ctx = env.WithCtx(ctx, e)
+	ctx = token.UserIDWithCtx(ctx, 123)
+
+	request := PatchApiUserPasswordRequestObject{
+		Body: &UpdatePasswordRequest{
+			CurrentPassword: currentPassword,
+			NewPassword:     newPassword,
+		},
+	}
+
+	resp, err := server.PatchApiUserPassword(ctx, request)
+	if err != nil {
+		t.Fatalf("PatchApiUserPassword() error = %v", err)
+	}
+
+	_, ok := resp.(PatchApiUserPassword204Response)
+	if !ok {
+		t.Fatalf("expected PatchApiUserPassword204Response, got %T", resp)
+	}
+}

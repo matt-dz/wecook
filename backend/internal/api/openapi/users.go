@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -423,4 +424,102 @@ func (Server) PostApiSignup(ctx context.Context,
 			AccessToken: accessToken,
 		},
 	}, nil
+}
+
+func (Server) PatchApiUserPassword(ctx context.Context,
+	request PatchApiUserPasswordRequestObject) (
+	PatchApiUserPasswordResponseObject, error,
+) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	userID, err := token.UserIDFromCtx(ctx)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to extract user id from context", slog.Any("error", err))
+		return PatchApiUserPassword500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Get password
+	env.Logger.DebugContext(ctx, "getting user password")
+	groundEncodedHash, err := env.Database.GetUserPasswordHash(ctx, userID)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get user password hash")
+		return PatchApiUserPassword500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	p, salt, groundHash, err := argon2id.DecodeHash(groundEncodedHash)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to decode ground password hash", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "failed to get user password hash")
+		return PatchApiUserPassword500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Compare hashes
+	currentHash := argon2id.HashWithSalt(request.Body.CurrentPassword, *p, salt)
+	if subtle.ConstantTimeCompare(currentHash, groundHash) == 0 {
+		env.Logger.ErrorContext(ctx, "passwords do not match")
+		return PatchApiUserPassword401JSONResponse{
+			Status:  http.StatusForbidden,
+			Code:    apiError.InvalidPassword.String(),
+			Message: "current password is incorrect",
+			ErrorId: requestID,
+		}, nil
+	}
+	env.Logger.DebugContext(ctx, "passwords match!")
+
+	// Validate current password
+	err = password.ValidatePassword(request.Body.NewPassword)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "new password is invalid", slog.Any("error", err))
+		return PatchApiUserPassword422JSONResponse{
+			Status:  apiError.InvalidPassword.StatusCode(),
+			Code:    apiError.InvalidPassword.String(),
+			Message: err.Error(),
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// hash new password
+	env.Logger.DebugContext(ctx, "hashing new password")
+	newPHash, err := argon2id.EncodeHash(request.Body.NewPassword, argon2id.DefaultParams)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to hash new password", slog.Any("error", err))
+		return PatchApiUserPassword500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// update password
+	env.Logger.DebugContext(ctx, "updating password")
+	err = env.Database.UpdateUserPasswordHash(ctx, database.UpdateUserPasswordHashParams{
+		PasswordHash: newPHash,
+		ID:           userID,
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to update password")
+		return PatchApiUserPassword500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	return PatchApiUserPassword204Response{}, nil
 }

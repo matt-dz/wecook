@@ -400,11 +400,56 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /api/user/password:
+    patch:
+      summary: Update password
+      tags:
+        - User
+        - Auth
+      description: >
+        Update the current user's password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePasswordRequest"
+      responses:
+        "204":
+          description: OK
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized — missing or invalid invite code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: >
+            Unprocessible Entity - current password is incorrect or
+            new password is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/signup:
     post:
       summary: Sign up
       tags:
         - User
+        - Auth
       description: >
         Sign up with a new email and password. If platform is 
         invite-only, requires an invite code.
@@ -1858,6 +1903,19 @@ components:
         - first_name
         - last_name
         - password
+
+    UpdatePasswordRequest:
+      type: object
+      properties:
+        current_password:
+          type: string
+          description: "Current Password"
+        new_password:
+          type: string
+          description: "New Password"
+      required:
+        - current_password
+        - new_password
 
   securitySchemes:
     AccessTokenUserBearer:

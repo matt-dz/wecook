@@ -53,6 +53,7 @@ type Querier interface {
 	GetRecipesByOwner(ctx context.Context, id int64) ([]GetRecipesByOwnerRow, error)
 	GetUser(ctx context.Context, lower string) (GetUserRow, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
+	GetUserPasswordHash(ctx context.Context, id int64) (string, error)
 	GetUserRefreshTokenHash(ctx context.Context, id int64) (GetUserRefreshTokenHashRow, error)
 	GetUserRole(ctx context.Context, id int64) (Role, error)
 	GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersRow, error)
@@ -63,6 +64,7 @@ type Querier interface {
 	UpdateRecipeIngredientImage(ctx context.Context, arg UpdateRecipeIngredientImageParams) error
 	UpdateRecipeStep(ctx context.Context, arg UpdateRecipeStepParams) (UpdateRecipeStepRow, error)
 	UpdateRecipeStepImage(ctx context.Context, arg UpdateRecipeStepImageParams) error
+	UpdateUserPasswordHash(ctx context.Context, arg UpdateUserPasswordHashParams) error
 	UpdateUserRefreshTokenHash(ctx context.Context, arg UpdateUserRefreshTokenHashParams) error
 }
 

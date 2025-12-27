@@ -39,6 +39,14 @@ FROM
 WHERE
   email = trim(lower($1));
 
+-- name: GetUserPasswordHash :one
+SELECT
+  password_hash
+FROM
+  users
+WHERE
+  id = $1;
+
 -- name: GetUserRefreshTokenHash :one
 SELECT
   refresh_token_hash,
@@ -61,6 +69,14 @@ UPDATE
   users
 SET
   refresh_token_hash = $1
+WHERE
+  id = $2;
+
+-- name: UpdateUserPasswordHash :exec
+UPDATE
+  users
+SET
+  password_hash = $1
 WHERE
   id = $2;
 

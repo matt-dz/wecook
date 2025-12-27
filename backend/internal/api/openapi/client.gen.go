@@ -242,6 +242,15 @@ type UpdateIngredientResponse struct {
 	Unit     *string  `json:"unit,omitempty"`
 }
 
+// UpdatePasswordRequest defines model for UpdatePasswordRequest.
+type UpdatePasswordRequest struct {
+	// CurrentPassword Current Password
+	CurrentPassword string `json:"current_password"`
+
+	// NewPassword New Password
+	NewPassword string `json:"new_password"`
+}
+
 // UpdateRecipe defines model for UpdateRecipe.
 type UpdateRecipe struct {
 	CookTimeAmount nullable.Nullable[int32]    `json:"cook_time_amount,omitempty"`
@@ -348,6 +357,9 @@ type PostApiSignupJSONRequestBody = SignupRequest
 
 // PostApiUserInviteJSONRequestBody defines body for PostApiUserInvite for application/json ContentType.
 type PostApiUserInviteJSONRequestBody = InviteUserRequest
+
+// PatchApiUserPasswordJSONRequestBody defines body for PatchApiUserPassword for application/json ContentType.
+type PatchApiUserPasswordJSONRequestBody = UpdatePasswordRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -526,6 +538,11 @@ type ClientInterface interface {
 	PostApiUserInviteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiUserInvite(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchApiUserPasswordWithBody request with any body
+	PatchApiUserPasswordWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchApiUserPassword(ctx context.Context, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiUsers request
 	GetApiUsers(ctx context.Context, params *GetApiUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -977,6 +994,30 @@ func (c *Client) PostApiUserInviteWithBody(ctx context.Context, contentType stri
 
 func (c *Client) PostApiUserInvite(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiUserInviteRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchApiUserPasswordWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiUserPasswordRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchApiUserPassword(ctx context.Context, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiUserPasswordRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2129,6 +2170,46 @@ func NewPostApiUserInviteRequestWithBody(server string, contentType string, body
 	return req, nil
 }
 
+// NewPatchApiUserPasswordRequest calls the generic PatchApiUserPassword builder with application/json body
+func NewPatchApiUserPasswordRequest(server string, body PatchApiUserPasswordJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchApiUserPasswordRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPatchApiUserPasswordRequestWithBody generates requests for PatchApiUserPassword with any type of body
+func NewPatchApiUserPasswordRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/user/password")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetApiUsersRequest generates requests for GetApiUsers
 func NewGetApiUsersRequest(server string, params *GetApiUsersParams) (*http.Request, error) {
 	var err error
@@ -2341,6 +2422,11 @@ type ClientWithResponsesInterface interface {
 	PostApiUserInviteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error)
 
 	PostApiUserInviteWithResponse(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error)
+
+	// PatchApiUserPasswordWithBodyWithResponse request with any body
+	PatchApiUserPasswordWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error)
+
+	PatchApiUserPasswordWithResponse(ctx context.Context, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error)
 
 	// GetApiUsersWithResponse request
 	GetApiUsersWithResponse(ctx context.Context, params *GetApiUsersParams, reqEditors ...RequestEditorFn) (*GetApiUsersResponse, error)
@@ -3057,6 +3143,31 @@ func (r PostApiUserInviteResponse) StatusCode() int {
 	return 0
 }
 
+type PatchApiUserPasswordResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *Error
+	JSON401      *Error
+	JSON422      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchApiUserPasswordResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchApiUserPasswordResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetApiUsersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -3413,6 +3524,23 @@ func (c *ClientWithResponses) PostApiUserInviteWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParsePostApiUserInviteResponse(rsp)
+}
+
+// PatchApiUserPasswordWithBodyWithResponse request with arbitrary body returning *PatchApiUserPasswordResponse
+func (c *ClientWithResponses) PatchApiUserPasswordWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error) {
+	rsp, err := c.PatchApiUserPasswordWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiUserPasswordResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchApiUserPasswordWithResponse(ctx context.Context, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error) {
+	rsp, err := c.PatchApiUserPassword(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiUserPasswordResponse(rsp)
 }
 
 // GetApiUsersWithResponse request returning *GetApiUsersResponse
@@ -4689,6 +4817,53 @@ func ParsePostApiUserInviteResponse(rsp *http.Response) (*PostApiUserInviteRespo
 	return response, nil
 }
 
+// ParsePatchApiUserPasswordResponse parses an HTTP response from a PatchApiUserPasswordWithResponse call
+func ParsePatchApiUserPasswordResponse(rsp *http.Response) (*PatchApiUserPasswordResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchApiUserPasswordResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetApiUsersResponse parses an HTTP response from a GetApiUsersWithResponse call
 func ParseGetApiUsersResponse(rsp *http.Response) (*GetApiUsersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -4825,6 +5000,9 @@ type ServerInterface interface {
 	// Invite a user
 	// (POST /api/user/invite)
 	PostApiUserInvite(w http.ResponseWriter, r *http.Request)
+	// Update password
+	// (PATCH /api/user/password)
+	PatchApiUserPassword(w http.ResponseWriter, r *http.Request)
 	// Get users
 	// (GET /api/users)
 	GetApiUsers(w http.ResponseWriter, r *http.Request, params GetApiUsersParams)
@@ -5005,6 +5183,12 @@ func (_ Unimplemented) GetApiUser(w http.ResponseWriter, r *http.Request) {
 // Invite a user
 // (POST /api/user/invite)
 func (_ Unimplemented) PostApiUserInvite(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update password
+// (PATCH /api/user/password)
+func (_ Unimplemented) PatchApiUserPassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5857,6 +6041,26 @@ func (siw *ServerInterfaceWrapper) PostApiUserInvite(w http.ResponseWriter, r *h
 	handler.ServeHTTP(w, r)
 }
 
+// PatchApiUserPassword operation middleware
+func (siw *ServerInterfaceWrapper) PatchApiUserPassword(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PatchApiUserPassword(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetApiUsers operation middleware
 func (siw *ServerInterfaceWrapper) GetApiUsers(w http.ResponseWriter, r *http.Request) {
 
@@ -6097,6 +6301,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/user/invite", wrapper.PostApiUserInvite)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/user/password", wrapper.PatchApiUserPassword)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/users", wrapper.GetApiUsers)
@@ -7370,6 +7577,58 @@ func (response PostApiUserInvite500JSONResponse) VisitPostApiUserInviteResponse(
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PatchApiUserPasswordRequestObject struct {
+	Body *PatchApiUserPasswordJSONRequestBody
+}
+
+type PatchApiUserPasswordResponseObject interface {
+	VisitPatchApiUserPasswordResponse(w http.ResponseWriter) error
+}
+
+type PatchApiUserPassword204Response struct {
+}
+
+func (response PatchApiUserPassword204Response) VisitPatchApiUserPasswordResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type PatchApiUserPassword400JSONResponse Error
+
+func (response PatchApiUserPassword400JSONResponse) VisitPatchApiUserPasswordResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiUserPassword401JSONResponse Error
+
+func (response PatchApiUserPassword401JSONResponse) VisitPatchApiUserPasswordResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiUserPassword422JSONResponse Error
+
+func (response PatchApiUserPassword422JSONResponse) VisitPatchApiUserPasswordResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiUserPassword500JSONResponse Error
+
+func (response PatchApiUserPassword500JSONResponse) VisitPatchApiUserPasswordResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetApiUsersRequestObject struct {
 	Params GetApiUsersParams
 }
@@ -7503,6 +7762,9 @@ type StrictServerInterface interface {
 	// Invite a user
 	// (POST /api/user/invite)
 	PostApiUserInvite(ctx context.Context, request PostApiUserInviteRequestObject) (PostApiUserInviteResponseObject, error)
+	// Update password
+	// (PATCH /api/user/password)
+	PatchApiUserPassword(ctx context.Context, request PatchApiUserPasswordRequestObject) (PatchApiUserPasswordResponseObject, error)
 	// Get users
 	// (GET /api/users)
 	GetApiUsers(ctx context.Context, request GetApiUsersRequestObject) (GetApiUsersResponseObject, error)
@@ -8354,6 +8616,37 @@ func (sh *strictHandler) PostApiUserInvite(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiUserInviteResponseObject); ok {
 		if err := validResponse.VisitPostApiUserInviteResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PatchApiUserPassword operation middleware
+func (sh *strictHandler) PatchApiUserPassword(w http.ResponseWriter, r *http.Request) {
+	var request PatchApiUserPasswordRequestObject
+
+	var body PatchApiUserPasswordJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PatchApiUserPassword(ctx, request.(PatchApiUserPasswordRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PatchApiUserPassword")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PatchApiUserPasswordResponseObject); ok {
+		if err := validResponse.VisitPatchApiUserPasswordResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

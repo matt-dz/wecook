@@ -1002,6 +1002,22 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, er
 	return i, err
 }
 
+const getUserPasswordHash = `-- name: GetUserPasswordHash :one
+SELECT
+  password_hash
+FROM
+  users
+WHERE
+  id = $1
+`
+
+func (q *Queries) GetUserPasswordHash(ctx context.Context, id int64) (string, error) {
+	row := q.db.QueryRow(ctx, getUserPasswordHash, id)
+	var password_hash string
+	err := row.Scan(&password_hash)
+	return password_hash, err
+}
+
 const getUserRefreshTokenHash = `-- name: GetUserRefreshTokenHash :one
 SELECT
   refresh_token_hash,
@@ -1442,6 +1458,25 @@ type UpdateRecipeStepImageParams struct {
 
 func (q *Queries) UpdateRecipeStepImage(ctx context.Context, arg UpdateRecipeStepImageParams) error {
 	_, err := q.db.Exec(ctx, updateRecipeStepImage, arg.ImageUrl, arg.ID)
+	return err
+}
+
+const updateUserPasswordHash = `-- name: UpdateUserPasswordHash :exec
+UPDATE
+  users
+SET
+  password_hash = $1
+WHERE
+  id = $2
+`
+
+type UpdateUserPasswordHashParams struct {
+	PasswordHash string
+	ID           int64
+}
+
+func (q *Queries) UpdateUserPasswordHash(ctx context.Context, arg UpdateUserPasswordHashParams) error {
+	_, err := q.db.Exec(ctx, updateUserPasswordHash, arg.PasswordHash, arg.ID)
 	return err
 }
 
