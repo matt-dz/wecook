@@ -1,8 +1,13 @@
-import { verifySession, refreshSession, ACCESS_TOKEN_COOKIE_NAME } from '$lib/auth';
+import { verifySession, refreshSession, ACCESS_TOKEN_COOKIE_NAME, type Role } from '$lib/auth';
 import ky, { HTTPError, type Options } from 'ky';
 import { baseOptions } from '$lib/http';
 import { REFRESH_TOKEN_COOKIE_NAME } from '$lib/auth';
-import { accessTokenExpired, parseError, refreshTokenExpired } from '$lib/errors/api';
+import {
+	accessTokenExpired,
+	ApiErrorCodes,
+	parseError,
+	refreshTokenExpired
+} from '$lib/errors/api';
 import { redirect, type Handle, type HandleServerError } from '@sveltejs/kit';
 import * as setCookie from 'set-cookie-parser';
 
@@ -47,8 +52,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	// Exit early, no auth required
-	if (!event.route.id?.startsWith('/(user)/')) {
+	if (!event.route.id?.startsWith('/(user)/') && !event.route.id?.startsWith('/(admin)/')) {
 		return await resolve(event);
+	}
+
+	// Extract required role
+	let role: Role;
+	if (event.route.id?.startsWith('/(admin)/')) {
+		role = 'admin';
+	} else {
+		role = 'user';
 	}
 
 	const concatenateCookies = (cookies: typeof event.cookies) =>
@@ -113,18 +126,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	try {
 		const fetch = ky.create(options);
-		await verifySession(fetch);
+		await verifySession(fetch, { role });
 	} catch (e) {
 		if (e instanceof HTTPError) {
-			if (await refreshTokenExpired(e.response)) {
-				redirect(303, '/login');
+			const err = await parseError(e.response);
+			if (err.success && err.data.code === ApiErrorCodes.InsufficientPermissions) {
+				redirect(303, '/');
 			}
-			console.error(e.message);
-			console.error(await e.response.json());
-		} else {
-			console.error(e);
 		}
-		redirect(303, '/');
+		throw e;
 	}
 
 	return await resolve(event);

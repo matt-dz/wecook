@@ -5,8 +5,18 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public';
 const ACCESS_TOKEN_COOKIE_NAME = 'access';
 const REFRESH_TOKEN_COOKIE_NAME = 'refresh';
 
-export async function verifySession(fetch: FetchType, options?: Options) {
-	await fetch.get(`${PUBLIC_BACKEND_URL}/api/auth/verify`, options);
+export type Role = 'user' | 'admin';
+
+export type VerifySessionRequest = {
+	role?: Role;
+};
+
+export async function verifySession(
+	fetch: FetchType,
+	request: VerifySessionRequest,
+	options?: Options
+) {
+	await fetch.get(`${PUBLIC_BACKEND_URL}/api/auth/verify?role=${request.role ?? 'user'}`, options);
 }
 
 export type RefreshSessionRequest = {
