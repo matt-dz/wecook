@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from '$lib/auth';
 import fetch from '$lib/http';
-import { getPersonalRecipes } from '$lib/recipes';
+import { getUser } from '$lib/users';
 import { redirect } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ cookies }) => {
@@ -12,12 +12,12 @@ export const load: PageServerLoad = async ({ cookies }) => {
 	}
 	const refreshToken = cookies.get(REFRESH_TOKEN_COOKIE_NAME);
 
-	const recipes = await getPersonalRecipes(fetch, {
+	const user = await getUser(fetch, {
 		headers: {
 			Cookie: `${ACCESS_TOKEN_COOKIE_NAME}=${accessToken}; ${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`
 		}
 	});
 	return {
-		recipes
+		user
 	};
 };

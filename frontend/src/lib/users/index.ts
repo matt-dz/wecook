@@ -14,24 +14,12 @@ export const UserSchema = z.object({
 
 export type User = z.infer<typeof UserSchema>;
 
-export type GetUserRequest = {
-	access_token?: string;
-};
-
 export type GetUserResponse = User;
 
-export async function getUser(
-	fetch: FetchType,
-	request: GetUserRequest,
-	options?: Options
-): Promise<GetUserResponse> {
+export async function getUser(fetch: FetchType, options?: Options): Promise<GetUserResponse> {
 	const json = await fetch
 		.get(`${PUBLIC_BACKEND_URL}/api/user`, {
 			...options,
-			headers: {
-				...options?.headers,
-				Cookie: request.access_token ? `${ACCESS_TOKEN_COOKIE_NAME}=${request.access_token};` : ''
-			},
 			credentials: 'include'
 		})
 		.json();
@@ -96,6 +84,22 @@ export async function signupRequest(
 	options?: Options
 ): Promise<void> {
 	await fetch.post(`${PUBLIC_BACKEND_URL}/api/signup`, {
+		...options,
+		json: request
+	});
+}
+
+export type ChangePasswordRequest = {
+	current_password: string;
+	new_password: string;
+};
+
+export async function changePassword(
+	fetch: FetchType,
+	request: ChangePasswordRequest,
+	options?: Options
+): Promise<void> {
+	await fetch.patch(`${PUBLIC_BACKEND_URL}/api/user/password`, {
 		...options,
 		json: request
 	});

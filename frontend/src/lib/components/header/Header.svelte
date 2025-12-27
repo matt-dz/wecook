@@ -18,12 +18,21 @@
 			{#if isLoggedIn}
 				<a
 					href={resolve('/home')}
-					class={clsx('hover:underline', page.route.id === '/(user)/home' && 'underline')}
-					>My Recipes</a
+					class={clsx(
+						'underline-offset-2 hover:underline',
+						page.route.id === '/(user)/home' && 'underline'
+					)}>My Recipes</a
 				>
-				<a href={resolve('/logout')} class="hover:underline">Logout</a>
+				<a
+					href={resolve('/profile')}
+					class={clsx(
+						'underline-offset-2 hover:underline',
+						page.route.id === '/(user)/profile' && 'underline'
+					)}>Profile</a
+				>
+				<a href={resolve('/logout')} class="underline-offset-2 hover:underline">Logout</a>
 			{:else}
-				<a href={resolve('/login')} class="hover:underline">Login</a>
+				<a href={resolve('/login')} class="underline-offset-2 hover:underline">Login</a>
 			{/if}
 		</nav>
 	</div>

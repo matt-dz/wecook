@@ -8,16 +8,16 @@
 	import { resolve } from '$app/paths';
 	import { HTTPError } from 'ky';
 	import { toast } from 'svelte-sonner';
+	import Error from '$lib/components/error/Error.svelte';
 
-	const placeholderError = 'placeholder';
 	let loading = $state(false);
-	let error: string = $state(placeholderError);
+	let error: string = $state('');
 	let email: string = $state('');
 	let password: string = $state('');
 
 	async function onSubmit(event: SubmitEvent) {
 		event.preventDefault();
-		error = placeholderError;
+		error = '';
 		loading = true;
 
 		try {
@@ -91,13 +91,7 @@
 			/>
 		</div>
 
-		<p
-			class="text-center text-sm text-red-600"
-			class:invisible={error === placeholderError}
-			class:visible={error !== placeholderError}
-		>
-			{error}
-		</p>
+		<Error {error} class="text-center" />
 
 		<Button
 			className="from-blue-300 to-blue-200 border-blue-400 hover:from-blue-200 hover:to-blue-100"

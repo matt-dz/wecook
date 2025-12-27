@@ -100,7 +100,7 @@ export const GetPersonalRecipesResponse = z.object({
 	recipes: z.array(RecipeAndOwnerSchema)
 });
 
-export async function GetPersonalRecipes(
+export async function getPersonalRecipes(
 	fetch: FetchType,
 	options?: Options
 ): Promise<z.infer<typeof GetPersonalRecipesResponse>> {
