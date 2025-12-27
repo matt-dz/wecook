@@ -398,11 +398,9 @@ const getInvitationCode = `-- name: GetInvitationCode :one
 SELECT
   code_hash
 FROM
-  invitation_codes
+  valid_invitation_codes
 WHERE
   id = $1
-  AND expires_at > now()
-  AND used_at <> NULL
 `
 
 func (q *Queries) GetInvitationCode(ctx context.Context, id int64) (string, error) {
@@ -1097,6 +1095,23 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersR
 	return items, nil
 }
 
+const redeemInvitationCode = `-- name: RedeemInvitationCode :execrows
+UPDATE
+  valid_invitation_codes
+SET
+  used_at = now()
+WHERE
+  id = $1
+`
+
+func (q *Queries) RedeemInvitationCode(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.Exec(ctx, redeemInvitationCode, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const updateRecipe = `-- name: UpdateRecipe :one
 UPDATE
   recipes
@@ -1446,19 +1461,5 @@ type UpdateUserRefreshTokenHashParams struct {
 
 func (q *Queries) UpdateUserRefreshTokenHash(ctx context.Context, arg UpdateUserRefreshTokenHashParams) error {
 	_, err := q.db.Exec(ctx, updateUserRefreshTokenHash, arg.RefreshTokenHash, arg.ID)
-	return err
-}
-
-const useInvitationCode = `-- name: UseInvitationCode :exec
-UPDATE
-  invitation_codes
-SET
-  used_at = now()
-WHERE
-  id = $1
-`
-
-func (q *Queries) UseInvitationCode(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, useInvitationCode, id)
 	return err
 }

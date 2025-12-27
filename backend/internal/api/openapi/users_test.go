@@ -7,12 +7,15 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	"go.uber.org/mock/gomock"
 
 	apiError "github.com/matt-dz/wecook/internal/api/error"
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/api/token"
+	"github.com/matt-dz/wecook/internal/argon2id"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/email"
 	"github.com/matt-dz/wecook/internal/env"
@@ -857,5 +860,463 @@ func TestPostApiUserInvite(t *testing.T) {
 				t.Errorf("unexpected response type: %T", v)
 			}
 		})
+	}
+}
+
+func TestPostApiSignup(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := database.NewMockQuerier(ctrl)
+	server := NewServer()
+
+	// Create a valid invite code and hash
+	validInviteCode := "456$test-code-1234567890"
+	inviteCodeOnly := "test-code-1234567890"
+	validCodeHash, err := argon2id.EncodeHash(inviteCodeOnly, argon2id.DefaultParams)
+	if err != nil {
+		t.Fatalf("failed to create test code hash: %v", err)
+	}
+
+	testPassword := "ValidP@ssw0rd123!"
+
+	tests := []struct {
+		name       string
+		request    PostApiSignupRequestObject
+		setup      func()
+		wantStatus int
+		wantCode   string
+		wantError  bool
+	}{
+		{
+			name: "successful signup",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("newuser@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   testPassword,
+					InviteCode: &validInviteCode,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetInvitationCode(gomock.Any(), int64(456)).
+					Return(validCodeHash, nil)
+
+				mockDB.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Return(int64(123), nil)
+
+				mockDB.EXPECT().
+					RedeemInvitationCode(gomock.Any(), int64(456)).
+					Return(int64(1), nil)
+
+				mockDB.EXPECT().
+					UpdateUserRefreshTokenHash(gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+		},
+		{
+			name: "missing invite code",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:     openapi_types.Email("newuser@example.com"),
+					FirstName: "John",
+					LastName:  "Doe",
+					Password:  testPassword,
+				},
+			},
+			setup:      func() {},
+			wantStatus: 400,
+			wantCode:   apiError.BadRequest.String(),
+			wantError:  false,
+		},
+		{
+			name: "invalid invite code format",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("newuser@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   testPassword,
+					InviteCode: stringPtr("invalid-no-delimiter"),
+				},
+			},
+			setup:      func() {},
+			wantStatus: 422,
+			wantCode:   apiError.InvalidInviteCode.String(),
+			wantError:  false,
+		},
+		{
+			name: "invite code not found in database",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("newuser@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   testPassword,
+					InviteCode: &validInviteCode,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetInvitationCode(gomock.Any(), int64(456)).
+					Return("", pgx.ErrNoRows)
+			},
+			wantStatus: 422,
+			wantCode:   apiError.InvalidInviteCode.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error getting invitation code",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("newuser@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   testPassword,
+					InviteCode: &validInviteCode,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetInvitationCode(gomock.Any(), int64(456)).
+					Return("", errors.New("database connection error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "invalid invite code - hash mismatch",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("newuser@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   testPassword,
+					InviteCode: stringPtr("456$wrong-code-here"),
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetInvitationCode(gomock.Any(), int64(456)).
+					Return(validCodeHash, nil)
+			},
+			wantStatus: 422,
+			wantCode:   apiError.InvalidInviteCode.String(),
+			wantError:  false,
+		},
+		{
+			name: "weak password",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("newuser@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   "weak",
+					InviteCode: &validInviteCode,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetInvitationCode(gomock.Any(), int64(456)).
+					Return(validCodeHash, nil)
+			},
+			wantStatus: 422,
+			wantCode:   apiError.InvalidPassword.String(),
+			wantError:  false,
+		},
+		{
+			name: "duplicate email",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("existing@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   testPassword,
+					InviteCode: &validInviteCode,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetInvitationCode(gomock.Any(), int64(456)).
+					Return(validCodeHash, nil)
+
+				pgErr := &pgconn.PgError{
+					Code: "23505",
+				}
+				mockDB.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Return(int64(0), pgErr)
+			},
+			wantStatus: 422,
+			wantCode:   apiError.EmailConflict.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error creating user",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("newuser@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   testPassword,
+					InviteCode: &validInviteCode,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetInvitationCode(gomock.Any(), int64(456)).
+					Return(validCodeHash, nil)
+
+				mockDB.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Return(int64(0), errors.New("database connection error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "invite code already used - redeem returns 0 rows",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("newuser@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   testPassword,
+					InviteCode: &validInviteCode,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetInvitationCode(gomock.Any(), int64(456)).
+					Return(validCodeHash, nil)
+
+				mockDB.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Return(int64(123), nil)
+
+				mockDB.EXPECT().
+					RedeemInvitationCode(gomock.Any(), int64(456)).
+					Return(int64(0), nil)
+			},
+			wantStatus: 422,
+			wantCode:   apiError.InvalidInviteCode.String(),
+			wantError:  false,
+		},
+		{
+			name: "database error redeeming invitation code",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("newuser@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   testPassword,
+					InviteCode: &validInviteCode,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetInvitationCode(gomock.Any(), int64(456)).
+					Return(validCodeHash, nil)
+
+				mockDB.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Return(int64(123), nil)
+
+				mockDB.EXPECT().
+					RedeemInvitationCode(gomock.Any(), int64(456)).
+					Return(int64(0), errors.New("database connection error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "error updating user refresh token",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:      openapi_types.Email("newuser@example.com"),
+					FirstName:  "John",
+					LastName:   "Doe",
+					Password:   testPassword,
+					InviteCode: &validInviteCode,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetInvitationCode(gomock.Any(), int64(456)).
+					Return(validCodeHash, nil)
+
+				mockDB.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Return(int64(123), nil)
+
+				mockDB.EXPECT().
+					RedeemInvitationCode(gomock.Any(), int64(456)).
+					Return(int64(1), nil)
+
+				mockDB.EXPECT().
+					UpdateUserRefreshTokenHash(gomock.Any(), gomock.Any()).
+					Return(errors.New("database connection error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+
+			ctx := context.Background()
+			ctx = requestid.InjectRequestID(ctx, 12345)
+			e := env.New(map[string]string{
+				"APP_SECRET": "test-secret-key-for-jwt-signing-at-least-32-characters-long",
+				"ENV":        "PROD",
+			})
+			e.Logger = log.NullLogger()
+			e.Database = mockDB
+			ctx = env.WithCtx(ctx, e)
+
+			resp, err := server.PostApiSignup(ctx, tt.request)
+			if (err != nil) != tt.wantError {
+				t.Errorf("PostApiSignup() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			switch v := resp.(type) {
+			case loginSuccessResponse:
+				if tt.wantStatus != 200 {
+					t.Errorf("expected status %d, got 200", tt.wantStatus)
+				}
+				if v.accessCookie == nil {
+					t.Error("expected access cookie, got nil")
+				}
+				if v.refreshCookie == nil {
+					t.Error("expected refresh cookie, got nil")
+				}
+				if v.body.AccessToken == "" {
+					t.Error("expected access token in body, got empty string")
+				}
+			case PostApiSignup400JSONResponse:
+				if tt.wantStatus != 400 {
+					t.Errorf("expected status %d, got 400", tt.wantStatus)
+				}
+				if tt.wantCode != "" && v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			case PostApiSignup422JSONResponse:
+				if tt.wantStatus != 422 {
+					t.Errorf("expected status %d, got 422", tt.wantStatus)
+				}
+				if tt.wantCode != "" && v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			case PostApiSignup500JSONResponse:
+				if tt.wantStatus != 500 {
+					t.Errorf("expected status %d, got 500", tt.wantStatus)
+				}
+				if tt.wantCode != "" && v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			default:
+				t.Errorf("unexpected response type: %T", v)
+			}
+		})
+	}
+}
+
+func TestPostApiSignup_ParameterValidation(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := database.NewMockQuerier(ctrl)
+	server := NewServer()
+
+	validInviteCode := "456$test-code-1234567890"
+	inviteCodeOnly := "test-code-1234567890"
+	validCodeHash, err := argon2id.EncodeHash(inviteCodeOnly, argon2id.DefaultParams)
+	if err != nil {
+		t.Fatalf("failed to create test code hash: %v", err)
+	}
+
+	testPassword := "ValidP@ssw0rd123!"
+
+	mockDB.EXPECT().
+		GetInvitationCode(gomock.Any(), int64(456)).
+		Return(validCodeHash, nil)
+
+	mockDB.EXPECT().
+		CreateUser(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, params database.CreateUserParams) (int64, error) {
+			if params.Email != "test@example.com" {
+				t.Errorf("expected email 'test@example.com', got %s", params.Email)
+			}
+			if params.FirstName != "John" {
+				t.Errorf("expected first name 'John', got %s", params.FirstName)
+			}
+			if params.LastName != "Doe" {
+				t.Errorf("expected last name 'Doe', got %s", params.LastName)
+			}
+			if params.PasswordHash == "" {
+				t.Error("expected non-empty password hash")
+			}
+			return int64(123), nil
+		})
+
+	mockDB.EXPECT().
+		RedeemInvitationCode(gomock.Any(), int64(456)).
+		Return(int64(1), nil)
+
+	mockDB.EXPECT().
+		UpdateUserRefreshTokenHash(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, params database.UpdateUserRefreshTokenHashParams) error {
+			if params.ID != 123 {
+				t.Errorf("expected user ID 123, got %d", params.ID)
+			}
+			if !params.RefreshTokenHash.Valid {
+				t.Error("expected valid refresh token hash")
+			}
+			if params.RefreshTokenHash.String == "" {
+				t.Error("expected non-empty refresh token hash")
+			}
+			return nil
+		})
+
+	ctx := context.Background()
+	ctx = requestid.InjectRequestID(ctx, 12345)
+	e := env.New(map[string]string{
+		"APP_SECRET": "test-secret-key-for-jwt-signing-at-least-32-characters-long",
+		"ENV":        "PROD",
+	})
+	e.Logger = log.NullLogger()
+	e.Database = mockDB
+	ctx = env.WithCtx(ctx, e)
+
+	request := PostApiSignupRequestObject{
+		Body: &SignupRequest{
+			Email:      openapi_types.Email("test@example.com"),
+			FirstName:  "John",
+			LastName:   "Doe",
+			Password:   testPassword,
+			InviteCode: &validInviteCode,
+		},
+	}
+
+	resp, err := server.PostApiSignup(ctx, request)
+	if err != nil {
+		t.Fatalf("PostApiSignup() error = %v", err)
+	}
+
+	_, ok := resp.(loginSuccessResponse)
+	if !ok {
+		t.Fatalf("expected loginSuccessResponse, got %T", resp)
 	}
 }

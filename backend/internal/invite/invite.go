@@ -23,21 +23,21 @@ func CreateInvite() (code string, err error) {
 }
 
 // EncodeInvite encodes the invite to be sent to the user.
-func EncodeInvite(code string, id int64) string {
+func EncodeInvite(id int64, code string) string {
 	return fmt.Sprintf("%d%c%s", id, delimiter, code)
 }
 
 // DecodeInvite decodes an invite.
-func DecodeInvite(invite string) (code string, id int64, err error) {
-	idStr, code, found := strings.Cut(code, string(delimiter))
+func DecodeInvite(invite string) (id int64, code string, err error) {
+	idStr, code, found := strings.Cut(invite, string(delimiter))
 	if !found {
-		return "", 0, ErrInvalidInvite
+		return id, code, ErrInvalidInvite
 	}
 
 	id, err = strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		return "", 0, errors.Join(ErrInvalidInvite, err)
+		return id, code, errors.Join(ErrInvalidInvite, err)
 	}
 
-	return code, id, nil
+	return id, code, nil
 }

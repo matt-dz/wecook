@@ -56,6 +56,7 @@ type Querier interface {
 	GetUserRefreshTokenHash(ctx context.Context, id int64) (GetUserRefreshTokenHashRow, error)
 	GetUserRole(ctx context.Context, id int64) (Role, error)
 	GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersRow, error)
+	RedeemInvitationCode(ctx context.Context, id int64) (int64, error)
 	UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (UpdateRecipeRow, error)
 	UpdateRecipeCoverImage(ctx context.Context, arg UpdateRecipeCoverImageParams) error
 	UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) (RecipeIngredient, error)
@@ -63,7 +64,6 @@ type Querier interface {
 	UpdateRecipeStep(ctx context.Context, arg UpdateRecipeStepParams) (UpdateRecipeStepRow, error)
 	UpdateRecipeStepImage(ctx context.Context, arg UpdateRecipeStepImageParams) error
 	UpdateUserRefreshTokenHash(ctx context.Context, arg UpdateUserRefreshTokenHashParams) error
-	UseInvitationCode(ctx context.Context, id int64) error
 }
 
 var _ Querier = (*Queries)(nil)

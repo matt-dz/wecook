@@ -24,10 +24,12 @@ const (
 	StepNotFound            ErrorCode = "step_not_found"
 	ImageNotFound           ErrorCode = "image_not_found"
 	UserNotFound            ErrorCode = "user_not_found"
+	InvalidInviteCode       ErrorCode = "invalid_invite_code"
+	InvalidPassword         ErrorCode = "invalid_password"
 )
 
 var errorCodeToStatusCode = map[ErrorCode]int{
-	UnknownError:            0, // No explicit error code because we it is unknown
+	UnknownError:            0, // No error code - unknown
 	InternalServerError:     http.StatusInternalServerError,
 	BadRequest:              http.StatusBadRequest,
 	UnprocessibleEntity:     http.StatusUnprocessableEntity,
@@ -46,6 +48,8 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	InvalidCredentials:      http.StatusUnauthorized,
 	ImageNotFound:           http.StatusNotFound,
 	UserNotFound:            http.StatusNotFound,
+	InvalidInviteCode:       http.StatusUnprocessableEntity,
+	InvalidPassword:         http.StatusUnprocessableEntity,
 }
 
 func (ec ErrorCode) StatusCode() int {

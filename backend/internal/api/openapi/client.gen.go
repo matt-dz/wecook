@@ -118,7 +118,7 @@ type GetUsersResponse struct {
 // InviteUserRequest defines model for InviteUserRequest.
 type InviteUserRequest struct {
 	// Email Email Address
-	Email string `json:"email"`
+	Email openapi_types.Email `json:"email"`
 }
 
 // LoginResponse defines model for LoginResponse.
@@ -207,6 +207,16 @@ type RefreshToken struct {
 
 // Role defines model for Role.
 type Role string
+
+// SignupRequest defines model for SignupRequest.
+type SignupRequest struct {
+	// Email Email Address
+	Email      openapi_types.Email `json:"email"`
+	FirstName  string              `json:"first_name"`
+	InviteCode *string             `json:"invite_code,omitempty"`
+	LastName   string              `json:"last_name"`
+	Password   string              `json:"password"`
+}
 
 // TimeUnit defines model for TimeUnit.
 type TimeUnit string
@@ -332,6 +342,9 @@ type PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody = UpdateStepRequest
 
 // PostApiRecipesRecipeIDStepsStepIDImageMultipartRequestBody defines body for PostApiRecipesRecipeIDStepsStepIDImage for multipart/form-data ContentType.
 type PostApiRecipesRecipeIDStepsStepIDImageMultipartRequestBody = UpdateStepImageForm
+
+// PostApiSignupJSONRequestBody defines body for PostApiSignup for application/json ContentType.
+type PostApiSignupJSONRequestBody = SignupRequest
 
 // PostApiUserInviteJSONRequestBody defines body for PostApiUserInvite for application/json ContentType.
 type PostApiUserInviteJSONRequestBody = InviteUserRequest
@@ -500,6 +513,11 @@ type ClientInterface interface {
 
 	// PostApiRecipesRecipeIDStepsStepIDImageWithBody request with any body
 	PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiSignupWithBody request with any body
+	PostApiSignupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiSignup(ctx context.Context, body PostApiSignupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiUser request
 	GetApiUser(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -899,6 +917,30 @@ func (c *Client) DeleteApiRecipesRecipeIDStepsStepIDImage(ctx context.Context, r
 
 func (c *Client) PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiRecipesRecipeIDStepsStepIDImageRequestWithBody(c.Server, recipeID, stepID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiSignupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiSignupRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiSignup(ctx context.Context, body PostApiSignupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiSignupRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1980,6 +2022,46 @@ func NewPostApiRecipesRecipeIDStepsStepIDImageRequestWithBody(server string, rec
 	return req, nil
 }
 
+// NewPostApiSignupRequest calls the generic PostApiSignup builder with application/json body
+func NewPostApiSignupRequest(server string, body PostApiSignupJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiSignupRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiSignupRequestWithBody generates requests for PostApiSignup with any type of body
+func NewPostApiSignupRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/signup")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetApiUserRequest generates requests for GetApiUser
 func NewGetApiUserRequest(server string) (*http.Request, error) {
 	var err error
@@ -2246,6 +2328,11 @@ type ClientWithResponsesInterface interface {
 
 	// PostApiRecipesRecipeIDStepsStepIDImageWithBodyWithResponse request with any body
 	PostApiRecipesRecipeIDStepsStepIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsStepIDImageResponse, error)
+
+	// PostApiSignupWithBodyWithResponse request with any body
+	PostApiSignupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiSignupResponse, error)
+
+	PostApiSignupWithResponse(ctx context.Context, body PostApiSignupJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiSignupResponse, error)
 
 	// GetApiUserWithResponse request
 	GetApiUserWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiUserResponse, error)
@@ -2893,6 +2980,33 @@ func (r PostApiRecipesRecipeIDStepsStepIDImageResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiSignupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *LoginResponse
+	JSON400      *Error
+	JSON401      *Error
+	JSON409      *Error
+	JSON422      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiSignupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiSignupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetApiUserResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -3256,6 +3370,23 @@ func (c *ClientWithResponses) PostApiRecipesRecipeIDStepsStepIDImageWithBodyWith
 		return nil, err
 	}
 	return ParsePostApiRecipesRecipeIDStepsStepIDImageResponse(rsp)
+}
+
+// PostApiSignupWithBodyWithResponse request with arbitrary body returning *PostApiSignupResponse
+func (c *ClientWithResponses) PostApiSignupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiSignupResponse, error) {
+	rsp, err := c.PostApiSignupWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiSignupResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiSignupWithResponse(ctx context.Context, body PostApiSignupJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiSignupResponse, error) {
+	rsp, err := c.PostApiSignup(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiSignupResponse(rsp)
 }
 
 // GetApiUserWithResponse request returning *GetApiUserResponse
@@ -4403,6 +4534,67 @@ func ParsePostApiRecipesRecipeIDStepsStepIDImageResponse(rsp *http.Response) (*P
 	return response, nil
 }
 
+// ParsePostApiSignupResponse parses an HTTP response from a PostApiSignupWithResponse call
+func ParsePostApiSignupResponse(rsp *http.Response) (*PostApiSignupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiSignupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LoginResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetApiUserResponse parses an HTTP response from a GetApiUserWithResponse call
 func ParseGetApiUserResponse(rsp *http.Response) (*GetApiUserResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -4624,6 +4816,9 @@ type ServerInterface interface {
 	// Upload an image for a recipe step
 	// (POST /api/recipes/{recipeID}/steps/{stepID}/image)
 	PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64)
+	// Sign up
+	// (POST /api/signup)
+	PostApiSignup(w http.ResponseWriter, r *http.Request)
 	// Get current user
 	// (GET /api/user)
 	GetApiUser(w http.ResponseWriter, r *http.Request)
@@ -4792,6 +4987,12 @@ func (_ Unimplemented) DeleteApiRecipesRecipeIDStepsStepIDImage(w http.ResponseW
 // Upload an image for a recipe step
 // (POST /api/recipes/{recipeID}/steps/{stepID}/image)
 func (_ Unimplemented) PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Sign up
+// (POST /api/signup)
+func (_ Unimplemented) PostApiSignup(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5602,6 +5803,20 @@ func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDStepsStepIDImage(w http
 	handler.ServeHTTP(w, r)
 }
 
+// PostApiSignup operation middleware
+func (siw *ServerInterfaceWrapper) PostApiSignup(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostApiSignup(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetApiUser operation middleware
 func (siw *ServerInterfaceWrapper) GetApiUser(w http.ResponseWriter, r *http.Request) {
 
@@ -5873,6 +6088,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/recipes/{recipeID}/steps/{stepID}/image", wrapper.PostApiRecipesRecipeIDStepsStepIDImage)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/signup", wrapper.PostApiSignup)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/user", wrapper.GetApiUser)
@@ -6987,6 +7205,76 @@ func (response PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse) VisitPostA
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PostApiSignupRequestObject struct {
+	Body *PostApiSignupJSONRequestBody
+}
+
+type PostApiSignupResponseObject interface {
+	VisitPostApiSignupResponse(w http.ResponseWriter) error
+}
+
+type PostApiSignup200ResponseHeaders struct {
+	SetCookie string
+}
+
+type PostApiSignup200JSONResponse struct {
+	Body    LoginResponse
+	Headers PostApiSignup200ResponseHeaders
+}
+
+func (response PostApiSignup200JSONResponse) VisitPostApiSignupResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Set-Cookie", fmt.Sprint(response.Headers.SetCookie))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type PostApiSignup400JSONResponse Error
+
+func (response PostApiSignup400JSONResponse) VisitPostApiSignupResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiSignup401JSONResponse Error
+
+func (response PostApiSignup401JSONResponse) VisitPostApiSignupResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiSignup409JSONResponse Error
+
+func (response PostApiSignup409JSONResponse) VisitPostApiSignupResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiSignup422JSONResponse Error
+
+func (response PostApiSignup422JSONResponse) VisitPostApiSignupResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiSignup500JSONResponse Error
+
+func (response PostApiSignup500JSONResponse) VisitPostApiSignupResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetApiUserRequestObject struct {
 }
 
@@ -7206,6 +7494,9 @@ type StrictServerInterface interface {
 	// Upload an image for a recipe step
 	// (POST /api/recipes/{recipeID}/steps/{stepID}/image)
 	PostApiRecipesRecipeIDStepsStepIDImage(ctx context.Context, request PostApiRecipesRecipeIDStepsStepIDImageRequestObject) (PostApiRecipesRecipeIDStepsStepIDImageResponseObject, error)
+	// Sign up
+	// (POST /api/signup)
+	PostApiSignup(ctx context.Context, request PostApiSignupRequestObject) (PostApiSignupResponseObject, error)
 	// Get current user
 	// (GET /api/user)
 	GetApiUser(ctx context.Context, request GetApiUserRequestObject) (GetApiUserResponseObject, error)
@@ -7977,6 +8268,37 @@ func (sh *strictHandler) PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseW
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiRecipesRecipeIDStepsStepIDImageResponseObject); ok {
 		if err := validResponse.VisitPostApiRecipesRecipeIDStepsStepIDImageResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostApiSignup operation middleware
+func (sh *strictHandler) PostApiSignup(w http.ResponseWriter, r *http.Request) {
+	var request PostApiSignupRequestObject
+
+	var body PostApiSignupJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PostApiSignup(ctx, request.(PostApiSignupRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostApiSignup")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PostApiSignupResponseObject); ok {
+		if err := validResponse.VisitPostApiSignupResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

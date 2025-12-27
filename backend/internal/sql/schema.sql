@@ -40,6 +40,15 @@ CREATE TABLE invitation_codes (
 ALTER TABLE invitation_codes
   ADD CONSTRAINT invitation_codes_expires_after_created CHECK (expires_at >= created_at);
 
+CREATE VIEW valid_invitation_codes AS
+SELECT
+  *
+FROM
+  invitation_codes
+WHERE
+  expires_at > now()
+  AND used_at IS NULL;
+
 CREATE TABLE recipes (
   id bigserial PRIMARY KEY,
   user_id bigserial REFERENCES users (id) ON DELETE CASCADE,

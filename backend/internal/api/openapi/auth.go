@@ -52,6 +52,16 @@ func (r loginSuccessResponse) VisitPostApiAuthRefreshResponse(w http.ResponseWri
 	return encoder.Encode(r.body)
 }
 
+func (r loginSuccessResponse) VisitPostApiSignupResponse(w http.ResponseWriter) error {
+	http.SetCookie(w, r.accessCookie)
+	http.SetCookie(w, r.refreshCookie)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	encoder := json.NewEncoder(w)
+	return encoder.Encode(r.body)
+}
+
 func (Server) PostApiLogin(ctx context.Context, request PostApiLoginRequestObject) (PostApiLoginResponseObject, error) {
 	env := env.EnvFromCtx(ctx)
 	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
@@ -170,8 +180,8 @@ func (Server) PostApiLogin(ctx context.Context, request PostApiLoginRequestObjec
 	tokenType := "Bearer"
 	expiresIn := int64(token.AccessTokenLifetime)
 	return loginSuccessResponse{
-		accessCookie:  token.NewAccessTokenCookie(accessToken, env),
-		refreshCookie: token.NewRefreshTokenCookie(refreshToken, env),
+		accessCookie:  token.NewAccessTokenCookie(accessToken, env.IsProd()),
+		refreshCookie: token.NewRefreshTokenCookie(refreshToken, env.IsProd()),
 		body: LoginResponse{
 			AccessToken: accessToken,
 			TokenType:   &tokenType,
@@ -352,8 +362,8 @@ func (Server) PostApiAuthRefresh(ctx context.Context,
 	tokenType := "Bearer"
 	expiresIn := int64(token.AccessTokenLifetime)
 	return loginSuccessResponse{
-		accessCookie:  token.NewAccessTokenCookie(accessToken, env),
-		refreshCookie: token.NewRefreshTokenCookie(newRefreshToken, env),
+		accessCookie:  token.NewAccessTokenCookie(accessToken, env.IsProd()),
+		refreshCookie: token.NewRefreshTokenCookie(newRefreshToken, env.IsProd()),
 		body: LoginResponse{
 			AccessToken: accessToken,
 			TokenType:   &tokenType,

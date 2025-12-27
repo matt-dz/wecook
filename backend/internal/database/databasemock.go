@@ -705,6 +705,21 @@ func (mr *MockQuerierMockRecorder) GetUsers(ctx, arg any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockQuerier)(nil).GetUsers), ctx, arg)
 }
 
+// RedeemInvitationCode mocks base method.
+func (m *MockQuerier) RedeemInvitationCode(ctx context.Context, id int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RedeemInvitationCode", ctx, id)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RedeemInvitationCode indicates an expected call of RedeemInvitationCode.
+func (mr *MockQuerierMockRecorder) RedeemInvitationCode(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RedeemInvitationCode", reflect.TypeOf((*MockQuerier)(nil).RedeemInvitationCode), ctx, id)
+}
+
 // UpdateRecipe mocks base method.
 func (m *MockQuerier) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (UpdateRecipeRow, error) {
 	m.ctrl.T.Helper()
@@ -804,18 +819,4 @@ func (m *MockQuerier) UpdateUserRefreshTokenHash(ctx context.Context, arg Update
 func (mr *MockQuerierMockRecorder) UpdateUserRefreshTokenHash(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserRefreshTokenHash", reflect.TypeOf((*MockQuerier)(nil).UpdateUserRefreshTokenHash), ctx, arg)
-}
-
-// UseInvitationCode mocks base method.
-func (m *MockQuerier) UseInvitationCode(ctx context.Context, id int64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UseInvitationCode", ctx, id)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UseInvitationCode indicates an expected call of UseInvitationCode.
-func (mr *MockQuerierMockRecorder) UseInvitationCode(ctx, id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UseInvitationCode", reflect.TypeOf((*MockQuerier)(nil).UseInvitationCode), ctx, id)
 }

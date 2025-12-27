@@ -38,17 +38,11 @@ const (
 
 var ErrMalformedRefreshToken = errors.New("malformed refresh token")
 
-func AccessTokenName(env *env.Env) string {
-	// if env.IsProd() {
-	// 	return "__Host-Http-access"
-	// }
+func AccessTokenName() string {
 	return "access"
 }
 
-func RefreshTokenName(env *env.Env) string {
-	// if env.IsProd() {
-	// 	return "__Host-Http-refresh"
-	// }
+func RefreshTokenName() string {
 	return "refresh"
 }
 
@@ -80,28 +74,28 @@ func NewAccessToken(params mJwt.JWTParams, env *env.Env) (string, error) {
 	return token, nil
 }
 
-func NewAccessTokenCookie(token string, env *env.Env) *http.Cookie {
+func NewAccessTokenCookie(token string, secure bool) *http.Cookie {
 	cookie := &http.Cookie{
-		Name:     AccessTokenName(env),
+		Name:     AccessTokenName(),
 		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
 		MaxAge:   AccessTokenLifetime,
-		Secure:   env.IsProd(),
+		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,
 	}
 
 	return cookie
 }
 
-func NewRefreshTokenCookie(token string, env *env.Env) *http.Cookie {
+func NewRefreshTokenCookie(token string, secure bool) *http.Cookie {
 	cookie := &http.Cookie{
-		Name:     RefreshTokenName(env),
+		Name:     RefreshTokenName(),
 		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
 		MaxAge:   refreshTokenLifetime,
-		Secure:   env.IsProd(),
+		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,
 	}
 

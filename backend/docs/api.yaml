@@ -400,6 +400,74 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /api/signup:
+    post:
+      summary: Sign up
+      tags:
+        - User
+      description: >
+        Sign up with a new email and password. If platform is 
+        invite-only, requires an invite code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupRequest"
+      security: []
+      responses:
+        "200":
+          description: >
+            OK - For browser clients, access and refresh tokens are set as HTTP-only
+            cookies. For API clients/Swagger, an access token is also returned in the body.
+          headers:
+            Set-Cookie:
+              description: >
+                HTTP-only cookies for access and refresh tokens. This header is sent twice:
+                once for the "access" cookie and once for the "refresh" cookie.
+              schema:
+                type: string
+              examples:
+                access:
+                  summary: Access token cookie
+                  value: access=<jwt_token>; HttpOnly; Secure; SameSite=Lax; Path=/
+                refresh:
+                  summary: Refresh token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized — missing or invalid invite code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Conflict - email already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Unprocessible Entity - invalid invite code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/recipes:
     post:
       summary: Create a new recipe
@@ -1765,10 +1833,31 @@ components:
       properties:
         email:
           type: string
-          format: idn-email
+          format: email
           description: "Email Address"
       required:
         - email
+
+    SignupRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: "Email Address"
+        password:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        invite_code:
+          type: string
+      required:
+        - email
+        - first_name
+        - last_name
+        - password
 
   securitySchemes:
     AccessTokenUserBearer:

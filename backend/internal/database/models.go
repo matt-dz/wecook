@@ -154,3 +154,12 @@ type User struct {
 	CreatedAt             pgtype.Timestamptz
 	UpdatedAt             pgtype.Timestamptz
 }
+
+type ValidInvitationCode struct {
+	ID        int64
+	CodeHash  string
+	InvitedBy pgtype.Int8
+	CreatedAt pgtype.Timestamptz
+	ExpiresAt pgtype.Timestamptz
+	UsedAt    pgtype.Timestamptz
+}

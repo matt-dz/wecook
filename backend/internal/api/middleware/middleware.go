@@ -141,9 +141,9 @@ func OAPIAuthFunc(ctx context.Context, input *openapi3filter.AuthenticationInput
 	var requiredRole role.Role
 	switch input.SecuritySchemeName {
 	case "AccessTokenUserBearer":
-		requiredRole = role.RoleAdmin
-	case "AccessTokenAdminBearer":
 		requiredRole = role.RoleUser
+	case "AccessTokenAdminBearer":
+		requiredRole = role.RoleAdmin
 	default:
 		// No authentication required
 		return nil
@@ -153,7 +153,7 @@ func OAPIAuthFunc(ctx context.Context, input *openapi3filter.AuthenticationInput
 	requestID := fmt.Sprintf("%d", requestid.ExtractRequestID(ctx))
 
 	var accessToken string
-	cookie, err := input.RequestValidationInput.Request.Cookie(token.AccessTokenName(env))
+	cookie, err := input.RequestValidationInput.Request.Cookie(token.AccessTokenName())
 	if err != nil {
 		env.Logger.DebugContext(ctx, "failed to get access token, searching for Bearer token next",
 			slog.Any("error", err))

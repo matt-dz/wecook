@@ -576,15 +576,13 @@ RETURNING
 SELECT
   code_hash
 FROM
-  invitation_codes
+  valid_invitation_codes
 WHERE
-  id = $1
-  AND expires_at > now()
-  AND used_at <> NULL;
+  id = $1;
 
--- name: UseInvitationCode :exec
+-- name: RedeemInvitationCode :execrows
 UPDATE
-  invitation_codes
+  valid_invitation_codes
 SET
   used_at = now()
 WHERE
