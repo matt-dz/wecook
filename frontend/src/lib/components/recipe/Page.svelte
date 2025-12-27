@@ -44,7 +44,7 @@
 <Tooltip.Provider>
 	<div class="mt-16 mb-16 flex justify-center px-6">
 		<div class="w-full max-w-3xl">
-			<div class="mb-12">
+			<div class="mb-8">
 				<div>
 					<h1 class="text-3xl font-semibold">{title}</h1>
 					<h2 class="text-lg capitalize">
@@ -84,7 +84,7 @@
 				</Tooltip.Root>
 
 				{#if recipe.recipe.image_url}
-					<div class="mx-auto mt-6">
+					<div class="mt-6 flex justify-center">
 						<img src={recipe.recipe.image_url} alt="cover" class="h-full max-h-96 object-cover" />
 					</div>
 				{/if}
