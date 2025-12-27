@@ -198,6 +198,10 @@ paths:
           schema:
             type: string
           description: Access token
+        - name: role
+          in: query
+          schema:
+            $ref: "#/components/schemas/Role"
       responses:
         "204":
           description: Session is valid
@@ -1586,6 +1590,12 @@ components:
       required:
         - id
         - step_number
+
+    Role:
+      type: string
+      enum:
+        - user
+        - admin
 
   securitySchemes:
     AccessTokenUserBearer:

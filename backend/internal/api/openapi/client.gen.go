@@ -29,6 +29,12 @@ const (
 	AccessTokenUserBearerScopes  = "AccessTokenUserBearer.Scopes"
 )
 
+// Defines values for Role.
+const (
+	Admin Role = "admin"
+	User  Role = "user"
+)
+
 // Defines values for TimeUnit.
 const (
 	Days    TimeUnit = "days"
@@ -187,6 +193,9 @@ type RefreshToken struct {
 	RefreshToken *string `json:"refresh_token,omitempty"`
 }
 
+// Role defines model for Role.
+type Role string
+
 // TimeUnit defines model for TimeUnit.
 type TimeUnit string
 
@@ -261,6 +270,8 @@ type PostApiAuthRefreshParams struct {
 
 // GetApiAuthVerifyParams defines parameters for GetApiAuthVerify.
 type GetApiAuthVerifyParams struct {
+	Role *Role `form:"role,omitempty" json:"role,omitempty"`
+
 	// Access Access token
 	Access *string `form:"access,omitempty" json:"access,omitempty"`
 }
@@ -1011,6 +1022,28 @@ func NewGetApiAuthVerifyRequest(server string, params *GetApiAuthVerifyParams) (
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Role != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "role", runtime.ParamLocationQuery, *params.Role); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -4366,6 +4399,14 @@ func (siw *ServerInterfaceWrapper) GetApiAuthVerify(w http.ResponseWriter, r *ht
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetApiAuthVerifyParams
+
+	// ------------- Optional query parameter "role" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "role", r.URL.Query(), &params.Role)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "role", Err: err})
+		return
+	}
 
 	{
 		var cookie *http.Cookie

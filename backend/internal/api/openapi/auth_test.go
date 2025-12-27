@@ -17,7 +17,9 @@ import (
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/dbmock"
 	"github.com/matt-dz/wecook/internal/env"
+	mJwt "github.com/matt-dz/wecook/internal/jwt"
 	"github.com/matt-dz/wecook/internal/log"
+	"github.com/matt-dz/wecook/internal/role"
 )
 
 func TestPostApiLogin(t *testing.T) {
@@ -651,22 +653,262 @@ func TestPostApiAuthRefresh(t *testing.T) {
 func TestGetApiAuthVerify(t *testing.T) {
 	server := NewServer()
 
-	ctx := context.Background()
-	ctx = requestid.InjectRequestID(ctx, 12345)
-	ctx = env.WithCtx(ctx, &env.Env{
-		Logger: log.NullLogger(),
-	})
+	tests := []struct {
+		name       string
+		userRole   string
+		queryRole  *Role
+		setup      func() context.Context
+		wantStatus int
+		wantCode   string
+		wantError  bool
+	}{
+		{
+			name:     "successful verification - user role with no query param",
+			userRole: "user",
+			setup: func() context.Context {
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					nil,
+					nil,
+					nil,
+					map[string]string{
+						"APP_SECRET": "test-secret-key-for-jwt-signing",
+					},
+				))
 
-	request := GetApiAuthVerifyRequestObject{}
+				accessToken, err := token.NewAccessToken(mJwt.JWTParams{
+					Role:   role.RoleUser,
+					UserID: "123",
+				}, env.EnvFromCtx(ctx))
+				if err != nil {
+					t.Fatalf("failed to create access token: %v", err)
+				}
 
-	resp, err := server.GetApiAuthVerify(ctx, request)
-	if err != nil {
-		t.Errorf("GetApiAuthVerify() error = %v, expected nil", err)
+				parsedToken, err := mJwt.ValidateJWT(accessToken, "1", []byte("test-secret-key-for-jwt-signing"))
+				if err != nil {
+					t.Fatalf("failed to validate token: %v", err)
+				}
+
+				ctx = token.AccessTokenWithCtx(ctx, parsedToken)
+				return ctx
+			},
+			wantStatus: 204,
+			wantError:  false,
+		},
+		{
+			name:      "successful verification - user role with explicit user query param",
+			userRole:  "user",
+			queryRole: rolePtr(User),
+			setup: func() context.Context {
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					nil,
+					nil,
+					nil,
+					map[string]string{
+						"APP_SECRET": "test-secret-key-for-jwt-signing",
+					},
+				))
+
+				accessToken, err := token.NewAccessToken(mJwt.JWTParams{
+					Role:   role.RoleUser,
+					UserID: "123",
+				}, env.EnvFromCtx(ctx))
+				if err != nil {
+					t.Fatalf("failed to create access token: %v", err)
+				}
+
+				parsedToken, err := mJwt.ValidateJWT(accessToken, "1", []byte("test-secret-key-for-jwt-signing"))
+				if err != nil {
+					t.Fatalf("failed to validate token: %v", err)
+				}
+
+				ctx = token.AccessTokenWithCtx(ctx, parsedToken)
+				return ctx
+			},
+			wantStatus: 204,
+			wantError:  false,
+		},
+		{
+			name:      "successful verification - admin role checking user permission",
+			userRole:  "admin",
+			queryRole: rolePtr(User),
+			setup: func() context.Context {
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					nil,
+					nil,
+					nil,
+					map[string]string{
+						"APP_SECRET": "test-secret-key-for-jwt-signing",
+					},
+				))
+
+				accessToken, err := token.NewAccessToken(mJwt.JWTParams{
+					Role:   role.RoleAdmin,
+					UserID: "456",
+				}, env.EnvFromCtx(ctx))
+				if err != nil {
+					t.Fatalf("failed to create access token: %v", err)
+				}
+
+				parsedToken, err := mJwt.ValidateJWT(accessToken, "1", []byte("test-secret-key-for-jwt-signing"))
+				if err != nil {
+					t.Fatalf("failed to validate token: %v", err)
+				}
+
+				ctx = token.AccessTokenWithCtx(ctx, parsedToken)
+				return ctx
+			},
+			wantStatus: 204,
+			wantError:  false,
+		},
+		{
+			name:      "successful verification - admin role checking admin permission",
+			userRole:  "admin",
+			queryRole: rolePtr(Admin),
+			setup: func() context.Context {
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					nil,
+					nil,
+					nil,
+					map[string]string{
+						"APP_SECRET": "test-secret-key-for-jwt-signing",
+					},
+				))
+
+				accessToken, err := token.NewAccessToken(mJwt.JWTParams{
+					Role:   role.RoleAdmin,
+					UserID: "456",
+				}, env.EnvFromCtx(ctx))
+				if err != nil {
+					t.Fatalf("failed to create access token: %v", err)
+				}
+
+				parsedToken, err := mJwt.ValidateJWT(accessToken, "1", []byte("test-secret-key-for-jwt-signing"))
+				if err != nil {
+					t.Fatalf("failed to validate token: %v", err)
+				}
+
+				ctx = token.AccessTokenWithCtx(ctx, parsedToken)
+				return ctx
+			},
+			wantStatus: 204,
+			wantError:  false,
+		},
+		{
+			name:      "insufficient permissions - user role trying to check admin permission",
+			userRole:  "user",
+			queryRole: rolePtr(Admin),
+			setup: func() context.Context {
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					nil,
+					nil,
+					nil,
+					map[string]string{
+						"APP_SECRET": "test-secret-key-for-jwt-signing",
+					},
+				))
+
+				accessToken, err := token.NewAccessToken(mJwt.JWTParams{
+					Role:   role.RoleUser,
+					UserID: "123",
+				}, env.EnvFromCtx(ctx))
+				if err != nil {
+					t.Fatalf("failed to create access token: %v", err)
+				}
+
+				parsedToken, err := mJwt.ValidateJWT(accessToken, "1", []byte("test-secret-key-for-jwt-signing"))
+				if err != nil {
+					t.Fatalf("failed to validate token: %v", err)
+				}
+
+				ctx = token.AccessTokenWithCtx(ctx, parsedToken)
+				return ctx
+			},
+			wantStatus: 401,
+			wantCode:   apiError.InsufficientPermissions.String(),
+			wantError:  false,
+		},
+		{
+			name:     "missing access token in context",
+			userRole: "",
+			setup: func() context.Context {
+				ctx := context.Background()
+				ctx = requestid.InjectRequestID(ctx, 12345)
+				ctx = env.WithCtx(ctx, env.New(
+					log.NullLogger(),
+					nil,
+					nil,
+					nil,
+					map[string]string{
+						"APP_SECRET": "test-secret-key-for-jwt-signing",
+					},
+				))
+				return ctx
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
 	}
 
-	if _, ok := resp.(GetApiAuthVerify204Response); !ok {
-		t.Errorf("expected GetApiAuthVerify204Response, got %T", resp)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := tt.setup()
+
+			request := GetApiAuthVerifyRequestObject{
+				Params: GetApiAuthVerifyParams{
+					Role: tt.queryRole,
+				},
+			}
+
+			resp, err := server.GetApiAuthVerify(ctx, request)
+			if (err != nil) != tt.wantError {
+				t.Errorf("GetApiAuthVerify() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			switch v := resp.(type) {
+			case GetApiAuthVerify204Response:
+				if tt.wantStatus != 204 {
+					t.Errorf("expected status %d, got 204", tt.wantStatus)
+				}
+			case GetApiAuthVerify401JSONResponse:
+				if tt.wantStatus != 401 {
+					t.Errorf("expected status %d, got 401", tt.wantStatus)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			case GetApiAuthVerify500JSONResponse:
+				if tt.wantStatus != 500 {
+					t.Errorf("expected status %d, got 500", tt.wantStatus)
+				}
+				if v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			default:
+				t.Errorf("unexpected response type: %T", v)
+			}
+		})
 	}
+}
+
+func rolePtr(r Role) *Role {
+	return &r
 }
 
 func stringPtr(s string) *string {

@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -20,7 +21,7 @@ import (
 	"github.com/matt-dz/wecook/internal/argon2id"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/env"
-	"github.com/matt-dz/wecook/internal/jwt"
+	mJwt "github.com/matt-dz/wecook/internal/jwt"
 	"github.com/matt-dz/wecook/internal/role"
 )
 
@@ -111,7 +112,7 @@ func (Server) PostApiLogin(ctx context.Context, request PostApiLoginRequestObjec
 
 	// Create access token
 	env.Logger.DebugContext(ctx, "Generating access token")
-	accessToken, err := token.NewAccessToken(jwt.JWTParams{
+	accessToken, err := token.NewAccessToken(mJwt.JWTParams{
 		Role:   role.DBToRole(user.Role),
 		UserID: fmt.Sprintf("%d", user.ID),
 	}, env)
@@ -332,7 +333,7 @@ func (Server) PostApiAuthRefresh(ctx context.Context,
 
 	// Generate access token
 	env.Logger.DebugContext(ctx, "Generating access token")
-	accessToken, err := token.NewAccessToken(jwt.JWTParams{
+	accessToken, err := token.NewAccessToken(mJwt.JWTParams{
 		Role:   role.DBToRole(userRole),
 		UserID: fmt.Sprintf("%d", userID),
 	}, env)
@@ -364,5 +365,34 @@ func (Server) PostApiAuthRefresh(ctx context.Context,
 func (Server) GetApiAuthVerify(ctx context.Context,
 	request GetApiAuthVerifyRequestObject,
 ) (GetApiAuthVerifyResponseObject, error) {
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+	accessToken, err := token.AccessTokenFromCtx(ctx)
+	if err != nil {
+		return GetApiAuthVerify500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	roleClaim := accessToken.Claims.(jwt.MapClaims)["role"].(string)
+	userRole := role.ToRole(roleClaim)
+
+	var givenRole role.Role
+	if request.Params.Role == nil {
+		givenRole = role.RoleUser
+	} else {
+		givenRole = role.ToRole(string(*request.Params.Role))
+	}
+	if userRole < givenRole {
+		return GetApiAuthVerify401JSONResponse{
+			Status:  apiError.InsufficientPermissions.StatusCode(),
+			Code:    apiError.InsufficientPermissions.String(),
+			Message: "Insufficient Permissions",
+			ErrorId: requestID,
+		}, nil
+	}
+
 	return GetApiAuthVerify204Response{}, nil
 }
