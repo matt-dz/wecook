@@ -538,3 +538,18 @@ FROM
   recipes
 WHERE
   id = $1;
+
+-- name: GetUsers :many
+SELECT
+  id,
+  email,
+  first_name,
+  last_name,
+  ROLE
+FROM
+  users
+WHERE
+  id > coalesce(sqlc.narg ('after'), 0)
+ORDER BY
+  id
+LIMIT LEAST (100, GREATEST (1, coalesce(sqlc.narg ('limit')::int, 20)));

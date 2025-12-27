@@ -700,7 +700,7 @@ func TestGetApiAuthVerify(t *testing.T) {
 		{
 			name:      "successful verification - user role with explicit user query param",
 			userRole:  "user",
-			queryRole: rolePtr(User),
+			queryRole: rolePtr(RoleUser),
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
@@ -736,7 +736,7 @@ func TestGetApiAuthVerify(t *testing.T) {
 		{
 			name:      "successful verification - admin role checking user permission",
 			userRole:  "admin",
-			queryRole: rolePtr(User),
+			queryRole: rolePtr(RoleUser),
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
@@ -772,7 +772,7 @@ func TestGetApiAuthVerify(t *testing.T) {
 		{
 			name:      "successful verification - admin role checking admin permission",
 			userRole:  "admin",
-			queryRole: rolePtr(Admin),
+			queryRole: rolePtr(RoleAdmin),
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
@@ -808,7 +808,7 @@ func TestGetApiAuthVerify(t *testing.T) {
 		{
 			name:      "insufficient permissions - user role trying to check admin permission",
 			userRole:  "user",
-			queryRole: rolePtr(Admin),
+			queryRole: rolePtr(RoleAdmin),
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)

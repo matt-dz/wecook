@@ -971,6 +971,61 @@ func (q *Queries) GetUserRole(ctx context.Context, id int64) (Role, error) {
 	return role, err
 }
 
+const getUsers = `-- name: GetUsers :many
+SELECT
+  id,
+  email,
+  first_name,
+  last_name,
+  ROLE
+FROM
+  users
+WHERE
+  id > coalesce($1, 0)
+ORDER BY
+  id
+LIMIT LEAST (100, GREATEST (1, coalesce($2::int, 20)))
+`
+
+type GetUsersParams struct {
+	After pgtype.Int8
+	Limit pgtype.Int4
+}
+
+type GetUsersRow struct {
+	ID        int64
+	Email     string
+	FirstName string
+	LastName  string
+	Role      Role
+}
+
+func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersRow, error) {
+	rows, err := q.db.Query(ctx, getUsers, arg.After, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUsersRow
+	for rows.Next() {
+		var i GetUsersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.FirstName,
+			&i.LastName,
+			&i.Role,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateRecipe = `-- name: UpdateRecipe :one
 UPDATE
   recipes

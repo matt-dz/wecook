@@ -646,6 +646,21 @@ func (mr *MockQuerierMockRecorder) GetUserRole(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserRole", reflect.TypeOf((*MockQuerier)(nil).GetUserRole), ctx, id)
 }
 
+// GetUsers mocks base method.
+func (m *MockQuerier) GetUsers(ctx context.Context, arg database.GetUsersParams) ([]database.GetUsersRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsers", ctx, arg)
+	ret0, _ := ret[0].([]database.GetUsersRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsers indicates an expected call of GetUsers.
+func (mr *MockQuerierMockRecorder) GetUsers(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockQuerier)(nil).GetUsers), ctx, arg)
+}
+
 // UpdateRecipe mocks base method.
 func (m *MockQuerier) UpdateRecipe(ctx context.Context, arg database.UpdateRecipeParams) (database.UpdateRecipeRow, error) {
 	m.ctrl.T.Helper()
