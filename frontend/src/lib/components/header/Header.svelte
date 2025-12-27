@@ -10,7 +10,7 @@
 	let { isLoggedIn }: Props = $props();
 </script>
 
-<header class="flex justify-center px-6 pt-8">
+<header class="relative z-10 flex justify-center px-6 pt-8">
 	<div class="flex w-full max-w-5xl items-center justify-between">
 		<a href={resolve('/')} class="text-3xl">WeCook</a>
 

@@ -43,7 +43,7 @@
 				<Breadcrumb.Root>
 					<Breadcrumb.List>
 						<Breadcrumb.Item class="hidden md:block">
-							<Breadcrumb.Link class="capitalize" href="##"
+							<Breadcrumb.Link class="font-inter capitalize" href="##"
 								>{page.route?.id?.split('/').at(-1)}</Breadcrumb.Link
 							>
 						</Breadcrumb.Item>
