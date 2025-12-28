@@ -1,10 +1,11 @@
 import type { PageServerLoad } from './$types';
-import { GetRecipe } from '$lib/recipes';
+import { getRecipe } from '$lib/recipes';
 import { error } from '@sveltejs/kit';
 import fetch from '$lib/http';
 import * as z from 'zod';
 import { HTTPError } from 'ky';
 import { ApiErrorCodes, parseError } from '$lib/errors/api';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const res = z.string().regex(/^\d+$/).safeParse(params.id);
@@ -22,7 +23,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	try {
 		return {
-			recipe: await GetRecipe(fetch, recipeID)
+			recipe: await getRecipe(fetch, recipeID, {}, env.INTERNAL_BACKEND_URL)
 		};
 	} catch (e) {
 		if (e instanceof HTTPError) {

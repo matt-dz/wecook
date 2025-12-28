@@ -1,4 +1,3 @@
-import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/auth';
 import type { FetchType } from '$lib/http';
 import type { Options } from 'ky';
@@ -16,9 +15,13 @@ export type User = z.infer<typeof UserSchema>;
 
 export type GetUserResponse = User;
 
-export async function getUser(fetch: FetchType, options?: Options): Promise<GetUserResponse> {
+export async function getUser(
+	fetch: FetchType,
+	options?: Options,
+	apiUrl?: string
+): Promise<GetUserResponse> {
 	const json = await fetch
-		.get(`${PUBLIC_BACKEND_URL}/api/user`, {
+		.get(`${apiUrl ?? ''}/api/user`, {
 			...options,
 			credentials: 'include'
 		})
@@ -40,10 +43,11 @@ export type GetUsersResponse = z.infer<typeof GetUsersResponseSchema>;
 export async function getUsers(
 	fetch: FetchType,
 	request: GetUsersRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<GetUsersResponse> {
 	const json = await fetch
-		.get(`${PUBLIC_BACKEND_URL}/api/users`, {
+		.get(`${apiUrl ?? ''}/api/users`, {
 			...options,
 			headers: {
 				...options?.headers,
@@ -62,9 +66,10 @@ export type InviteUserRequest = {
 export async function inviteUser(
 	fetch: FetchType,
 	request: InviteUserRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<void> {
-	await fetch.post(`${PUBLIC_BACKEND_URL}/api/user/invite`, {
+	await fetch.post(`${apiUrl ?? ''}/api/user/invite`, {
 		...options,
 		json: request
 	});
@@ -81,9 +86,10 @@ export type UserSignupRequest = {
 export async function signupRequest(
 	fetch: FetchType,
 	request: UserSignupRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<void> {
-	await fetch.post(`${PUBLIC_BACKEND_URL}/api/signup`, {
+	await fetch.post(`${apiUrl ?? ''}/api/signup`, {
 		...options,
 		json: request
 	});
@@ -97,9 +103,10 @@ export type ChangePasswordRequest = {
 export async function changePassword(
 	fetch: FetchType,
 	request: ChangePasswordRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<void> {
-	await fetch.patch(`${PUBLIC_BACKEND_URL}/api/user/password`, {
+	await fetch.patch(`${apiUrl ?? ''}/api/user/password`, {
 		...options,
 		json: request
 	});

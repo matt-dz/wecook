@@ -182,7 +182,7 @@ func (Server) PostApiUserInvite(ctx context.Context,
 	// Encode invite
 	invite := invite.EncodeInvite(inviteID, code)
 	inviteLink := fmt.Sprintf("%s/signup?code=%s",
-		strings.TrimRight(env.Get("BASE_URL"), "/"), invite)
+		strings.TrimRight(env.Get("HOST_ORIGIN"), "/"), invite)
 
 	//nolint:lll
 	msg := fmt.Sprintf(`Hello!

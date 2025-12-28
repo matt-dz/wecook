@@ -1,0 +1,87 @@
+services:
+  database:
+    image: postgres:18
+    container_name: wecook_database
+    hostname: wecook-database
+    environment:
+      POSTGRES_PASSWORD: secure-password # change to secure password
+      POSTGRES_USER: wecook
+      POSTGRES_DB: wecook
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - db-data:/var/lib/postgresql
+
+  nginx:
+    image: nginx:alpine
+    container_name: wecook_nginx
+    hostname: wecook-nginx
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+      web:
+        condition: service_started
+    ports:
+      - "8080:80"
+    volumes:
+      - files-data:/data/files:ro
+      - ./fileserver.dev.conf:/etc/nginx/conf.d/default.conf:ro
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    container_name: wecook_docs
+    hostname: wecook-docs
+    environment:
+      BASE_URL: /docs
+      URL: http://localhost:8080/api/openapi.yaml
+      DEEP_LINKING: true
+    volumes:
+      - ./backend/docs/api.yaml:/usr/share/nginx/html/api.yaml:ro
+
+  backend:
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile.dev
+    container_name: wecook_backend
+    hostname: wecook-backend
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./backend/:/app
+      - go-modules:/go/pkg/mod
+      - files-data:/data/files
+    stdin_open: true
+    tty: true
+
+  web:
+    container_name: wecook_frontend
+    hostname: wecook-frontend
+    restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - web-node-modules:/app/node_modules
+    environment:
+      INTERNAL_BACKEND_URL: http://wecook-backend:8080
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+
+volumes:
+  db-data:
+  go-modules:
+  files-data:
+  web-node-modules:

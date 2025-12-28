@@ -831,7 +831,7 @@ func TestPostApiUserInvite(t *testing.T) {
 			ctx = requestid.InjectRequestID(ctx, 12345)
 			ctx = tt.setup(ctx)
 			e := env.New(map[string]string{
-				"BASE_URL": "http://localhost:5173",
+				"HOST_ORIGIN": "http://localhost:5173",
 			})
 			e.Logger = log.NullLogger()
 			e.Database = mockDB
@@ -1462,8 +1462,8 @@ func TestPatchApiUserPassword(t *testing.T) {
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
 			e := env.New(map[string]string{
-				"ENV":      "PROD",
-				"BASE_URL": "http://localhost:5173",
+				"ENV":         "PROD",
+				"HOST_ORIGIN": "http://localhost:5173",
 			})
 			e.Logger = log.NullLogger()
 			e.Database = mockDB
@@ -1543,8 +1543,8 @@ func TestPatchApiUserPassword_ParameterValidation(t *testing.T) {
 	ctx := context.Background()
 	ctx = requestid.InjectRequestID(ctx, 12345)
 	e := env.New(map[string]string{
-		"ENV":      "PROD",
-		"BASE_URL": "http://localhost:5173",
+		"ENV":         "PROD",
+		"HOST_ORIGIN": "http://localhost:5173",
 	})
 	e.Logger = log.NullLogger()
 	e.Database = mockDB

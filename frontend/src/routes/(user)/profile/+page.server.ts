@@ -3,6 +3,7 @@ import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from '$lib/auth';
 import fetch from '$lib/http';
 import { getUser } from '$lib/users';
 import { redirect } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ cookies }) => {
 	const accessToken = cookies.get(ACCESS_TOKEN_COOKIE_NAME);
@@ -12,12 +13,21 @@ export const load: PageServerLoad = async ({ cookies }) => {
 	}
 	const refreshToken = cookies.get(REFRESH_TOKEN_COOKIE_NAME);
 
-	const user = await getUser(fetch, {
-		headers: {
-			Cookie: `${ACCESS_TOKEN_COOKIE_NAME}=${accessToken}; ${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`
-		}
-	});
-	return {
-		user
-	};
+	try {
+		const user = await getUser(
+			fetch,
+			{
+				headers: {
+					Cookie: `${ACCESS_TOKEN_COOKIE_NAME}=${accessToken}; ${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`
+				}
+			},
+			env.INTERNAL_BACKEND_URL
+		);
+		return {
+			user
+		};
+	} catch (e) {
+		console.error(e);
+		throw e;
+	}
 };

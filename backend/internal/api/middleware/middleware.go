@@ -66,26 +66,25 @@ func AddCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e := env.EnvFromCtx(r.Context())
 		origin := r.Header.Get("Origin")
-		baseURL := e.Get("BASE_URL")
-		isProd := e.Get("ENV") == "PROD"
+		hostOrigin := e.Get("HOST_ORIGIN")
 
 		// Determine allowed origin based on the incoming Origin header
 		var allowedOrigin string
-		if isProd {
-			allowedOrigin = baseURL
+		if e.IsProd() {
+			allowedOrigin = hostOrigin
 		} else if origin != "" {
 			// In dev mode, allow all origins
 			allowedOrigin = origin
 		}
 
-		if allowedOrigin == "" && baseURL != "" {
-			// Fallback to BASE_URL if no matching origin
-			allowedOrigin = baseURL
+		if allowedOrigin == "" && hostOrigin != "" {
+			// Fallback to HOST_ORIGIN if no matching origin
+			allowedOrigin = hostOrigin
 		}
 
 		if allowedOrigin == "" {
 			e.Logger.WarnContext(r.Context(),
-				"BASE_URL not set and no valid origin found; Access-Control-Allow-Origin will be empty")
+				"HOST_ORIGIN not set and no valid origin found; Access-Control-Allow-Origin will be empty")
 		}
 
 		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)

@@ -1,9 +1,17 @@
 import type { PageServerLoad } from './$types';
 import fetch from '$lib/http';
-import { GetRecipes } from '$lib/recipes';
+import { getRecipes } from '$lib/recipes';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async () => {
-	return {
-		recipes: await GetRecipes(fetch)
-	};
+	try {
+		console.log('backend url', env.INTERNAL_BACKEND_URL);
+		const recipes = await getRecipes(fetch, {}, env.INTERNAL_BACKEND_URL);
+		return {
+			recipes
+		};
+	} catch (e) {
+		console.error(e);
+		throw e;
+	}
 };

@@ -1,5 +1,15 @@
 Dockerfile
+Dockerfile.dev
+Makefile
+README.md
+CLAUDE.md
+fileserver.conf
+sqlc.yaml
+bin/*
+
 .github/
+.claude/
+.air.toml
 .env
 .env.**
 .golangci.yaml

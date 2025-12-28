@@ -5,7 +5,7 @@ endif
 
 SERVER_DIR:=cmd/wecook
 SERVER_BIN:=wecook
-DOCKER_NAME:=wecook
+DOCKER_NAME:=wecook-server
 BIN_DIR:=bin
 
 .PHONY: all
@@ -18,7 +18,7 @@ build: fmt lint docs
 	@echo "✓  Built $(BIN_DIR)/$(SERVER_BIN)"
 
 .PHONY: docker-build
-docker-build:
+docker-build: docs mocks fmt lint
 	@echo "🔨🐳 Building docker image \"$(SERVER_BIN)\" with tag \"$(DOCKER_NAME)\""
 	docker build -f Dockerfile -t $(DOCKER_NAME) .
 	@echo "✓  Built $(SERVER_BIN)"

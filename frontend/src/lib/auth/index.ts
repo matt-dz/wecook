@@ -1,6 +1,5 @@
 import { type FetchType } from '$lib/http';
 import ky, { type Options } from 'ky';
-import { PUBLIC_BACKEND_URL } from '$env/static/public';
 
 const ACCESS_TOKEN_COOKIE_NAME = 'access';
 const REFRESH_TOKEN_COOKIE_NAME = 'refresh';
@@ -14,9 +13,10 @@ export type VerifySessionRequest = {
 export async function verifySession(
 	fetch: FetchType,
 	request: VerifySessionRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ) {
-	await fetch.get(`${PUBLIC_BACKEND_URL}/api/auth/verify?role=${request.role ?? 'user'}`, options);
+	await fetch.get(`${apiUrl ?? ''}/api/auth/verify?role=${request.role ?? 'user'}`, options);
 }
 
 export type RefreshSessionRequest = {
@@ -24,8 +24,12 @@ export type RefreshSessionRequest = {
 };
 
 // refreshSession refreshes the user session.
-export async function refreshSession(request: RefreshSessionRequest, options?: Options) {
-	return await ky.post(`${PUBLIC_BACKEND_URL}/api/auth/refresh`, {
+export async function refreshSession(
+	request: RefreshSessionRequest,
+	options?: Options,
+	apiUrl?: string
+) {
+	return await ky.post(`${apiUrl ?? ''}/api/auth/refresh`, {
 		...options,
 		json: request,
 		credentials: 'include'
@@ -37,10 +41,22 @@ export type LoginRequest = {
 	password: string;
 };
 
-export async function login(fetch: FetchType, request: LoginRequest, options?: Options) {
-	return await fetch.post(`${PUBLIC_BACKEND_URL}/api/login`, {
+export async function login(
+	fetch: FetchType,
+	request: LoginRequest,
+	options?: Options,
+	apiUrl?: string
+) {
+	return await fetch.post(`${apiUrl ?? ''}/api/login`, {
 		...options,
 		json: request
+	});
+}
+
+export async function logout(fetch: FetchType, options?: Options, apiUrl?: string) {
+	await fetch.post(`${apiUrl ?? ''}/api/logout`, {
+		...options,
+		credentials: 'include'
 	});
 }
 

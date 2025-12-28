@@ -164,9 +164,9 @@ func FileStore() (filestore.FileStore, error) {
 	if urlPrefix == "" {
 		urlPrefix = filestore.DefaultURLPrefix
 	}
-	filestoreHost := os.Getenv("NGINX_URL")
+	filestoreHost := os.Getenv("HOST_ORIGIN")
 	if filestoreHost == "" {
-		return fs, errors.New("NGINX_URL must be set")
+		return fs, errors.New("HOST_ORIGIN must be set")
 	}
 	return filestore.New(fileserverPath, urlPrefix, filestoreHost), nil
 }

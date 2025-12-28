@@ -88,6 +88,15 @@ func NewAccessTokenCookie(token string, secure bool) *http.Cookie {
 	return cookie
 }
 
+func DeleteAccessTokenCookie() *http.Cookie {
+	return &http.Cookie{
+		Name:   AccessTokenName(),
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	}
+}
+
 func NewRefreshTokenCookie(token string, secure bool) *http.Cookie {
 	cookie := &http.Cookie{
 		Name:     RefreshTokenName(),
@@ -100,6 +109,15 @@ func NewRefreshTokenCookie(token string, secure bool) *http.Cookie {
 	}
 
 	return cookie
+}
+
+func DeleteRefreshTokenCookie() *http.Cookie {
+	return &http.Cookie{
+		Name:   RefreshTokenName(),
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	}
 }
 
 func ExtractUserIDFromRefreshToken(token string) (int64, error) {

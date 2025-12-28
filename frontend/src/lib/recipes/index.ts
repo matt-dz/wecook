@@ -1,6 +1,5 @@
 import { type FetchType } from '$lib/http';
 import type { Options } from 'ky';
-import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import * as z from 'zod';
 
 const RecipeOwner = z.object({
@@ -102,9 +101,10 @@ export const GetPersonalRecipesResponse = z.object({
 
 export async function getPersonalRecipes(
 	fetch: FetchType,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<z.infer<typeof GetPersonalRecipesResponse>> {
-	const res = await fetch(`${PUBLIC_BACKEND_URL}/api/recipes`, options);
+	const res = await fetch(`${apiUrl ?? ''}/api/recipes`, options);
 	return GetPersonalRecipesResponse.parse(await res.json());
 }
 
@@ -112,22 +112,24 @@ export const GetRecipesResponse = z.object({
 	recipes: z.array(RecipeAndOwnerSchema)
 });
 
-export async function GetRecipes(
+export async function getRecipes(
 	fetch: FetchType,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<z.infer<typeof GetRecipesResponse>> {
-	const res = await fetch(`${PUBLIC_BACKEND_URL}/api/recipes/public`, options);
+	const res = await fetch(`${apiUrl ?? ''}/api/recipes/public`, options);
 	return GetRecipesResponse.parse(await res.json());
 }
 
 export type GetRecipeResponse = RecipeWithStepsIngredientsAndOwner;
 
-export async function GetRecipe(
+export async function getRecipe(
 	fetch: FetchType,
 	id: number,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<GetRecipeResponse> {
-	const res = await fetch(`${PUBLIC_BACKEND_URL}/api/recipes/${id}/public`, options).json();
+	const res = await fetch(`${apiUrl ?? ''}/api/recipes/${id}/public`, options).json();
 	return RecipeWithStepsIngredientsAndOwnerSchema.parse(res);
 }
 
@@ -137,22 +139,24 @@ export const CreateRecipeResponseSchema = z.object({
 
 export type CreateRecipeResponse = z.infer<typeof CreateRecipeResponseSchema>;
 
-export async function CreateRecipe(
+export async function createRecipe(
 	fetch: FetchType,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<CreateRecipeResponse> {
-	const res = await fetch.post(`${PUBLIC_BACKEND_URL}/api/recipes`, options).json();
+	const res = await fetch.post(`${apiUrl ?? ''}/api/recipes`, options).json();
 	return CreateRecipeResponseSchema.parse(res);
 }
 
 export type GetPersonalRecipeResponse = z.infer<typeof RecipeWithStepsIngredientsAndOwnerSchema>;
 
-export async function GetPersonalRecipe(
+export async function getPersonalRecipe(
 	fetch: FetchType,
 	id: number,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<GetPersonalRecipeResponse> {
-	const res = await fetch.get(`${PUBLIC_BACKEND_URL}/api/recipes/${id}`, options).json();
+	const res = await fetch.get(`${apiUrl ?? ''}/api/recipes/${id}`, options).json();
 	return RecipeWithStepsIngredientsAndOwnerSchema.parse(res);
 }
 
@@ -173,10 +177,11 @@ export type UpdateRecipeResponse = Recipe;
 export async function updatePersonalRecipe(
 	fetch: FetchType,
 	request: UpdateRecipeRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<UpdateRecipeResponse> {
 	const res = await fetch
-		.patch(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}`, {
+		.patch(`${apiUrl ?? ''}/api/recipes/${request.recipe_id}`, {
 			...options,
 			json: request
 		})
@@ -197,11 +202,12 @@ export type UpdateIngredientResponse = Ingredient;
 export async function updateIngredient(
 	fetch: FetchType,
 	request: UpdateIngredientRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<UpdateIngredientResponse> {
 	const res = await fetch
 		.patch(
-			`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}`,
+			`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}`,
 			{
 				...options,
 				json: {
@@ -223,10 +229,11 @@ export type CreateIngredientResponse = Ingredient;
 export async function createIngredient(
 	fetch: FetchType,
 	request: CreateIngredientRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<Ingredient> {
 	const res = await fetch
-		.post(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/ingredients`, options)
+		.post(`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/ingredients`, options)
 		.json();
 	return IngredientSchema.parse(res);
 }
@@ -243,10 +250,11 @@ export type UpdateStepResponse = Step;
 export async function updateStep(
 	fetch: FetchType,
 	request: UpdateStepRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<Step> {
 	const res = await fetch
-		.patch(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/steps/${request.step_id}`, {
+		.patch(`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/steps/${request.step_id}`, {
 			...options,
 			json: {
 				step_number: request.step_number,
@@ -266,10 +274,11 @@ export type CreateStepResponse = Step;
 export async function createStep(
 	fetch: FetchType,
 	request: CreateStepRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<Step> {
 	const res = await fetch
-		.post(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/steps`, {
+		.post(`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/steps`, {
 			...options
 		})
 		.json();
@@ -284,10 +293,11 @@ export type DeleteIngredientRequest = {
 export async function deleteIngredient(
 	fetch: FetchType,
 	request: DeleteIngredientRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<void> {
 	await fetch.delete(
-		`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}`,
+		`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}`,
 		options
 	);
 }
@@ -300,10 +310,11 @@ export type DeleteStepRequest = {
 export async function deleteStep(
 	fetch: FetchType,
 	request: DeleteStepRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<void> {
 	await fetch.delete(
-		`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/steps/${request.step_id}`,
+		`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/steps/${request.step_id}`,
 		options
 	);
 }
@@ -319,13 +330,14 @@ export type UploadIngredientImageResponse = Ingredient;
 export async function uploadIngredientImage(
 	fetch: FetchType,
 	request: UploadIngredientImageRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<UploadIngredientImageResponse> {
 	const form = new FormData();
 	form.append('image', request.image);
 	const res = await fetch
 		.post(
-			`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}/image`,
+			`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}/image`,
 			{
 				...options,
 				body: form
@@ -343,10 +355,11 @@ export type DeleteIngredientImageRequest = {
 export async function deleteIngredientImage(
 	fetch: FetchType,
 	request: DeleteIngredientImageRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<void> {
 	await fetch.delete(
-		`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}/image`,
+		`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/ingredients/${request.ingredient_id}/image`,
 		options
 	);
 }
@@ -362,12 +375,13 @@ export type UploadStepImageResponse = Step;
 export async function uploadStepImage(
 	fetch: FetchType,
 	request: UploadStepImageRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<UploadStepImageResponse> {
 	const form = new FormData();
 	form.append('image', request.image);
 	const res = await fetch
-		.post(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/steps/${request.step_id}/image`, {
+		.post(`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/steps/${request.step_id}/image`, {
 			...options,
 			body: form
 		})
@@ -383,10 +397,11 @@ export type DeleteStepImageRequest = {
 export async function deleteStepImage(
 	fetch: FetchType,
 	request: DeleteStepImageRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<void> {
 	await fetch.delete(
-		`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/steps/${request.step_id}/image`,
+		`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/steps/${request.step_id}/image`,
 		options
 	);
 }
@@ -401,12 +416,13 @@ export type UploadRecipeImageResponse = Recipe;
 export async function uploadRecipeImage(
 	fetch: FetchType,
 	request: UploadRecipeImageRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<UploadRecipeImageResponse> {
 	const form = new FormData();
 	form.append('image', request.image);
 	const res = await fetch
-		.post(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/image`, {
+		.post(`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/image`, {
 			...options,
 			body: form
 		})
@@ -421,9 +437,10 @@ export type DeleteRecipeImageRequest = {
 export async function deleteRecipeImage(
 	fetch: FetchType,
 	request: DeleteRecipeImageRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<void> {
-	await fetch.delete(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}/image`, options);
+	await fetch.delete(`${apiUrl ?? ''}/api/recipes/${request.recipe_id}/image`, options);
 }
 
 export type DeleteRecipeRequest = {
@@ -433,7 +450,8 @@ export type DeleteRecipeRequest = {
 export async function deleteRecipe(
 	fetch: FetchType,
 	request: DeleteRecipeRequest,
-	options?: Options
+	options?: Options,
+	apiUrl?: string
 ): Promise<void> {
-	await fetch.delete(`${PUBLIC_BACKEND_URL}/api/recipes/${request.recipe_id}`, options);
+	await fetch.delete(`${apiUrl ?? ''}/api/recipes/${request.recipe_id}`, options);
 }

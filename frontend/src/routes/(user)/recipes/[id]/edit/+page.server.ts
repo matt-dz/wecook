@@ -1,9 +1,10 @@
 import type { PageServerLoad } from './$types';
 import fetch from '$lib/http';
 import { redirect } from '@sveltejs/kit';
-import { GetPersonalRecipe } from '$lib/recipes';
+import { getPersonalRecipe } from '$lib/recipes';
 import { error } from '@sveltejs/kit';
 import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from '$lib/auth';
+import { env } from '$env/dynamic/private';
 import * as z from 'zod';
 
 export const load: PageServerLoad = async ({ cookies, params }) => {
@@ -27,12 +28,22 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 		});
 	}
 
-	const recipe = await GetPersonalRecipe(fetch, recipeID, {
-		headers: {
-			Cookie: `${ACCESS_TOKEN_COOKIE_NAME}=${accessToken}; ${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`
-		}
-	});
-	return {
-		recipe
-	};
+	try {
+		const recipe = await getPersonalRecipe(
+			fetch,
+			recipeID,
+			{
+				headers: {
+					Cookie: `${ACCESS_TOKEN_COOKIE_NAME}=${accessToken}; ${REFRESH_TOKEN_COOKIE_NAME}=${refreshToken}`
+				}
+			},
+			env.INTERNAL_BACKEND_URL
+		);
+		return {
+			recipe
+		};
+	} catch (e) {
+		console.error(e);
+		throw e;
+	}
 };

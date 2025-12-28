@@ -2,7 +2,7 @@
 	import Recipe from '$lib/components/recipe/Recipe.svelte';
 	import Button from '$lib/components/button/Button.svelte';
 	import type { PageProps } from './$types';
-	import { CreateRecipe } from '$lib/recipes';
+	import { createRecipe } from '$lib/recipes';
 	import fetch from '$lib/http';
 	import * as Empty from '$lib/components/ui/empty/index.js';
 	import { HTTPError } from 'ky';
@@ -16,7 +16,7 @@
 
 	const createNewRecipe = async () => {
 		try {
-			const recipe = await CreateRecipe(fetch);
+			const recipe = await createRecipe(fetch);
 			goto(resolve(`/recipes/${recipe.recipe_id.toString()}/edit`));
 		} catch (e) {
 			if (e instanceof HTTPError) {

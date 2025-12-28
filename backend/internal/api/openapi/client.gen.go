@@ -457,6 +457,9 @@ type ClientInterface interface {
 
 	PostApiLogin(ctx context.Context, body PostApiLoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostApiLogout request
+	PostApiLogout(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetApiOpenapiYaml request
 	GetApiOpenapiYaml(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -646,6 +649,18 @@ func (c *Client) PostApiLoginWithBody(ctx context.Context, contentType string, b
 
 func (c *Client) PostApiLogin(ctx context.Context, body PostApiLoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiLoginRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiLogout(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiLogoutRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -1279,6 +1294,33 @@ func NewPostApiLoginRequestWithBody(server string, contentType string, body io.R
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiLogoutRequest generates requests for PostApiLogout
+func NewPostApiLogoutRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/logout")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -2341,6 +2383,9 @@ type ClientWithResponsesInterface interface {
 
 	PostApiLoginWithResponse(ctx context.Context, body PostApiLoginJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiLoginResponse, error)
 
+	// PostApiLogoutWithResponse request
+	PostApiLogoutWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostApiLogoutResponse, error)
+
 	// GetApiOpenapiYamlWithResponse request
 	GetApiOpenapiYamlWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiOpenapiYamlResponse, error)
 
@@ -2548,6 +2593,28 @@ func (r PostApiLoginResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostApiLoginResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiLogoutResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiLogoutResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiLogoutResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -3270,6 +3337,15 @@ func (c *ClientWithResponses) PostApiLoginWithResponse(ctx context.Context, body
 	return ParsePostApiLoginResponse(rsp)
 }
 
+// PostApiLogoutWithResponse request returning *PostApiLogoutResponse
+func (c *ClientWithResponses) PostApiLogoutWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostApiLogoutResponse, error) {
+	rsp, err := c.PostApiLogout(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiLogoutResponse(rsp)
+}
+
 // GetApiOpenapiYamlWithResponse request returning *GetApiOpenapiYamlResponse
 func (c *ClientWithResponses) GetApiOpenapiYamlWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiOpenapiYamlResponse, error) {
 	rsp, err := c.GetApiOpenapiYaml(ctx, reqEditors...)
@@ -3754,6 +3830,32 @@ func ParsePostApiLoginResponse(rsp *http.Response) (*PostApiLoginResponse, error
 		}
 		response.JSON401 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiLogoutResponse parses an HTTP response from a PostApiLogoutWithResponse call
+func ParsePostApiLogoutResponse(rsp *http.Response) (*PostApiLogoutResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiLogoutResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -4928,6 +5030,9 @@ type ServerInterface interface {
 	// User login.
 	// (POST /api/login)
 	PostApiLogin(w http.ResponseWriter, r *http.Request)
+	// Logout a user
+	// (POST /api/logout)
+	PostApiLogout(w http.ResponseWriter, r *http.Request)
 	// Get OpenAPI specification.
 	// (GET /api/openapi.yaml)
 	GetApiOpenapiYaml(w http.ResponseWriter, r *http.Request)
@@ -5039,6 +5144,12 @@ func (_ Unimplemented) GetApiAuthVerify(w http.ResponseWriter, r *http.Request, 
 // User login.
 // (POST /api/login)
 func (_ Unimplemented) PostApiLogin(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Logout a user
+// (POST /api/logout)
+func (_ Unimplemented) PostApiLogout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5334,6 +5445,20 @@ func (siw *ServerInterfaceWrapper) PostApiLogin(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostApiLogin(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostApiLogout operation middleware
+func (siw *ServerInterfaceWrapper) PostApiLogout(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostApiLogout(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6231,6 +6356,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/api/login", wrapper.PostApiLogin)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/logout", wrapper.PostApiLogout)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/openapi.yaml", wrapper.GetApiOpenapiYaml)
 	})
 	r.Group(func(r chi.Router) {
@@ -6524,6 +6652,30 @@ func (response PostApiLogin401JSONResponse) VisitPostApiLoginResponse(w http.Res
 type PostApiLogin500JSONResponse Error
 
 func (response PostApiLogin500JSONResponse) VisitPostApiLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiLogoutRequestObject struct {
+}
+
+type PostApiLogoutResponseObject interface {
+	VisitPostApiLogoutResponse(w http.ResponseWriter) error
+}
+
+type PostApiLogout204Response struct {
+}
+
+func (response PostApiLogout204Response) VisitPostApiLogoutResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type PostApiLogout500JSONResponse Error
+
+func (response PostApiLogout500JSONResponse) VisitPostApiLogoutResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -7690,6 +7842,9 @@ type StrictServerInterface interface {
 	// User login.
 	// (POST /api/login)
 	PostApiLogin(ctx context.Context, request PostApiLoginRequestObject) (PostApiLoginResponseObject, error)
+	// Logout a user
+	// (POST /api/logout)
+	PostApiLogout(ctx context.Context, request PostApiLogoutRequestObject) (PostApiLogoutResponseObject, error)
 	// Get OpenAPI specification.
 	// (GET /api/openapi.yaml)
 	GetApiOpenapiYaml(ctx context.Context, request GetApiOpenapiYamlRequestObject) (GetApiOpenapiYamlResponseObject, error)
@@ -7944,6 +8099,30 @@ func (sh *strictHandler) PostApiLogin(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PostApiLoginResponseObject); ok {
 		if err := validResponse.VisitPostApiLoginResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostApiLogout operation middleware
+func (sh *strictHandler) PostApiLogout(w http.ResponseWriter, r *http.Request) {
+	var request PostApiLogoutRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PostApiLogout(ctx, request.(PostApiLogoutRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostApiLogout")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PostApiLogoutResponseObject); ok {
+		if err := validResponse.VisitPostApiLogoutResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

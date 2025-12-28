@@ -10,6 +10,7 @@ import {
 } from '$lib/errors/api';
 import { redirect, type Handle, type HandleServerError } from '@sveltejs/kit';
 import * as setCookie from 'set-cookie-parser';
+import { env } from '$env/dynamic/private';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const patchCookies = (setCookieHeader: string[]) => {
@@ -35,9 +36,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Refresh session if necessary
 	if (!accessToken && refreshToken) {
 		try {
-			const res = await refreshSession({
-				refresh_token: refreshToken
-			});
+			const res = await refreshSession(
+				{
+					refresh_token: refreshToken
+				},
+				{},
+				env.INTERNAL_BACKEND_URL
+			);
 			patchCookies(res.headers.getSetCookie());
 		} catch (e) {
 			console.error('failed to refresh session', e);
@@ -96,7 +101,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 							{
 								refresh_token: refreshToken
 							},
-							options
+							options,
+							env.INTERNAL_BACKEND_URL
 						);
 						console.log('refreshed session');
 
@@ -126,7 +132,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	try {
 		const fetch = ky.create(options);
-		await verifySession(fetch, { role });
+		await verifySession(fetch, { role }, {}, env.INTERNAL_BACKEND_URL);
 	} catch (e) {
 		if (e instanceof HTTPError) {
 			const err = await parseError(e.response);

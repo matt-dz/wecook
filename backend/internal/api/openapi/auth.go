@@ -62,6 +62,15 @@ func (r loginSuccessResponse) VisitPostApiSignupResponse(w http.ResponseWriter) 
 	return encoder.Encode(r.body)
 }
 
+type logoutSuccessResponse struct{}
+
+func (l logoutSuccessResponse) VisitPostApiLogoutResponse(w http.ResponseWriter) error {
+	http.SetCookie(w, token.DeleteAccessTokenCookie())
+	http.SetCookie(w, token.DeleteRefreshTokenCookie())
+	w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
 func (Server) PostApiLogin(ctx context.Context, request PostApiLoginRequestObject) (PostApiLoginResponseObject, error) {
 	env := env.EnvFromCtx(ctx)
 	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
@@ -405,4 +414,8 @@ func (Server) GetApiAuthVerify(ctx context.Context,
 	}
 
 	return GetApiAuthVerify204Response{}, nil
+}
+
+func (Server) PostApiLogout(ctx context.Context, request PostApiLogoutRequestObject) (PostApiLogoutResponseObject, error) {
+	return logoutSuccessResponse{}, nil
 }

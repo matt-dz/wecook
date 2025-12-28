@@ -1,0 +1,13 @@
+README.md
+Dockerfile
+Dockerfile.dev
+
+node_modules/
+
+.claude/
+.DS_Store
+.env
+.env.**
+.gitignore
+.prettierignore
+.prettierrc
