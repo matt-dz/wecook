@@ -140,9 +140,8 @@ func (Server) PostApiUserInvite(ctx context.Context,
 	}
 
 	// Create invite
-	const inviteCodeBytes = 16
 	env.Logger.DebugContext(ctx, "creating invite code")
-	code, err := token.CreateToken(inviteCodeBytes)
+	code, err := invite.CreateInvite()
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to create code", slog.Any("error", err))
 		return PostApiUserInvite500JSONResponse{
