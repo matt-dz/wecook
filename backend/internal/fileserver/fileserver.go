@@ -52,7 +52,11 @@ func (f *FileServer) Write(path string, data []byte) (fullpath string, n int, er
 		return "", 0, fmt.Errorf("creating parent directories: %w", err)
 	}
 
-	file, err := os.Create(fullpath)
+	if info, err := os.Stat(fullpath); err == nil && info.IsDir() {
+		return "", 0, errors.Join(fmt.Errorf("path %q is a directory", path), ErrInvalidPath)
+	}
+
+	file, err := os.OpenFile(fullpath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
 		return "", 0, fmt.Errorf("creating file: %w", err)
 	}
