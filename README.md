@@ -98,3 +98,6 @@ Default admin credentials are set in `.env.backend`:
 - Email: `admin@example.com`
 - Password: `Change-m3!` (change this!)
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

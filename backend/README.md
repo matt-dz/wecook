@@ -386,3 +386,7 @@ See the [main README](../README.md) for general contribution guidelines.
 - [Chi Router](https://go-chi.io/)
 - [GoMock](https://github.com/uber-go/mock)
 - [pgx PostgreSQL Driver](https://github.com/jackc/pgx)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
