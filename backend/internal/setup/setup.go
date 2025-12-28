@@ -108,10 +108,25 @@ func Database(ctx context.Context) (*database.Database, error) {
 	if defaultDB == "" {
 		return nil, errors.New("environment variable DATABASE must be set")
 	}
-	dbString := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", dbUser, dbPassword, dbHost, dbPort, defaultDB)
+
+	poolConfig, err := pgxpool.ParseConfig("")
+	if err != nil {
+		return nil, fmt.Errorf("configuring database pool: %w", err)
+	}
+
+	port, err := strconv.ParseUint(dbPort, 10, 16)
+	if err != nil {
+		return nil, fmt.Errorf("parsing DATABASE_PORT: %w", err)
+	}
+
+	poolConfig.ConnConfig.Host = dbHost
+	poolConfig.ConnConfig.Port = uint16(port)
+	poolConfig.ConnConfig.User = dbUser
+	poolConfig.ConnConfig.Password = dbPassword
+	poolConfig.ConnConfig.Database = defaultDB
 
 	// Creating DB connection
-	pool, err := pgxpool.New(ctx, dbString)
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		return nil, fmt.Errorf("creating database pool: %w", err)
 	}
