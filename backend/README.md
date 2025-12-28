@@ -348,6 +348,10 @@ for _, tt := range tests {
 | `SMTP_USERNAME` | SMTP username (optional) | - |
 | `SMTP_PASSWORD` | SMTP password (optional) | - |
 | `SMTP_FROM` | SMTP from address (optional) | - |
+| `SMTP_TLS_MODE` | TLS mode (`auto`, `starttls`, `implicit`, `none`) | `auto` |
+| `SMTP_TLS_SKIP_VERIFY` | Skip TLS certificate verification (development only) | `false` |
+
+With `SMTP_TLS_MODE=auto`, port `587` uses `STARTTLS` after `EHLO`, port `465` uses implicit TLS, and other ports send without TLS.
 
 ## API Documentation
 
