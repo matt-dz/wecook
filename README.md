@@ -70,15 +70,29 @@ wget -O .env.database https://raw.githubusercontent.com/matt-dz/wecook/refs/head
 
 ### 2. Configure Environment Variables
 
-Edit `.env.backend` and set:
-- (recommended) change `DATABASE_PASSWORD` to a secure password. You may generate a password with the following command `openssl rand --base64 32`.
-    - **Note**: Ensure the database variables correspond to their respective values in `.env.database`.
-- `ADMIN_EMAIL` and `ADMIN_PASSWORD` - You will use these to login.
-- (optional) `HOST_ORIGIN` (e.g., `http://localhost:8080`)
-- (optional) Email configurartion - this will be used to invite users.
+**Note**: The application will run with default values. You only need to configure variables for production use.
 
-Edit `.env.database` and set:
-- PostgreSQL credentials
+#### Required for Production
+
+Edit both `.env.backend` and `.env.database`:
+
+1. **Database Password** - Set the same password in both files:
+   - In `.env.backend`: `DATABASE_PASSWORD=your-secure-password`
+   - In `.env.database`: `POSTGRES_PASSWORD=your-secure-password`
+   - Generate a secure password: `openssl rand --base64 32`
+
+2. **Admin Credentials** - Set in `.env.backend`:
+   - `ADMIN_EMAIL=your-email@example.com`
+   - `ADMIN_PASSWORD=Your-Secure-Password1!`
+
+#### Optional Configuration
+
+Edit `.env.backend` if needed:
+
+- **`HOST_ORIGIN`** - Only needed if serving at a different URL (e.g., `https://example.com`)
+  - Default: `http://localhost:8080`
+- **SMTP Settings** - Only needed for user invitations via email:
+  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`
 
 ### 3. Start the Application
 
@@ -94,9 +108,7 @@ The application will be available at `http://localhost:8080`
 - **API**: http://localhost:8080/api
 - **API Documentation**: http://localhost:8080/docs/
 
-Default admin credentials are set in `.env.backend`:
-- Email: `admin@example.com`
-- Password: `Change-m3!` (change this!)
+Login with the admin credentials you set in `.env.backend` (default: `admin@example.com` / `Change-m3!`)
 
 ## License
 
