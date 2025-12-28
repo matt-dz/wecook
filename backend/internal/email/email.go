@@ -24,6 +24,11 @@ const (
 	TLSModeNone     TLSMode = "none"
 )
 
+const (
+	port465 = 465
+	port587 = 587
+)
+
 // ParseTLSMode normalizes the TLS mode and returns an error if it is invalid.
 func ParseTLSMode(mode string) (TLSMode, error) {
 	if mode == "" {
@@ -211,10 +216,10 @@ func (s *SMTPSender) resolveTLSMode() TLSMode {
 	case string(TLSModeNone):
 		return TLSModeNone
 	default:
-		if s.config.Port == 465 {
+		if s.config.Port == port465 {
 			return TLSModeImplicit
 		}
-		if s.config.Port == 587 {
+		if s.config.Port == port587 {
 			return TLSModeStartTLS
 		}
 

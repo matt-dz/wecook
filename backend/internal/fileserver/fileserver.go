@@ -12,6 +12,7 @@ import (
 
 const (
 	directoryPerms = 0o755
+	newFilePerms   = 0o600
 )
 
 var (
@@ -56,7 +57,7 @@ func (f *FileServer) Write(path string, data []byte) (fullpath string, n int, er
 		return "", 0, errors.Join(fmt.Errorf("path %q is a directory", path), ErrInvalidPath)
 	}
 
-	file, err := os.OpenFile(fullpath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	file, err := os.OpenFile(fullpath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, newFilePerms)
 	if err != nil {
 		return "", 0, fmt.Errorf("creating file: %w", err)
 	}

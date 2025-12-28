@@ -19,7 +19,8 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	setupCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	const setupTime = 30 * time.Second
+	setupCtx, cancel := context.WithTimeout(ctx, setupTime)
 	defer cancel()
 
 	logger := log.New(nil)

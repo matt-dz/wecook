@@ -416,6 +416,8 @@ func (Server) GetApiAuthVerify(ctx context.Context,
 	return GetApiAuthVerify204Response{}, nil
 }
 
-func (Server) PostApiLogout(ctx context.Context, request PostApiLogoutRequestObject) (PostApiLogoutResponseObject, error) {
+func (Server) PostApiLogout(ctx context.Context,
+	request PostApiLogoutRequestObject,
+) (PostApiLogoutResponseObject, error) {
 	return logoutSuccessResponse{}, nil
 }

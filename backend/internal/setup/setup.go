@@ -20,7 +20,10 @@ import (
 	"github.com/matt-dz/wecook/internal/password"
 )
 
-const appSecretPath = "/data/secret"
+const (
+	appSecretPath = "/data/secret"
+	newFilePerms  = 0o600
+)
 
 // SMTP creates a new SMTP sender from environment variables.
 // TLS usage is automatically inferred from the port unless overridden:
@@ -206,7 +209,7 @@ func AppSecret(env *env.Env) error {
 			return fmt.Errorf("checking secret path: %w", err)
 		}
 
-		file, err := os.OpenFile(secretPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+		file, err := os.OpenFile(secretPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, newFilePerms)
 		if err != nil {
 			return fmt.Errorf("creating secret file: %w", err)
 		}
