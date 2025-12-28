@@ -130,8 +130,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 	} catch (e) {
 		if (e instanceof HTTPError) {
 			const err = await parseError(e.response);
-			if (err.success && err.data.code === ApiErrorCodes.InsufficientPermissions) {
-				redirect(303, '/');
+			if (err.success) {
+				console.log(err.data);
+				if (
+					err.data.code === ApiErrorCodes.InsufficientPermissions ||
+					err.data.code === ApiErrorCodes.InvalidCredentials
+				) {
+					redirect(303, '/');
+				}
 			}
 		}
 		throw e;

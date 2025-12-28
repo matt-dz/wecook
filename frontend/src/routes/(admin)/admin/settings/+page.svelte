@@ -3,7 +3,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 </script>
 
-<div class="mt-12 flex justify-center">
+<div class="mt-12 flex justify-center px-6">
 	<div class="flex w-full max-w-3xl justify-center">
 		<div class="flex items-start gap-2">
 			<Switch id="public-signup" disabled />

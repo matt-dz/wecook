@@ -12,9 +12,10 @@
 
 <Dialog.Root>
 	<div class="mt-12 flex justify-center">
-		<div class="w-full max-w-3xl">
+		<div class="w-full max-w-3xl px-6">
 			<Dialog.Trigger>
-				<Button className="mb-4 from-blue-300 to-blue-200 hover:from-blue-200 hover:to-blue-100"
+				<Button
+					className="mb-4 from-blue-300 to-blue-200 hover:from-blue-200 hover:to-blue-100 rounded-lg text-sm"
 					>Invite User</Button
 				>
 			</Dialog.Trigger>

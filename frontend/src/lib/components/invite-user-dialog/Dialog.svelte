@@ -4,7 +4,7 @@
 	import { inviteUser } from '$lib/users';
 	import { toast } from 'svelte-sonner';
 	import Button from '../button/Button.svelte';
-	import Input from '../input/Input.svelte';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import { HTTPError } from 'ky';
 	import { parseError } from '$lib/errors/api';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
@@ -50,19 +50,19 @@
 				autocorrect="off"
 				spellcheck="false"
 				required
-				className="w-full font-inter py-1.5 text-base"
+				class="w-full py-1.5 font-inter text-base"
 			/>
 		</div>
 
 		<Dialog.Footer class="mt-4">
 			<Dialog.Close>
-				<Button>Cancel</Button>
+				<Button className="rounded-lg text-sm">Cancel</Button>
 			</Dialog.Close>
 			<Button
 				type="submit"
 				onclick={handleInvite}
 				disabled={inviting}
-				className="from-blue-300 to-blue-200 hover:from-blue-200 hover:to-blue-100"
+				className="from-blue-300 to-blue-200 hover:from-blue-200 hover:to-blue-100 rounded-lg text-sm"
 			>
 				{#if inviting}
 					<Spinner />

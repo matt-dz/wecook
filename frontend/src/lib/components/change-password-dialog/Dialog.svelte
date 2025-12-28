@@ -86,12 +86,10 @@
 			</div>
 			<Error {error} class="font-inter" />
 			<Dialog.Footer class="mt-4">
-				<Dialog.Close>
-					<Button
-						onclick={() => (open = false)}
-						className="text-sm font-medium w-fit py-1.5 rounded-lg">Cancel</Button
-					>
-				</Dialog.Close>
+				<Button
+					onclick={() => (open = false)}
+					className="text-sm font-medium w-fit py-1.5 rounded-lg">Cancel</Button
+				>
 				<Button
 					type="submit"
 					onclick={(e) => {

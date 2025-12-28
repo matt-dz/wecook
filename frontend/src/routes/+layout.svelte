@@ -8,7 +8,8 @@
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import AppSidebar from '$lib/components/app-sidebar.svelte';
+	import AdminSidebar from '$lib/components/admin-sidebar/Sidebar.svelte';
+	import AppSidebar from '$lib/components/app-sidebar/Sidebar.svelte';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 
@@ -16,6 +17,7 @@
 
 	// Check if current route is an admin route
 	let isAdminRoute = $derived(page.route.id?.startsWith('/(admin)'));
+	let innerWidth: number = $state(500);
 </script>
 
 <svelte:head>
@@ -30,19 +32,21 @@
 	/>
 </svelte:head>
 
+<svelte:window bind:innerWidth />
+
 <Toaster position="top-center" richColors />
 
 {#if isAdminRoute}
 	<!-- Admin routes: no header/footer, full layout control for sidebar -->
 	<Sidebar.Provider class="bg-white">
-		<AppSidebar />
+		<AdminSidebar />
 		<Sidebar.Inset>
 			<header class="flex h-16 shrink-0 items-center gap-2 px-4">
 				<Sidebar.Trigger class="-ms-1" />
 				<Separator orientation="vertical" class="me-2 data-[orientation=vertical]:h-4" />
 				<Breadcrumb.Root>
 					<Breadcrumb.List>
-						<Breadcrumb.Item class="hidden md:block">
+						<Breadcrumb.Item>
 							<Breadcrumb.Link class="font-inter capitalize" href="##"
 								>{page.route?.id?.split('/').at(-1)}</Breadcrumb.Link
 							>
@@ -55,11 +59,23 @@
 	</Sidebar.Provider>
 {:else}
 	<!-- Regular routes: with header and footer -->
-	<div class="flex h-full min-h-dvh flex-col">
-		<Header isLoggedIn={data.isLoggedIn} />
-		{@render children()}
-		<div class="flex grow flex-col justify-end">
-			<Footer />
-		</div>
-	</div>
+	<Sidebar.Provider class="white">
+		{#if innerWidth <= 500}
+			<AppSidebar
+				loggedIn={data.isLoggedIn}
+				side="right"
+				variant="floating"
+				collapsible="offcanvas"
+			/>
+		{/if}
+		<Sidebar.Inset>
+			<main class="flex min-h-screen flex-col">
+				<Header isLoggedIn={data.isLoggedIn} />
+				<div class="grow">
+					{@render children()}
+				</div>
+				<Footer />
+			</main>
+		</Sidebar.Inset>
+	</Sidebar.Provider>
 {/if}
