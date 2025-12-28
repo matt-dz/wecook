@@ -67,7 +67,7 @@
 			<Label for="fname" class="font-inter">First Name</Label>
 			<Input
 				disabled={loading}
-				class="text-sm"
+				class="font-inter"
 				bind:value={firstName}
 				id="fname"
 				name="fname"

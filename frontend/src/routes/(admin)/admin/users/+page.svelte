@@ -8,9 +8,18 @@
 
 	let { data }: PageProps = $props();
 	const users = $state(data.users);
+
+	let inviteDialogOpen = $state(false);
+	let inviteEmail = $state('');
+
+	$effect(() => {
+		if (!inviteDialogOpen) {
+			inviteEmail = '';
+		}
+	});
 </script>
 
-<Dialog.Root>
+<Dialog.Root bind:open={inviteDialogOpen}>
 	<div class="mt-12 flex justify-center">
 		<div class="w-full max-w-3xl px-6">
 			<Dialog.Trigger>
@@ -22,5 +31,5 @@
 			<DataTable data={users.users} {columns} />
 		</div>
 	</div>
-	<InviteUserDialog />
+	<InviteUserDialog bind:email={inviteEmail} />
 </Dialog.Root>

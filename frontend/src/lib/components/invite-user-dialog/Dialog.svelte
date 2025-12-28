@@ -9,7 +9,12 @@
 	import { parseError } from '$lib/errors/api';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
 
-	let email = $state('');
+	interface Props {
+		email?: string;
+	}
+
+	let { email = $bindable('') }: Props = $props();
+
 	let inviting = $state(false);
 
 	const handleInvite = async () => {
