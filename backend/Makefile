@@ -79,6 +79,7 @@ filestoremock:
 		-destination internal/filestore/filestoremock.go \
 		-package filestore
 
+.PHONY: smtpmock
 smtpmock:
 	@echo "🤖 Generating smtp mock..."
 	mockgen -source=internal/email/email.go \
