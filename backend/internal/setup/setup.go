@@ -186,17 +186,22 @@ func AppSecret(env *env.Env) error {
 
 	var secret string
 	if f1, err := os.Lstat(secretPath); err != nil {
-		_, err := os.Create(secretPath)
+		if !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("checking secret path: %w", err)
+		}
+
+		file, err := os.OpenFile(secretPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 		if err != nil {
 			return fmt.Errorf("creating secret file: %w", err)
 		}
+		defer func() { _ = file.Close() }()
 
 		secret, err = token.NewAppSecret()
 		if err != nil {
 			return fmt.Errorf("generating new app secret: %w", err)
 		}
 
-		if err := os.WriteFile(secretPath, []byte(secret), 0o600); err != nil {
+		if _, err := file.WriteString(secret); err != nil {
 			return fmt.Errorf("writing secret file: %w", err)
 		}
 	} else {
