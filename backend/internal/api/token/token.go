@@ -31,7 +31,8 @@ const (
 )
 
 const (
-	accessTokenBytes     = 32
+	refreshTokenBytes    = 32
+	appSecretBytes       = 32
 	AccessTokenLifetime  = 60 * 30           // 30 minutes
 	refreshTokenLifetime = 60 * 60 * 24 * 14 // 14 days
 )
@@ -54,8 +55,12 @@ func CreateToken(numbytes uint) (string, error) {
 	return base64.StdEncoding.EncodeToString(token), nil
 }
 
+func NewAppSecret() (string, error) {
+	return CreateToken(appSecretBytes)
+}
+
 func NewRefreshToken(userid int64) (string, error) {
-	randSegment, err := CreateToken(accessTokenBytes)
+	randSegment, err := CreateToken(refreshTokenBytes)
 	if err != nil {
 		return "", err
 	}

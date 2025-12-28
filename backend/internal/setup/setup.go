@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/argon2id"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/email"
@@ -18,6 +19,8 @@ import (
 	"github.com/matt-dz/wecook/internal/filestore"
 	"github.com/matt-dz/wecook/internal/password"
 )
+
+const appSecretPath = "/data/secret"
 
 // SMTP creates a new SMTP sender from environment variables.
 // TLS usage is automatically inferred from the port:
@@ -169,4 +172,46 @@ func FileStore() (filestore.FileStore, error) {
 		return fs, errors.New("HOST_ORIGIN must be set")
 	}
 	return filestore.New(fileserverPath, urlPrefix, filestoreHost), nil
+}
+
+func AppSecret(env *env.Env) error {
+	var secretPath string
+	if env.Get("APP_SECRET_PATH") != "" {
+		secretPath = env.Get("APP_SECRET_PATH")
+	} else {
+		secretPath = appSecretPath
+	}
+
+	if env.Get("APP_SECRET") != "" {
+		return nil
+	}
+
+	var secret string
+	if f1, err := os.Lstat(secretPath); err != nil {
+		_, err := os.Create(secretPath)
+		if err != nil {
+			return fmt.Errorf("creating secret file: %w", err)
+		}
+
+		secret, err = token.NewAppSecret()
+		if err != nil {
+			return fmt.Errorf("generating new app secret: %w", err)
+		}
+
+		if err := os.WriteFile(secretPath, []byte(secret), 0o600); err != nil {
+			return fmt.Errorf("writing secret file: %w", err)
+		}
+	} else {
+		if f1.IsDir() {
+			return fmt.Errorf("expected file, got directory at %q", secretPath)
+		}
+		data, err := os.ReadFile(secretPath)
+		if err != nil {
+			return fmt.Errorf("reading file: %w", err)
+		}
+		secret = string(data)
+	}
+
+	env.Set("APP_SECRET", secret)
+	return nil
 }

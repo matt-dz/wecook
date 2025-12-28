@@ -49,6 +49,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := setup.AppSecret(env); err != nil {
+		logger.Error("failed to setup app secret", slog.Any("error", err))
+		os.Exit(1)
+	}
+
 	if err := api.Start(env); err != nil {
 		env.Logger.Error("API Failed", slog.Any("error", err))
 		os.Exit(1)

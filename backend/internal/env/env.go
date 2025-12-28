@@ -33,6 +33,13 @@ func (e *Env) Get(key string) string {
 	return os.Getenv(key)
 }
 
+func (e *Env) Set(key string, value string) {
+	if e.vars == nil {
+		e.vars = make(map[string]string)
+	}
+	e.vars[key] = value
+}
+
 func (e *Env) IsProd() bool {
 	return e.Get("ENV") == "PROD"
 }

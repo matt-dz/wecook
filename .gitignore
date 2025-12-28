@@ -2,7 +2,7 @@
 .env.**
 !.env.database.example
 !.env.backend.example
-!.env.backend.frontend
+!.env.frontend.example
 
 .DS_Store
 .claude/

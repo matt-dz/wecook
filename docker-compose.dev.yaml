@@ -19,6 +19,7 @@ services:
       - ./backend/:/app
       - go-modules:/go/pkg/mod
       - files-data:/data/files
+      - backend-data:/data
     stdin_open: true
     tty: true
 
@@ -79,3 +80,4 @@ volumes:
   go-modules:
   files-data:
   web-node-modules:
+  backend-data:

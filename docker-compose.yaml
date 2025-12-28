@@ -4,7 +4,7 @@ services:
     container_name: wecook_backend
     hostname: wecook-backend
     restart: unless-stopped
-    env_file: .env
+    env_file: .env.backend
     depends_on:
       database:
         condition: service_healthy
@@ -15,6 +15,7 @@ services:
       retries: 5
     volumes:
       - files-data:/data/files
+      - backend-data:/data
 
   web:
     image: matthew10125/wecook-frontend:latest
@@ -55,3 +56,4 @@ services:
 volumes:
   db-data:
   files-data:
+  backend-data:
