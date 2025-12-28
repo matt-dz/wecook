@@ -1,5 +1,8 @@
 .env
 .env.**
 !.env.database.example
+!.env.backend.example
+!.env.backend.frontend
 
-garage.toml
+.DS_Store
+.claude/

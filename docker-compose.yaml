@@ -4,29 +4,7 @@ services:
     container_name: wecook_backend
     hostname: wecook-backend
     restart: unless-stopped
-    # env_file: .env
-    environment:
-      DATABASE_USER: wecook
-      DATABASE_PASSWORD: secure-password
-      DATABASE_HOST: wecook-database
-      DATABASE_PORT: 5432
-      DATABASE: wecook
-
-      APP_SECRET: change-me
-      HOST_ORIGIN: http://localhost:8080 # CHANGE to host url
-
-      FILESERVER_VOLUME: /data/files
-
-      # Admin Configuration (optional)
-      ADMIN_EMAIL: admin@example.com
-      ADMIN_PASSWORD: Secure-passw0rd-change-me!
-
-      # Email Configuration (optional - used for signup invitations)
-      SMTP_HOST: smtp.example.com
-      SMTP_PORT: 587
-      SMTP_USERNAME: user@example.com
-      SMTP_PASSWORD: your-smtp-password
-      SMTP_FROM: noreply@example.com
+    env_file: .env
     depends_on:
       database:
         condition: service_healthy
@@ -43,17 +21,13 @@ services:
     container_name: wecook_frontend
     hostname: wecook-frontend
     restart: unless-stopped
-    environment:
-      INTERNAL_BACKEND_URL: http://wecook-backend:8080
+    env_file: .env.frontend
 
   database:
     image: postgres:18
     container_name: wecook_database
     hostname: wecook-database
-    environment:
-      POSTGRES_PASSWORD: secure-password # change to secure password
-      POSTGRES_USER: wecook
-      POSTGRES_DB: wecook
+    env_file: .env.database
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
@@ -80,5 +54,4 @@ services:
 
 volumes:
   db-data:
-  go-modules:
   files-data:
