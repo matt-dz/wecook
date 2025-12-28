@@ -92,7 +92,7 @@ The application will be available at `http://localhost:8080`
 
 - **Web Interface**: http://localhost:8080
 - **API**: http://localhost:8080/api
-- **API Documentation**: http://localhost:8080/api/docs
+- **API Documentation**: http://localhost:8080/docs/
 
 Default admin credentials are set in `.env.backend`:
 - Email: `admin@example.com`

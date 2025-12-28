@@ -47,11 +47,22 @@ services:
         condition: service_healthy
       web:
         condition: service_started
+      swagger-ui:
+        condition: service_started
     ports:
       - "8080:80"
     volumes:
       - files-data:/data/files:ro
       - ./fileserver.conf:/etc/nginx/conf.d/default.conf:ro
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    container_name: wecook_docs
+    hostname: wecook-docs
+    environment:
+      BASE_URL: /docs
+      URL: /api/openapi.yaml
+      DEEP_LINKING: true
 
 volumes:
   db-data:
