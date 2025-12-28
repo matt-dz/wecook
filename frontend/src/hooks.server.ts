@@ -31,6 +31,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 		if (event.route.id === '/login') {
 			return await resolve(event);
 		}
+		if (event.route.id?.startsWith('/(user)/') || event.route.id?.startsWith('/(admin)/')) {
+			redirect(303, '/login');
+		}
 	}
 
 	// Refresh session if necessary
