@@ -68,7 +68,7 @@ func SMTP() (*email.SMTPSender, error) {
 	return email.NewSMTPSender(config), nil
 }
 
-func Database() (*database.Database, error) {
+func Database(ctx context.Context) (*database.Database, error) {
 	dbUser := os.Getenv("DATABASE_USER")
 	if dbUser == "" {
 		return nil, errors.New("environment variable DATABASE_USER must be set")
@@ -92,13 +92,13 @@ func Database() (*database.Database, error) {
 	dbString := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", dbUser, dbPassword, dbHost, dbPort, defaultDB)
 
 	// Creating DB connection
-	pool, err := pgxpool.New(context.Background(), dbString)
+	pool, err := pgxpool.New(ctx, dbString)
 	if err != nil {
 		return nil, fmt.Errorf("creating database pool: %w", err)
 	}
 
 	db := database.NewDatabase(pool)
-	if err := db.EnsureSchema(context.TODO()); err != nil {
+	if err := db.EnsureSchema(ctx); err != nil {
 		return nil, fmt.Errorf("initializing database: %w", err)
 	}
 
@@ -106,14 +106,12 @@ func Database() (*database.Database, error) {
 }
 
 // Admin setups an admin user if one does not exist. Requires env.Database.
-func Admin(env *env.Env) error {
+func Admin(ctx context.Context, env *env.Env) error {
 	adminEmail, adminPassword := env.Get("ADMIN_EMAIL"), env.Get("ADMIN_PASSWORD")
 	if adminEmail == "" || adminPassword == "" {
 		env.Logger.Info("ADMIN_EMAIL and ADMIN_PASSWORD not setup, skipping admin setup")
 		return nil
 	}
-
-	ctx := context.TODO()
 
 	// Validate email and password
 	if _, err := mail.ParseAddress(adminEmail); err != nil {

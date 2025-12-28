@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/matt-dz/wecook/internal/api"
 	"github.com/matt-dz/wecook/internal/env"
@@ -12,6 +16,12 @@ import (
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	setupCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
 	logger := log.New(nil)
 
 	conf := http.DefaultConfig()
@@ -24,7 +34,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	db, err := setup.Database()
+	db, err := setup.Database(setupCtx)
 	if err != nil {
 		logger.Error("failed to setup database", slog.Any("error", err))
 		os.Exit(1)
@@ -44,7 +54,7 @@ func main() {
 		HTTP:      http,
 	}
 
-	if err := setup.Admin(env); err != nil {
+	if err := setup.Admin(setupCtx, env); err != nil {
 		logger.Error("failed to setup admin", slog.Any("error", err))
 		os.Exit(1)
 	}
