@@ -110,6 +110,21 @@ The application will be available at `http://localhost:8080`
 
 Login with the admin credentials you set in `.env.backend` (default: `admin@example.com` / `Change-m3!`)
 
+## Kubernetes Deployment
+
+Kubernetes manifests that mirror the Docker Compose stack are available in [`k8s/`](k8s/). Review and update the bundled secrets before applying them:
+
+```bash
+kubectl apply -f k8s/storage.yaml
+kubectl apply -f k8s/database.yaml
+kubectl apply -f k8s/backend.yaml
+kubectl apply -f k8s/frontend.yaml
+kubectl apply -f k8s/swagger-ui.yaml
+kubectl apply -f k8s/nginx.yaml
+```
+
+See [`k8s/README.md`](k8s/README.md) for configuration notes.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wecook-db-secret
+  labels:
+    app: wecook-database
+type: Opaque
+stringData:
+  POSTGRES_USER: wecook
+  POSTGRES_PASSWORD: secure-password
+  POSTGRES_DB: wecook
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wecook-database
+  labels:
+    app: wecook-database
+spec:
+  selector:
+    app: wecook-database
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wecook-database
+  labels:
+    app: wecook-database
+spec:
+  serviceName: wecook-database
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wecook-database
+  template:
+    metadata:
+      labels:
+        app: wecook-database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:18
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wecook-db-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wecook-db-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: wecook-db-secret
+                  key: POSTGRES_DB
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 20
+            periodSeconds: 20
+  volumeClaimTemplates:
+    - metadata:
+        name: db-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
