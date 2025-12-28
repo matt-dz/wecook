@@ -13,6 +13,7 @@
 	import ShareDialog from '$lib/components/share-dialog/Dialog.svelte';
 	import clsx from 'clsx';
 	import type { RecipeAndOwner } from '$lib/recipes';
+	import { parseError } from '$lib/errors/api';
 	interface Props {
 		recipe: RecipeAndOwner;
 		className?: string;
@@ -47,11 +48,13 @@
 			toast.success(`Recipe ${published ? '' : 'un'}published successfully.`);
 		} catch (e) {
 			if (e instanceof HTTPError) {
-				console.error('failed to publish recipe', e.message);
-			} else {
-				console.error(e);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to publish recipe', err.data);
+				}
 			}
-			alert('failed to publish recipe. try again later.');
+			console.error(e);
+			toast.error('Failed to publish recipe.');
 		}
 	};
 </script>

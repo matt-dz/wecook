@@ -9,38 +9,33 @@
 	}
 
 	let { isLoggedIn }: Props = $props();
-	let innerWidth: number = $state(500);
 </script>
 
-<svelte:window bind:innerWidth />
 <header class="relative z-10 flex justify-center px-6 pt-8">
 	<div class="flex w-full max-w-5xl items-center justify-between">
 		<a href={resolve('/')} class="text-3xl">WeCook</a>
 
-		{#if innerWidth > 500}
-			<nav class="flex gap-4">
-				{#if isLoggedIn}
-					<a
-						href={resolve('/home')}
-						class={clsx(
-							'underline-offset-2 hover:underline',
-							page.route.id === '/(user)/home' && 'underline'
-						)}>My Recipes</a
-					>
-					<a
-						href={resolve('/profile')}
-						class={clsx(
-							'underline-offset-2 hover:underline',
-							page.route.id === '/(user)/profile' && 'underline'
-						)}>Profile</a
-					>
-					<a href={resolve('/logout')} class="underline-offset-2 hover:underline">Logout</a>
-				{:else}
-					<a href={resolve('/login')} class="underline-offset-2 hover:underline">Login</a>
-				{/if}
-			</nav>
-		{:else}
-			<Sidebar.Trigger />
-		{/if}
+		<nav class="hidden gap-4 sm:flex">
+			{#if isLoggedIn}
+				<a
+					href={resolve('/home')}
+					class={clsx(
+						'underline-offset-2 hover:underline',
+						page.route.id === '/(user)/home' && 'underline'
+					)}>My Recipes</a
+				>
+				<a
+					href={resolve('/profile')}
+					class={clsx(
+						'underline-offset-2 hover:underline',
+						page.route.id === '/(user)/profile' && 'underline'
+					)}>Profile</a
+				>
+				<a href={resolve('/logout')} class="underline-offset-2 hover:underline">Logout</a>
+			{:else}
+				<a href={resolve('/login')} class="underline-offset-2 hover:underline">Login</a>
+			{/if}
+		</nav>
+		<Sidebar.Trigger class="block sm:hidden" />
 	</div>
 </header>

@@ -17,7 +17,8 @@
 
 	// Check if current route is an admin route
 	let isAdminRoute = $derived(page.route.id?.startsWith('/(admin)'));
-	let innerWidth: number = $state(500);
+	let innerWidth: number = $state(9999); // Start large to prevent sidebar flash on desktop
+	let sidebarOpen = $state(false);
 </script>
 
 <svelte:head>
@@ -59,15 +60,14 @@
 	</Sidebar.Provider>
 {:else}
 	<!-- Regular routes: with header and footer -->
-	<Sidebar.Provider class="white">
-		{#if innerWidth <= 500}
-			<AppSidebar
-				loggedIn={data.isLoggedIn}
-				side="right"
-				variant="floating"
-				collapsible="offcanvas"
-			/>
-		{/if}
+	<Sidebar.Provider class="white" bind:open={sidebarOpen}>
+		<AppSidebar
+			loggedIn={data.isLoggedIn}
+			side="right"
+			variant="floating"
+			collapsible="offcanvas"
+			class="sm:invisible"
+		/>
 		<Sidebar.Inset>
 			<main class="flex min-h-screen flex-col">
 				<Header isLoggedIn={data.isLoggedIn} />

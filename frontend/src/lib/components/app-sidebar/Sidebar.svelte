@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import type { ComponentProps } from 'svelte';
+	import { onMount, type ComponentProps } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
 
@@ -18,6 +18,8 @@
 			sidebar.setOpen(false);
 		}
 	};
+
+	onMount(() => closeSidebar());
 </script>
 
 <Sidebar.Root bind:ref {...restProps}>

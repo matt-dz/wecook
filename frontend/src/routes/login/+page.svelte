@@ -10,6 +10,7 @@
 	import { toast } from 'svelte-sonner';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import Error from '$lib/components/error/Error.svelte';
+	import { Spinner } from '$lib/components/ui/spinner/index.js';
 
 	let loading = $state(false);
 	let error: string = $state('');
@@ -102,7 +103,11 @@
 			type="submit"
 			disabled={loading}
 		>
-			Login
+			{#if loading}
+				<Spinner class="mx-auto size-5" />
+			{:else}
+				Login
+			{/if}
 		</Button>
 	</form>
 </div>

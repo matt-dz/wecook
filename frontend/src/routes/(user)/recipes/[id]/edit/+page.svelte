@@ -39,6 +39,7 @@
 	import { HTTPError } from 'ky';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { parseError } from '$lib/errors/api';
 
 	let { data }: PageProps = $props();
 
@@ -166,11 +167,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to upload image', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to upload image', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to upload image', e);
 			}
-			alert('failed to upload image. try again later.');
+			toast.error('Failed to upload image.');
 		}
 	};
 
@@ -188,11 +192,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to delete image', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to delete ingredient image', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to delete ingredient image', e);
 			}
-			alert('failed to delete image. try again later.');
+			toast.error('Failed to delete ingredient image.');
 		}
 	};
 
@@ -209,11 +216,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to upload image', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to update step', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to update', e);
 			}
-			alert('failed to upload image. try again later.');
+			toast.error('Failed to update step.');
 		}
 	};
 
@@ -229,11 +239,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to delete image', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to delete step image', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to delete step image', e);
 			}
-			alert('failed to delete image. try again later.');
+			toast.error('Failed to delete step image.');
 		}
 	};
 
@@ -249,11 +262,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to upload image', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to upload recipe image', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to upload recipe image', e);
 			}
-			alert('failed to upload image. try again later.');
+			toast.error('Failed to upload recipe image.');
 		}
 	};
 
@@ -268,11 +284,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to delete image', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to delete recipe image', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to delete recipe image', e);
 			}
-			alert('failed to delete image. try again later.');
+			toast.error('Failed to delete recipe image.');
 		}
 	};
 
@@ -301,11 +320,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to publish recipe', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to toggle publish', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to toggle publish', e);
 			}
-			alert('failed to publish recipe. try again later.');
+			toast.error(`Failed to ${published ? '' : 'un'}publish recipe.`);
 		}
 	};
 
@@ -318,11 +340,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to create ingredient', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to create ingredient', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to create ingredient', e);
 			}
-			alert('failed to create ingredient. try again later.');
+			toast.error('Failed to create ingredient.');
 		}
 	};
 
@@ -335,11 +360,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to create step', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to create step', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to create step', e);
 			}
-			alert('failed to create step. try again later.');
+			toast.error('Failed to create step.');
 		}
 	};
 
@@ -355,11 +383,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to delete ingredient', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to delete ingredient', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to delete ingredient', e);
 			}
-			alert('failed to delete ingredient. try again later.');
+			toast.error('Failed to delete ingredient.');
 		}
 	};
 
@@ -381,11 +412,14 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
-				console.error('failed to delete step', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to delete step', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to delete step', e);
 			}
-			alert('failed to delete step. try again later.');
+			toast.error('Failed to delete step.');
 		}
 	};
 
@@ -396,11 +430,14 @@
 			goto(resolve('/home'));
 		} catch (e) {
 			if (e instanceof HTTPError) {
-				console.error('failed to delete recipe', e.message);
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to delete recipe', err.data);
+				}
 			} else {
-				console.error(e);
+				console.error('failed to delete recipe', e);
 			}
-			alert('failed to delete recipe. try again later.');
+			toast.error('Failed to delete recipe.');
 		}
 	};
 

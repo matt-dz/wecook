@@ -3,13 +3,14 @@
 	import Button from '$lib/components/button/Button.svelte';
 	import type { PageProps } from './$types';
 	import { CreateRecipe } from '$lib/recipes';
-	import fetch, { isRetryable } from '$lib/http';
+	import fetch from '$lib/http';
 	import * as Empty from '$lib/components/ui/empty/index.js';
-	import { HTTPError, TimeoutError } from 'ky';
-	import { refreshTokenExpired } from '$lib/errors/api';
+	import { HTTPError } from 'ky';
+	import { parseError } from '$lib/errors/api';
 	import { goto } from '$app/navigation';
 	import { CookingPot } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
+	import { toast } from 'svelte-sonner';
 
 	let { data }: PageProps = $props();
 
@@ -19,20 +20,13 @@
 			goto(resolve(`/recipes/${recipe.recipe_id.toString()}/edit`));
 		} catch (e) {
 			if (e instanceof HTTPError) {
-				console.error(e.response);
-				if (await refreshTokenExpired(e.response)) {
-					goto(resolve('/login'));
-				} else if (isRetryable(e.response)) {
-					alert('something went wrong. try again later.');
-				} else {
-					alert('uh-oh, something bad happened.');
+				const err = await parseError(e.response);
+				if (err.success) {
+					console.error('failed to create recipe', err.data);
 				}
-			} else if (e instanceof TimeoutError) {
-				alert('request timed out. try again later.');
-			} else {
-				alert('uh-oh, an un-retryable error occured.');
-				console.error(e);
 			}
+			console.error('failed to create recipe', e);
+			toast.error('Failed to create recipe.');
 		}
 	};
 </script>
