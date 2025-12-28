@@ -23,18 +23,6 @@ const (
 	defaultPort = "8080"
 )
 
-// Start godoc
-//
-//	@title						WeCook API
-//	@version					1.0
-//	@description				API Server for the WeCook application.
-//
-//	@securityDefinitions.apikey	BearerAuth
-//	@in							header
-//	@name						Authorization
-//
-//	@host						localhost:8080
-//	@BasePath					/api
 func Start(env *env.Env) error {
 	serverPort := env.Get("SERVER_PORT")
 	if serverPort == "" {
@@ -88,6 +76,8 @@ func Start(env *env.Env) error {
 	}
 
 	env.Logger.Info(fmt.Sprintf("Listening at localhost:%s", serverPort))
-	env.Logger.Info(fmt.Sprintf("Swagger UI available at http://localhost:%s/api/swagger/index.html", serverPort))
+	if !env.IsProd() {
+		env.Logger.Info(fmt.Sprintf("Swagger UI available at http://localhost:%s/docs/", serverPort))
+	}
 	return s.ListenAndServe()
 }
