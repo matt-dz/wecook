@@ -36,6 +36,6 @@
 				<a href={resolve('/login')} class="underline-offset-2 hover:underline">Login</a>
 			{/if}
 		</nav>
-		<Sidebar.Trigger class="block sm:hidden" />
+		<Sidebar.Trigger class="sm:hidden" />
 	</div>
 </header>
