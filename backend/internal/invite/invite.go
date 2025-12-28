@@ -2,12 +2,12 @@
 package invite
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/matt-dz/wecook/internal/api/token"
 )
 
 const (
@@ -19,7 +19,11 @@ var ErrInvalidInvite = errors.New("malformed invite")
 
 // CreateInvite creates a cryptographically secure random invite.
 func CreateInvite() (code string, err error) {
-	return token.CreateToken(inviteCodeBytes)
+	token := make([]byte, inviteCodeBytes)
+	if _, err := rand.Reader.Read(token); err != nil {
+		return "", fmt.Errorf("creating code: %w", err)
+	}
+	return base64.URLEncoding.EncodeToString(token), nil
 }
 
 // EncodeInvite encodes the invite to be sent to the user.
