@@ -23,9 +23,10 @@ import (
 const appSecretPath = "/data/secret"
 
 // SMTP creates a new SMTP sender from environment variables.
-// TLS usage is automatically inferred from the port:
-// - Port 587 or 465: TLS enabled.
-// - Other ports: TLS disabled.
+// TLS usage is automatically inferred from the port unless overridden:
+// - Port 587: StartTLS is used.
+// - Port 465: Implicit TLS is used.
+// - Other ports: TLS is disabled.
 func SMTP() (*email.SMTPSender, error) {
 	host := os.Getenv("SMTP_HOST")
 	if host == "" {
@@ -57,12 +58,27 @@ func SMTP() (*email.SMTPSender, error) {
 		return nil, fmt.Errorf("SMTP_FROM environment variable not set")
 	}
 
+	tlsMode, err := email.ParseTLSMode(os.Getenv("SMTP_TLS_MODE"))
+	if err != nil {
+		return nil, err
+	}
+
+	skipVerify := false
+	if skipVerifyStr := os.Getenv("SMTP_TLS_SKIP_VERIFY"); skipVerifyStr != "" {
+		skipVerify, err = strconv.ParseBool(skipVerifyStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid SMTP_TLS_SKIP_VERIFY value: %w", err)
+		}
+	}
+
 	config := email.Config{
-		Host:     host,
-		Port:     port,
-		Username: username,
-		Password: password,
-		From:     from,
+		Host:                host,
+		Port:                port,
+		Username:            username,
+		Password:            password,
+		From:                from,
+		TLSMode:             tlsMode,
+		SkipTLSVerification: skipVerify,
 	}
 
 	return email.NewSMTPSender(config), nil

@@ -19,7 +19,7 @@ func TestNewSMTPSender(t *testing.T) {
 		t.Fatal("expected sender to be created, got nil")
 	}
 
-	if sender.config.Host != config.Host {
+	if sender.config.Host != config.Host || sender.config.TLSMode != TLSModeAuto {
 		t.Errorf("expected host %s, got %s", config.Host, sender.config.Host)
 	}
 	if sender.config.Port != config.Port {
@@ -127,48 +127,112 @@ func TestSend_NoRecipients(t *testing.T) {
 
 func TestTLSInference(t *testing.T) {
 	tests := []struct {
-		name      string
-		port      int
-		expectTLS bool
+		name     string
+		port     int
+		mode     TLSMode
+		expected TLSMode
 	}{
 		{
-			name:      "port 587 uses TLS",
-			port:      587,
-			expectTLS: true,
+			name:     "port 587 uses StartTLS by default",
+			port:     587,
+			expected: TLSModeStartTLS,
 		},
 		{
-			name:      "port 465 uses TLS",
-			port:      465,
-			expectTLS: true,
+			name:     "port 465 uses implicit TLS by default",
+			port:     465,
+			expected: TLSModeImplicit,
 		},
 		{
-			name:      "port 25 does not use TLS",
-			port:      25,
-			expectTLS: false,
+			name:     "port 25 does not use TLS by default",
+			port:     25,
+			expected: TLSModeNone,
 		},
 		{
-			name:      "custom port does not use TLS",
-			port:      2525,
-			expectTLS: false,
+			name:     "custom port does not use TLS",
+			port:     2525,
+			expected: TLSModeNone,
+		},
+		{
+			name:     "force StartTLS on custom port",
+			port:     1025,
+			mode:     TLSModeStartTLS,
+			expected: TLSModeStartTLS,
+		},
+		{
+			name:     "force implicit TLS on custom port",
+			port:     1025,
+			mode:     TLSModeImplicit,
+			expected: TLSModeImplicit,
+		},
+		{
+			name:     "force no TLS on TLS-enabled port",
+			port:     465,
+			mode:     TLSModeNone,
+			expected: TLSModeNone,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := Config{
-				Host:     "smtp.example.com",
-				Port:     tt.port,
-				Username: "user@example.com",
-				Password: "password",
-				From:     "sender@example.com",
+				Host:    "smtp.example.com",
+				Port:    tt.port,
+				From:    "sender@example.com",
+				TLSMode: tt.mode,
 			}
 
 			sender := NewSMTPSender(config)
-			usesTLS := sender.config.Port == 587 || sender.config.Port == 465
+			resolved := sender.resolveTLSMode()
 
-			if usesTLS != tt.expectTLS {
-				t.Errorf("expected TLS usage to be %v for port %d, got %v", tt.expectTLS, tt.port, usesTLS)
+			if resolved != tt.expected {
+				t.Errorf("expected TLS mode %s for port %d, got %s", tt.expected, tt.port, resolved)
 			}
 		})
+	}
+}
+
+func TestParseTLSMode(t *testing.T) {
+	tests := []struct {
+		input       string
+		expected    TLSMode
+		expectError bool
+	}{
+		{"", TLSModeAuto, false},
+		{"AUTO", TLSModeAuto, false},
+		{"starttls", TLSModeStartTLS, false},
+		{"implicit", TLSModeImplicit, false},
+		{"none", TLSModeNone, false},
+		{"invalid", TLSModeAuto, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			mode, err := ParseTLSMode(tt.input)
+			if tt.expectError && err == nil {
+				t.Fatalf("expected error for input %q", tt.input)
+			}
+
+			if !tt.expectError && err != nil {
+				t.Fatalf("did not expect error for input %q: %v", tt.input, err)
+			}
+
+			if mode != tt.expected {
+				t.Fatalf("expected mode %s, got %s", tt.expected, mode)
+			}
+		})
+	}
+}
+
+func TestTLSConfigRespectsSkipVerification(t *testing.T) {
+	sender := NewSMTPSender(Config{
+		Host:                "smtp.example.com",
+		Port:                587,
+		SkipTLSVerification: true,
+	})
+
+	cfg := sender.tlsConfig()
+
+	if !cfg.InsecureSkipVerify {
+		t.Fatalf("expected InsecureSkipVerify to be true")
 	}
 }
