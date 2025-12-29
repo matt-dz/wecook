@@ -120,6 +120,7 @@ kubectl apply -f k8s/database.yaml
 kubectl apply -f k8s/backend.yaml
 kubectl apply -f k8s/frontend.yaml
 kubectl apply -f k8s/swagger-ui.yaml
+kubectl apply -f k8s/fileserver.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 

@@ -21,9 +21,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: wecook-backend
+                name: wecook-fileserver
                 port:
-                  number: 8080
+                  number: 80
           - path: /docs
             pathType: Prefix
             backend:

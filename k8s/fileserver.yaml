@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wecook-fileserver-config
+  labels:
+    app: wecook-fileserver
+data:
+  default.conf: |
+    server {
+      listen 80;
+      server_name _;
+
+      access_log /var/log/nginx/access.log;
+      error_log  /var/log/nginx/error.log;
+
+      location /files/ {
+        alias /data/files/;
+        autoindex off;
+        add_header Access-Control-Allow-Origin *;
+
+        if (-d $request_filename) { return 404; }
+        try_files $uri =404;
+
+        etag on;
+        expires 1h;
+        add_header Cache-Control "public, max-age=3600" always;
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wecook-fileserver
+  labels:
+    app: wecook-fileserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wecook-fileserver
+  template:
+    metadata:
+      labels:
+        app: wecook-fileserver
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+            - name: files
+              mountPath: /data/files
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /files/
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /files/
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 20
+      volumes:
+        - name: config
+          configMap:
+            name: wecook-fileserver-config
+        - name: files
+          persistentVolumeClaim:
+            claimName: wecook-files
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wecook-fileserver
+  labels:
+    app: wecook-fileserver
+spec:
+  selector:
+    app: wecook-fileserver
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

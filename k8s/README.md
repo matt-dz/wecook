@@ -6,6 +6,7 @@ This directory provides Kubernetes manifests mirroring the existing Docker Compo
 - Backend API (`k8s/backend.yaml`)
 - Frontend (`k8s/frontend.yaml`)
 - Swagger UI docs (`k8s/swagger-ui.yaml`)
+- Nginx fileserver for uploads (`k8s/fileserver.yaml`)
 - Cluster Ingress for routing to services (`k8s/ingress.yaml`)
 - Shared storage claims for uploads and backend data (`k8s/storage.yaml`)
 
@@ -25,7 +26,8 @@ kubectl apply -f k8s/database.yaml
 kubectl apply -f k8s/backend.yaml
 kubectl apply -f k8s/frontend.yaml
 kubectl apply -f k8s/swagger-ui.yaml
+kubectl apply -f k8s/fileserver.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 
-The Ingress routes `/api` and `/files` to the backend, `/docs` to Swagger UI, and `/` to the frontend.
+The Ingress routes `/api` to the backend, `/files` to the dedicated nginx fileserver, `/docs` to Swagger UI, and `/` to the frontend.
