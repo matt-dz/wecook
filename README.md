@@ -155,6 +155,7 @@ Configuration file: `.env.backend`
 | `SMTP_TLS_SKIP_VERIFY` | Skip TLS certificate verification (development only) | `false` | No** |
 
 \* Required if you want to create an admin user on first startup
+
 \** Required only if you want email invitation functionality
 
 **Notes:**
