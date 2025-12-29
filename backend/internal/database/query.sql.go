@@ -12,11 +12,9 @@ import (
 )
 
 type BulkInsertRecipeIngredientsParams struct {
-	RecipeID int64
-	Quantity pgtype.Float4
-	Unit     pgtype.Text
-	Name     pgtype.Text
-	ImageUrl pgtype.Text
+	RecipeID    int64
+	Description pgtype.Text
+	ImageUrl    pgtype.Text
 }
 
 type BulkInsertRecipeStepsParams struct {
@@ -153,7 +151,7 @@ const createEmptyRecipeIngredient = `-- name: CreateEmptyRecipeIngredient :one
 INSERT INTO recipe_ingredients (recipe_id)
   VALUES ($1)
 RETURNING
-  id, recipe_id, quantity, unit, name, image_url, created_at, updated_at
+  id, recipe_id, description, image_url, created_at, updated_at
 `
 
 func (q *Queries) CreateEmptyRecipeIngredient(ctx context.Context, recipeID int64) (RecipeIngredient, error) {
@@ -162,9 +160,7 @@ func (q *Queries) CreateEmptyRecipeIngredient(ctx context.Context, recipeID int6
 	err := row.Scan(
 		&i.ID,
 		&i.RecipeID,
-		&i.Quantity,
-		&i.Unit,
-		&i.Name,
+		&i.Description,
 		&i.ImageUrl,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -211,28 +207,20 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (int
 }
 
 const createRecipeIngredient = `-- name: CreateRecipeIngredient :one
-INSERT INTO recipe_ingredients (recipe_id, quantity, unit, name, image_url)
-  VALUES ($1, $2, $3, $4, $5)
+INSERT INTO recipe_ingredients (recipe_id, description, image_url)
+  VALUES ($1, $2, $3)
 RETURNING
   id
 `
 
 type CreateRecipeIngredientParams struct {
-	RecipeID int64
-	Quantity pgtype.Float4
-	Unit     pgtype.Text
-	Name     pgtype.Text
-	ImageUrl pgtype.Text
+	RecipeID    int64
+	Description pgtype.Text
+	ImageUrl    pgtype.Text
 }
 
 func (q *Queries) CreateRecipeIngredient(ctx context.Context, arg CreateRecipeIngredientParams) (int64, error) {
-	row := q.db.QueryRow(ctx, createRecipeIngredient,
-		arg.RecipeID,
-		arg.Quantity,
-		arg.Unit,
-		arg.Name,
-		arg.ImageUrl,
-	)
+	row := q.db.QueryRow(ctx, createRecipeIngredient, arg.RecipeID, arg.Description, arg.ImageUrl)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -708,7 +696,12 @@ func (q *Queries) GetRecipeIngredientImageURL(ctx context.Context, id int64) (pg
 
 const getRecipeIngredients = `-- name: GetRecipeIngredients :many
 SELECT
-  id, recipe_id, quantity, unit, name, image_url, created_at, updated_at
+  id,
+  recipe_id,
+  description,
+  image_url,
+  created_at,
+  updated_at
 FROM
   recipe_ingredients
 WHERE
@@ -729,9 +722,7 @@ func (q *Queries) GetRecipeIngredients(ctx context.Context, recipeID int64) ([]R
 		if err := rows.Scan(
 			&i.ID,
 			&i.RecipeID,
-			&i.Quantity,
-			&i.Unit,
-			&i.Name,
+			&i.Description,
 			&i.ImageUrl,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -1294,53 +1285,40 @@ const updateRecipeIngredient = `-- name: UpdateRecipeIngredient :one
 UPDATE
   recipe_ingredients
 SET
-  quantity = CASE WHEN $2::boolean THEN
+  description = CASE WHEN $2::boolean THEN
     $3
   ELSE
-    quantity
+    description
   END,
-  unit = CASE WHEN $4::boolean THEN
+  image_url = CASE WHEN $4::boolean THEN
     $5
-  ELSE
-    unit
-  END,
-  name = CASE WHEN $6::boolean THEN
-    $7
-  ELSE
-    name
-  END,
-  image_url = CASE WHEN $8::boolean THEN
-    $9
   ELSE
     image_url
   END
 WHERE
   id = $1
 RETURNING
-  id, recipe_id, quantity, unit, name, image_url, created_at, updated_at
+  id,
+  recipe_id,
+  description,
+  image_url,
+  created_at,
+  updated_at
 `
 
 type UpdateRecipeIngredientParams struct {
-	ID             int64
-	UpdateQuantity pgtype.Bool
-	Quantity       pgtype.Float4
-	UpdateUnit     pgtype.Bool
-	Unit           pgtype.Text
-	UpdateName     pgtype.Bool
-	Name           pgtype.Text
-	UpdateImageUrl pgtype.Bool
-	ImageUrl       pgtype.Text
+	ID                int64
+	UpdateDescription pgtype.Bool
+	Description       pgtype.Text
+	UpdateImageUrl    pgtype.Bool
+	ImageUrl          pgtype.Text
 }
 
 func (q *Queries) UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) (RecipeIngredient, error) {
 	row := q.db.QueryRow(ctx, updateRecipeIngredient,
 		arg.ID,
-		arg.UpdateQuantity,
-		arg.Quantity,
-		arg.UpdateUnit,
-		arg.Unit,
-		arg.UpdateName,
-		arg.Name,
+		arg.UpdateDescription,
+		arg.Description,
 		arg.UpdateImageUrl,
 		arg.ImageUrl,
 	)
@@ -1348,9 +1326,7 @@ func (q *Queries) UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIn
 	err := row.Scan(
 		&i.ID,
 		&i.RecipeID,
-		&i.Quantity,
-		&i.Unit,
-		&i.Name,
+		&i.Description,
 		&i.ImageUrl,
 		&i.CreatedAt,
 		&i.UpdatedAt,

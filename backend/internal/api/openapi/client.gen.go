@@ -57,11 +57,9 @@ type CreateAdminResponse struct {
 
 // CreateIngredientResponse defines model for CreateIngredientResponse.
 type CreateIngredientResponse struct {
-	Id       int64    `json:"id"`
-	ImageUrl *string  `json:"image_url,omitempty"`
-	Name     *string  `json:"name,omitempty"`
-	Quantity *float32 `json:"quantity,omitempty"`
-	Unit     *string  `json:"unit,omitempty"`
+	Description nullable.Nullable[string] `json:"description,omitempty"`
+	Id          int64                     `json:"id"`
+	ImageUrl    *string                   `json:"image_url,omitempty"`
 }
 
 // CreateRecipeResponse defines model for CreateRecipeResponse.
@@ -156,12 +154,10 @@ type RecipeAndOwner struct {
 
 // RecipeIngredient defines model for RecipeIngredient.
 type RecipeIngredient struct {
-	Id       int64    `json:"id"`
-	ImageUrl *string  `json:"image_url,omitempty"`
-	Name     *string  `json:"name,omitempty"`
-	Quantity *float32 `json:"quantity,omitempty"`
-	RecipeId int64    `json:"recipe_id"`
-	Unit     *string  `json:"unit,omitempty"`
+	Description nullable.Nullable[string] `json:"description,omitempty"`
+	Id          int64                     `json:"id"`
+	ImageUrl    *string                   `json:"image_url,omitempty"`
+	RecipeId    int64                     `json:"recipe_id"`
 }
 
 // RecipeOwner defines model for RecipeOwner.
@@ -223,9 +219,7 @@ type TimeUnit string
 
 // UpdateIngredientBody defines model for UpdateIngredientBody.
 type UpdateIngredientBody struct {
-	Name     nullable.Nullable[string]  `json:"name,omitempty"`
-	Quantity nullable.Nullable[float32] `json:"quantity,omitempty"`
-	Unit     nullable.Nullable[string]  `json:"unit,omitempty"`
+	Description nullable.Nullable[string] `json:"description,omitempty"`
 }
 
 // UpdateIngredientImageForm defines model for UpdateIngredientImageForm.
@@ -235,11 +229,9 @@ type UpdateIngredientImageForm struct {
 
 // UpdateIngredientResponse defines model for UpdateIngredientResponse.
 type UpdateIngredientResponse struct {
-	Id       int64    `json:"id"`
-	ImageUrl *string  `json:"image_url,omitempty"`
-	Name     string   `json:"name"`
-	Quantity *float32 `json:"quantity,omitempty"`
-	Unit     *string  `json:"unit,omitempty"`
+	Description nullable.Nullable[string] `json:"description,omitempty"`
+	Id          int64                     `json:"id"`
+	ImageUrl    *string                   `json:"image_url,omitempty"`
 }
 
 // UpdatePasswordRequest defines model for UpdatePasswordRequest.

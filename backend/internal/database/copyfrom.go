@@ -30,9 +30,7 @@ func (r *iteratorForBulkInsertRecipeIngredients) Next() bool {
 func (r iteratorForBulkInsertRecipeIngredients) Values() ([]interface{}, error) {
 	return []interface{}{
 		r.rows[0].RecipeID,
-		r.rows[0].Quantity,
-		r.rows[0].Unit,
-		r.rows[0].Name,
+		r.rows[0].Description,
 		r.rows[0].ImageUrl,
 	}, nil
 }
@@ -42,7 +40,7 @@ func (r iteratorForBulkInsertRecipeIngredients) Err() error {
 }
 
 func (q *Queries) BulkInsertRecipeIngredients(ctx context.Context, arg []BulkInsertRecipeIngredientsParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"recipe_ingredients"}, []string{"recipe_id", "quantity", "unit", "name", "image_url"}, &iteratorForBulkInsertRecipeIngredients{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"recipe_ingredients"}, []string{"recipe_id", "description", "image_url"}, &iteratorForBulkInsertRecipeIngredients{rows: arg})
 }
 
 // iteratorForBulkInsertRecipeSteps implements pgx.CopyFromSource.
