@@ -53,6 +53,8 @@ paths:
       summary: Create an admin.
       tags:
         - Admin
+      parameters:
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         description: Create Admin Request
         required: true
@@ -93,6 +95,8 @@ paths:
       summary: Create a user.
       tags:
         - User
+      parameters:
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         description: Create User Request
         required: true
@@ -142,6 +146,7 @@ paths:
           schema:
             type: string
           description: Refresh token
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         required: false
         content:
@@ -167,6 +172,9 @@ paths:
                 refresh:
                   summary: Refresh token cookie
                   value: refresh=<jwt_token>; HttpOnly; Secure; SameSite=Lax; Path=/
+                csrf:
+                  summary: CSRF token cookie
+                  value: csrf=<csrf_token>; Secure; SameSite=Lax; Path=/
           content:
             application/json:
               schema:
@@ -246,8 +254,8 @@ paths:
           headers:
             Set-Cookie:
               description: >
-                HTTP-only cookies for access and refresh tokens. This header is sent twice:
-                once for the "access" cookie and once for the "refresh" cookie.
+                HTTP-only cookies for access and refresh tokens. This header is sent thrice:
+                once for the "access" cookie, once for the "refresh" cookie, and once for the "csrf" cookie.
               schema:
                 type: string
               examples:
@@ -257,6 +265,9 @@ paths:
                 refresh:
                   summary: Refresh token cookie
                   value: refresh=<jwt_token>; HttpOnly; Secure; SameSite=Lax; Path=/
+                csrf:
+                  summary: CSRF token cookie
+                  value: csrf=<csrf_token>; Secure; SameSite=Lax; Path=/
           content:
             application/json:
               schema:
@@ -390,6 +401,8 @@ paths:
         should be used to verify their invitation.
       security:
         - AccessTokenAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         required: true
         content:
@@ -426,6 +439,8 @@ paths:
         - Auth
       description: >
         Update the current user's password.
+      parameters:
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         required: true
         content:
@@ -538,6 +553,8 @@ paths:
         - Recipes
       description: >
         Creates a new (empty) recipe for the authenticated user.
+      parameters:
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       responses:
         "201":
           description: Recipe successfully created
@@ -720,6 +737,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         required: true
         content:
@@ -769,6 +787,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       responses:
         "204":
           description: Recipe deleted successfully
@@ -814,6 +833,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         required: true
         content:
@@ -861,6 +881,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       responses:
         "204":
           description: No Content
@@ -895,6 +916,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       responses:
         "200":
           description: Ingredient Created
@@ -941,6 +963,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         required: false
         content:
@@ -997,6 +1020,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       responses:
         "204":
           description: Ingredient Deleted
@@ -1045,6 +1069,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         required: true
         content:
@@ -1102,6 +1127,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       responses:
         "204":
           description: Image deleted successfully
@@ -1142,6 +1168,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       responses:
         "200":
           description: Step Created
@@ -1195,6 +1222,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         required: false
         content:
@@ -1252,6 +1280,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       responses:
         "204":
           description: Step Deleted
@@ -1300,6 +1329,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       requestBody:
         required: true
         content:
@@ -1356,6 +1386,7 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
       responses:
         "204":
           description: Image deleted successfully
@@ -1379,6 +1410,17 @@ paths:
                 $ref: "#/components/schemas/Error"
 
 components:
+  parameters:
+    CsrfTokenHeader:
+      name: X-CSRF-Token
+      in: header
+      required: false
+      description: >
+        CSRF token required when authenticating via cookies.
+        Must match the CSRF cookie value.
+      schema:
+        type: string
+
   schemas:
     Error:
       type: object
