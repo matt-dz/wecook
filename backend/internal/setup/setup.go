@@ -22,7 +22,7 @@ import (
 
 const (
 	appSecretPath = "/data/secret"
-	newFilePerms  = 0o600
+	secretPerms   = 0o600
 )
 
 // SMTP creates a new SMTP sender from environment variables.
@@ -224,7 +224,7 @@ func AppSecret(env *env.Env) error {
 			return fmt.Errorf("checking secret path: %w", err)
 		}
 
-		file, err := os.OpenFile(secretPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, newFilePerms)
+		file, err := os.OpenFile(secretPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, secretPerms)
 		if err != nil {
 			return fmt.Errorf("creating secret file: %w", err)
 		}
