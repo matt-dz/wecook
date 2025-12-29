@@ -12,6 +12,10 @@
 	const user = data.user;
 </script>
 
+<svelte:head>
+	<title>Profile | WeCook</title>
+</svelte:head>
+
 <div class="absolute top-0 bottom-0 flex w-full items-center justify-center px-4">
 	<div
 		class="flex w-full max-w-[375px] flex-col gap-4 rounded-lg border border-solid p-6 shadow-xs"

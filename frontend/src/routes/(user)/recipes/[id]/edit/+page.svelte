@@ -438,7 +438,7 @@
 </script>
 
 <svelte:head>
-	<title>Edit Recipe</title>
+	<title>Edit Recipe | WeCook</title>
 </svelte:head>
 
 <div class="relative mt-12 mb-12 flex w-full flex-col items-center px-6">

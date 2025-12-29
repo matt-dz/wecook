@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>Recipe | {data.recipe.recipe.title}</title>
+	<title>{data.recipe.recipe.title} | WeCook</title>
 </svelte:head>
 
 <RecipePage recipe={data.recipe} />
