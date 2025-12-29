@@ -33,10 +33,8 @@ export type UpdateStep = z.infer<typeof UpdateStepSchema>;
 export const IngredientSchema = z.object({
 	id: z.int(),
 	image_url: z.string().optional(),
-	name: z.string().optional(),
-	quantity: z.number().optional(),
-	recipe_id: z.int().optional(),
-	unit: z.string().optional()
+	description: z.string().optional(),
+	recipe_id: z.int().optional()
 });
 
 export type Ingredient = z.infer<typeof IngredientSchema>;
@@ -192,9 +190,7 @@ export async function updatePersonalRecipe(
 export type UpdateIngredientRequest = {
 	recipe_id: number;
 	ingredient_id: number;
-	quantity?: number;
-	name?: string;
-	unit?: string;
+	description?: string | null;
 };
 
 export type UpdateIngredientResponse = Ingredient;
@@ -211,9 +207,7 @@ export async function updateIngredient(
 			{
 				...options,
 				json: {
-					quantity: request.quantity,
-					name: request.name,
-					unit: request.unit
+					description: request.description
 				}
 			}
 		)
