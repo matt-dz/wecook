@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wecook
+  labels:
+    app: wecook
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: wecook-backend
+                port:
+                  number: 8080
+          - path: /files
+            pathType: Prefix
+            backend:
+              service:
+                name: wecook-backend
+                port:
+                  number: 8080
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: wecook-docs
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wecook-frontend
+                port:
+                  number: 3000

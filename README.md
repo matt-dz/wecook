@@ -120,7 +120,7 @@ kubectl apply -f k8s/database.yaml
 kubectl apply -f k8s/backend.yaml
 kubectl apply -f k8s/frontend.yaml
 kubectl apply -f k8s/swagger-ui.yaml
-kubectl apply -f k8s/nginx.yaml
+kubectl apply -f k8s/ingress.yaml
 ```
 
 See [`k8s/README.md`](k8s/README.md) for configuration notes.
