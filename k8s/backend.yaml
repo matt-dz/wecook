@@ -5,7 +5,7 @@ metadata:
   labels:
     app: wecook-backend
 data:
-  HOST_ORIGIN: "http://localhost:8080"
+  HOST_ORIGIN: http://127.0.0.1 # change to host where this is served
   DATABASE_HOST: wecook-database
   DATABASE_PORT: "5432"
   DATABASE: wecook
@@ -25,7 +25,7 @@ metadata:
     app: wecook-backend
 type: Opaque
 stringData:
-  APP_SECRET: change-me
+  # APP_SECRET: random-32-bit-string
   ADMIN_PASSWORD: Change-m3!
   SMTP_PASSWORD: your-smtp-password
 ---
@@ -48,6 +48,7 @@ spec:
       containers:
         - name: backend
           image: matthew10125/wecook-server:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           envFrom:

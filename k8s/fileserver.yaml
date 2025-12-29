@@ -55,18 +55,6 @@ spec:
             - name: files
               mountPath: /data/files
               readOnly: true
-          readinessProbe:
-            httpGet:
-              path: /files/
-              port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /files/
-              port: 80
-            initialDelaySeconds: 10
-            periodSeconds: 20
       volumes:
         - name: config
           configMap:

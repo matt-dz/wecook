@@ -4,9 +4,8 @@ metadata:
   name: wecook
   labels:
     app: wecook
-  annotations:
-    kubernetes.io/ingress.class: nginx
 spec:
+  ingressClassName: nginx
   rules:
     - http:
         paths:
