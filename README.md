@@ -1,6 +1,6 @@
 # WeCook
 
-A self-hosted recipe manager for organizing and sharing your favorite recipes.
+A self-hosted recipe manager for organizing and sharing your favorite recipes. Checkout the demo website [wecook.deguzman.cloud](https://wecook.deguzman.cloud).
 
 <img width="1466" height="832" alt="Screenshot 2025-12-28 at 3 47 20 PM" src="https://github.com/user-attachments/assets/a0f1eb94-ad8e-46ad-b56e-c9c939101b9d" />
 
