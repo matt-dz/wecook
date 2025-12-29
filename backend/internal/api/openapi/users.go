@@ -416,9 +416,23 @@ func (Server) PostApiSignup(ctx context.Context,
 		}, nil
 	}
 
+	// Create CSRF Token
+	env.Logger.DebugContext(ctx, "generating csrf token")
+	csrfToken, err := token.NewCSRFToken()
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to generate csrf token", slog.Any("error", err))
+		return PostApiSignup500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
 	return loginSuccessResponse{
 		accessCookie:  token.NewAccessTokenCookie(accessToken, env.IsProd()),
 		refreshCookie: token.NewRefreshTokenCookie(refreshToken, env.IsProd()),
+		csrfCookie:    token.NewCSRFTokenCookie(csrfToken, env.IsProd()),
 		body: LoginResponse{
 			AccessToken: accessToken,
 		},

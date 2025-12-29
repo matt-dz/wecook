@@ -3,6 +3,8 @@ import ky, { type Options } from 'ky';
 
 const ACCESS_TOKEN_COOKIE_NAME = 'access';
 const REFRESH_TOKEN_COOKIE_NAME = 'refresh';
+const CSRF_TOKEN_COOKIE_NAME = 'csrf';
+const CSRF_HEADER = 'X-CSRF-Token';
 
 export type Role = 'user' | 'admin';
 
@@ -60,4 +62,4 @@ export async function logout(fetch: FetchType, options?: Options, apiUrl?: strin
 	});
 }
 
-export { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME };
+export { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, CSRF_TOKEN_COOKIE_NAME, CSRF_HEADER };

@@ -200,6 +200,9 @@ func TestPostApiLogin(t *testing.T) {
 				if v.refreshCookie == nil {
 					t.Error("expected refresh cookie, got nil")
 				}
+				if v.csrfCookie == nil {
+					t.Error("expected CSRF cookie, got nil")
+				}
 				if v.body.AccessToken == "" {
 					t.Error("expected access token in body, got empty string")
 				}
@@ -293,6 +296,9 @@ func TestPostApiLogin_AdminRole(t *testing.T) {
 	}
 	if successResp.refreshCookie == nil {
 		t.Error("expected refresh cookie, got nil")
+	}
+	if successResp.csrfCookie == nil {
+		t.Error("expected CSRF cookie, got nil")
 	}
 	if successResp.body.AccessToken == "" {
 		t.Error("expected access token in body, got empty string")
@@ -616,6 +622,9 @@ func TestPostApiAuthRefresh(t *testing.T) {
 				}
 				if v.refreshCookie == nil {
 					t.Error("expected refresh cookie, got nil")
+				}
+				if v.csrfCookie == nil {
+					t.Error("expected CSRF cookie, got nil")
 				}
 			case PostApiAuthRefresh401JSONResponse:
 				if tt.wantStatus != 401 {

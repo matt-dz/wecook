@@ -28,11 +28,13 @@ var (
 
 const (
 	AuthorizationHeader = "Authorization"
+	CSRFTokenHeader     = "X-CSRF-Token"
 )
 
 const (
 	refreshTokenBytes    = 32
 	appSecretBytes       = 32
+	csrfTokenBytes       = 32
 	AccessTokenLifetime  = 60 * 30           // 30 minutes
 	refreshTokenLifetime = 60 * 60 * 24 * 14 // 14 days
 )
@@ -47,12 +49,20 @@ func RefreshTokenName() string {
 	return "refresh"
 }
 
+func CSRFTokenName() string {
+	return "csrf"
+}
+
 func CreateToken(numbytes uint) (string, error) {
 	token := make([]byte, numbytes)
 	if _, err := rand.Reader.Read(token); err != nil {
 		return "", fmt.Errorf("creating token: %w", err)
 	}
 	return base64.StdEncoding.EncodeToString(token), nil
+}
+
+func NewCSRFToken() (string, error) {
+	return CreateToken(csrfTokenBytes)
 }
 
 func NewAppSecret() (string, error) {
@@ -119,6 +129,26 @@ func NewRefreshTokenCookie(token string, secure bool) *http.Cookie {
 func DeleteRefreshTokenCookie() *http.Cookie {
 	return &http.Cookie{
 		Name:   RefreshTokenName(),
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	}
+}
+
+func NewCSRFTokenCookie(token string, secure bool) *http.Cookie {
+	return &http.Cookie{
+		Name:     CSRFTokenName(),
+		Value:    token,
+		Path:     "/",
+		MaxAge:   0, // will exist the duration of the session
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	}
+}
+
+func DeleteCSRFTokenCookie() *http.Cookie {
+	return &http.Cookie{
+		Name:   CSRFTokenName(),
 		Value:  "",
 		Path:   "/",
 		MaxAge: -1,

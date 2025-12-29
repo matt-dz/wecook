@@ -29,12 +29,14 @@ import (
 type loginSuccessResponse struct {
 	accessCookie  *http.Cookie
 	refreshCookie *http.Cookie
+	csrfCookie    *http.Cookie
 	body          LoginResponse
 }
 
 func (r loginSuccessResponse) VisitPostApiLoginResponse(w http.ResponseWriter) error {
 	http.SetCookie(w, r.accessCookie)
 	http.SetCookie(w, r.refreshCookie)
+	http.SetCookie(w, r.csrfCookie)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -45,6 +47,7 @@ func (r loginSuccessResponse) VisitPostApiLoginResponse(w http.ResponseWriter) e
 func (r loginSuccessResponse) VisitPostApiAuthRefreshResponse(w http.ResponseWriter) error {
 	http.SetCookie(w, r.accessCookie)
 	http.SetCookie(w, r.refreshCookie)
+	http.SetCookie(w, r.csrfCookie)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -55,6 +58,7 @@ func (r loginSuccessResponse) VisitPostApiAuthRefreshResponse(w http.ResponseWri
 func (r loginSuccessResponse) VisitPostApiSignupResponse(w http.ResponseWriter) error {
 	http.SetCookie(w, r.accessCookie)
 	http.SetCookie(w, r.refreshCookie)
+	http.SetCookie(w, r.csrfCookie)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -67,6 +71,7 @@ type logoutSuccessResponse struct{}
 func (l logoutSuccessResponse) VisitPostApiLogoutResponse(w http.ResponseWriter) error {
 	http.SetCookie(w, token.DeleteAccessTokenCookie())
 	http.SetCookie(w, token.DeleteRefreshTokenCookie())
+	http.SetCookie(w, token.DeleteCSRFTokenCookie())
 	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
@@ -184,6 +189,19 @@ func (Server) PostApiLogin(ctx context.Context, request PostApiLoginRequestObjec
 		}, nil
 	}
 
+	// Create CSRF Token
+	env.Logger.DebugContext(ctx, "generating csrf token")
+	csrfToken, err := token.NewCSRFToken()
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to generate csrf token", slog.Any("error", err))
+		return PostApiLogin500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
 	// Write response
 	env.Logger.DebugContext(ctx, "Writing response")
 	tokenType := "Bearer"
@@ -191,6 +209,7 @@ func (Server) PostApiLogin(ctx context.Context, request PostApiLoginRequestObjec
 	return loginSuccessResponse{
 		accessCookie:  token.NewAccessTokenCookie(accessToken, env.IsProd()),
 		refreshCookie: token.NewRefreshTokenCookie(refreshToken, env.IsProd()),
+		csrfCookie:    token.NewCSRFTokenCookie(csrfToken, env.IsProd()),
 		body: LoginResponse{
 			AccessToken: accessToken,
 			TokenType:   &tokenType,
@@ -366,6 +385,19 @@ func (Server) PostApiAuthRefresh(ctx context.Context,
 		}, nil
 	}
 
+	// Create CSRF Token
+	env.Logger.DebugContext(ctx, "generating csrf token")
+	csrfToken, err := token.NewCSRFToken()
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to generate csrf token", slog.Any("error", err))
+		return PostApiAuthRefresh500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
 	// Write response
 	env.Logger.DebugContext(ctx, "Writing response")
 	tokenType := "Bearer"
@@ -373,6 +405,7 @@ func (Server) PostApiAuthRefresh(ctx context.Context,
 	return loginSuccessResponse{
 		accessCookie:  token.NewAccessTokenCookie(accessToken, env.IsProd()),
 		refreshCookie: token.NewRefreshTokenCookie(newRefreshToken, env.IsProd()),
+		csrfCookie:    token.NewCSRFTokenCookie(csrfToken, env.IsProd()),
 		body: LoginResponse{
 			AccessToken: accessToken,
 			TokenType:   &tokenType,

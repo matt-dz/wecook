@@ -294,8 +294,26 @@ type UserLoginRequest struct {
 	Password string `json:"password"`
 }
 
+// CsrfTokenHeader defines model for CsrfTokenHeader.
+type CsrfTokenHeader = string
+
+// PostApiAdminParams defines parameters for PostApiAdmin.
+type PostApiAdminParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PostApiAdminUserParams defines parameters for PostApiAdminUser.
+type PostApiAdminUserParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
 // PostApiAuthRefreshParams defines parameters for PostApiAuthRefresh.
 type PostApiAuthRefreshParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+
 	// Refresh Refresh token
 	Refresh *string `form:"refresh,omitempty" json:"refresh,omitempty"`
 }
@@ -306,6 +324,108 @@ type GetApiAuthVerifyParams struct {
 
 	// Access Access token
 	Access *string `form:"access,omitempty" json:"access,omitempty"`
+}
+
+// PostApiRecipesParams defines parameters for PostApiRecipes.
+type PostApiRecipesParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// DeleteApiRecipesRecipeIDParams defines parameters for DeleteApiRecipesRecipeID.
+type DeleteApiRecipesRecipeIDParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PatchApiRecipesRecipeIDParams defines parameters for PatchApiRecipesRecipeID.
+type PatchApiRecipesRecipeIDParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// DeleteApiRecipesRecipeIDImageParams defines parameters for DeleteApiRecipesRecipeIDImage.
+type DeleteApiRecipesRecipeIDImageParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PostApiRecipesRecipeIDImageParams defines parameters for PostApiRecipesRecipeIDImage.
+type PostApiRecipesRecipeIDImageParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PostApiRecipesRecipeIDIngredientsParams defines parameters for PostApiRecipesRecipeIDIngredients.
+type PostApiRecipesRecipeIDIngredientsParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// DeleteApiRecipesRecipeIDIngredientsIngredientIDParams defines parameters for DeleteApiRecipesRecipeIDIngredientsIngredientID.
+type DeleteApiRecipesRecipeIDIngredientsIngredientIDParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PatchApiRecipesRecipeIDIngredientsIngredientIDParams defines parameters for PatchApiRecipesRecipeIDIngredientsIngredientID.
+type PatchApiRecipesRecipeIDIngredientsIngredientIDParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams defines parameters for DeleteApiRecipesRecipeIDIngredientsIngredientIDImage.
+type DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PostApiRecipesRecipeIDIngredientsIngredientIDImageParams defines parameters for PostApiRecipesRecipeIDIngredientsIngredientIDImage.
+type PostApiRecipesRecipeIDIngredientsIngredientIDImageParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PostApiRecipesRecipeIDStepsParams defines parameters for PostApiRecipesRecipeIDSteps.
+type PostApiRecipesRecipeIDStepsParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// DeleteApiRecipesRecipeIDStepsStepIDParams defines parameters for DeleteApiRecipesRecipeIDStepsStepID.
+type DeleteApiRecipesRecipeIDStepsStepIDParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PatchApiRecipesRecipeIDStepsStepIDParams defines parameters for PatchApiRecipesRecipeIDStepsStepID.
+type PatchApiRecipesRecipeIDStepsStepIDParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// DeleteApiRecipesRecipeIDStepsStepIDImageParams defines parameters for DeleteApiRecipesRecipeIDStepsStepIDImage.
+type DeleteApiRecipesRecipeIDStepsStepIDImageParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PostApiRecipesRecipeIDStepsStepIDImageParams defines parameters for PostApiRecipesRecipeIDStepsStepIDImage.
+type PostApiRecipesRecipeIDStepsStepIDImageParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PostApiUserInviteParams defines parameters for PostApiUserInvite.
+type PostApiUserInviteParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
+// PatchApiUserPasswordParams defines parameters for PatchApiUserPassword.
+type PatchApiUserPasswordParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
 }
 
 // GetApiUsersParams defines parameters for GetApiUsers.
@@ -427,14 +547,14 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 	// PostApiAdminWithBody request with any body
-	PostApiAdminWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiAdminWithBody(ctx context.Context, params *PostApiAdminParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiAdmin(ctx context.Context, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiAdmin(ctx context.Context, params *PostApiAdminParams, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiAdminUserWithBody request with any body
-	PostApiAdminUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiAdminUserWithBody(ctx context.Context, params *PostApiAdminUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiAdminUser(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiAdminUser(ctx context.Context, params *PostApiAdminUserParams, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiAuthRefreshWithBody request with any body
 	PostApiAuthRefreshWithBody(ctx context.Context, params *PostApiAuthRefreshParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -462,64 +582,64 @@ type ClientInterface interface {
 	GetApiRecipes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiRecipes request
-	PostApiRecipes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiRecipes(ctx context.Context, params *PostApiRecipesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiRecipesPublic request
 	GetApiRecipesPublic(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteApiRecipesRecipeID request
-	DeleteApiRecipesRecipeID(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteApiRecipesRecipeID(ctx context.Context, recipeID int64, params *DeleteApiRecipesRecipeIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiRecipesRecipeID request
 	GetApiRecipesRecipeID(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PatchApiRecipesRecipeIDWithBody request with any body
-	PatchApiRecipesRecipeIDWithBody(ctx context.Context, recipeID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchApiRecipesRecipeIDWithBody(ctx context.Context, recipeID int64, params *PatchApiRecipesRecipeIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchApiRecipesRecipeID(ctx context.Context, recipeID int64, body PatchApiRecipesRecipeIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchApiRecipesRecipeID(ctx context.Context, recipeID int64, params *PatchApiRecipesRecipeIDParams, body PatchApiRecipesRecipeIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteApiRecipesRecipeIDImage request
-	DeleteApiRecipesRecipeIDImage(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteApiRecipesRecipeIDImage(ctx context.Context, recipeID int64, params *DeleteApiRecipesRecipeIDImageParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiRecipesRecipeIDImageWithBody request with any body
-	PostApiRecipesRecipeIDImageWithBody(ctx context.Context, recipeID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiRecipesRecipeIDImageWithBody(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiRecipesRecipeIDIngredients request
-	PostApiRecipesRecipeIDIngredients(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiRecipesRecipeIDIngredients(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDIngredientsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteApiRecipesRecipeIDIngredientsIngredientID request
-	DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, recipeID int64, ingredientID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, recipeID int64, ingredientID int64, params *DeleteApiRecipesRecipeIDIngredientsIngredientIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody request with any body
-	PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody(ctx context.Context, recipeID int64, ingredientID int64, params *PatchApiRecipesRecipeIDIngredientsIngredientIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, recipeID int64, ingredientID int64, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, recipeID int64, ingredientID int64, params *PatchApiRecipesRecipeIDIngredientsIngredientIDParams, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteApiRecipesRecipeIDIngredientsIngredientIDImage request
-	DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Context, recipeID int64, ingredientID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Context, recipeID int64, ingredientID int64, params *DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody request with any body
-	PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody(ctx context.Context, recipeID int64, ingredientID int64, params *PostApiRecipesRecipeIDIngredientsIngredientIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiRecipesRecipeIDPublic request
 	GetApiRecipesRecipeIDPublic(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiRecipesRecipeIDSteps request
-	PostApiRecipesRecipeIDSteps(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiRecipesRecipeIDSteps(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDStepsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteApiRecipesRecipeIDStepsStepID request
-	DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, params *DeleteApiRecipesRecipeIDStepsStepIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PatchApiRecipesRecipeIDStepsStepIDWithBody request with any body
-	PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx context.Context, recipeID int64, stepID int64, params *PatchApiRecipesRecipeIDStepsStepIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, params *PatchApiRecipesRecipeIDStepsStepIDParams, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteApiRecipesRecipeIDStepsStepIDImage request
-	DeleteApiRecipesRecipeIDStepsStepIDImage(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteApiRecipesRecipeIDStepsStepIDImage(ctx context.Context, recipeID int64, stepID int64, params *DeleteApiRecipesRecipeIDStepsStepIDImageParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiRecipesRecipeIDStepsStepIDImageWithBody request with any body
-	PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx context.Context, recipeID int64, stepID int64, params *PostApiRecipesRecipeIDStepsStepIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiSignupWithBody request with any body
 	PostApiSignupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -530,21 +650,21 @@ type ClientInterface interface {
 	GetApiUser(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiUserInviteWithBody request with any body
-	PostApiUserInviteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiUserInviteWithBody(ctx context.Context, params *PostApiUserInviteParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiUserInvite(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiUserInvite(ctx context.Context, params *PostApiUserInviteParams, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PatchApiUserPasswordWithBody request with any body
-	PatchApiUserPasswordWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchApiUserPasswordWithBody(ctx context.Context, params *PatchApiUserPasswordParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchApiUserPassword(ctx context.Context, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchApiUserPassword(ctx context.Context, params *PatchApiUserPasswordParams, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiUsers request
 	GetApiUsers(ctx context.Context, params *GetApiUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) PostApiAdminWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiAdminRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiAdminWithBody(ctx context.Context, params *PostApiAdminParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiAdminRequestWithBody(c.Server, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -555,8 +675,8 @@ func (c *Client) PostApiAdminWithBody(ctx context.Context, contentType string, b
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiAdmin(ctx context.Context, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiAdminRequest(c.Server, body)
+func (c *Client) PostApiAdmin(ctx context.Context, params *PostApiAdminParams, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiAdminRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -567,8 +687,8 @@ func (c *Client) PostApiAdmin(ctx context.Context, body PostApiAdminJSONRequestB
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiAdminUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiAdminUserRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiAdminUserWithBody(ctx context.Context, params *PostApiAdminUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiAdminUserRequestWithBody(c.Server, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -579,8 +699,8 @@ func (c *Client) PostApiAdminUserWithBody(ctx context.Context, contentType strin
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiAdminUser(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiAdminUserRequest(c.Server, body)
+func (c *Client) PostApiAdminUser(ctx context.Context, params *PostApiAdminUserParams, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiAdminUserRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -699,8 +819,8 @@ func (c *Client) GetApiRecipes(ctx context.Context, reqEditors ...RequestEditorF
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiRecipes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiRecipesRequest(c.Server)
+func (c *Client) PostApiRecipes(ctx context.Context, params *PostApiRecipesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiRecipesRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -723,8 +843,8 @@ func (c *Client) GetApiRecipesPublic(ctx context.Context, reqEditors ...RequestE
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiRecipesRecipeID(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiRecipesRecipeIDRequest(c.Server, recipeID)
+func (c *Client) DeleteApiRecipesRecipeID(ctx context.Context, recipeID int64, params *DeleteApiRecipesRecipeIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApiRecipesRecipeIDRequest(c.Server, recipeID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -747,8 +867,8 @@ func (c *Client) GetApiRecipesRecipeID(ctx context.Context, recipeID int64, reqE
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchApiRecipesRecipeIDWithBody(ctx context.Context, recipeID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchApiRecipesRecipeIDRequestWithBody(c.Server, recipeID, contentType, body)
+func (c *Client) PatchApiRecipesRecipeIDWithBody(ctx context.Context, recipeID int64, params *PatchApiRecipesRecipeIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiRecipesRecipeIDRequestWithBody(c.Server, recipeID, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -759,8 +879,8 @@ func (c *Client) PatchApiRecipesRecipeIDWithBody(ctx context.Context, recipeID i
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchApiRecipesRecipeID(ctx context.Context, recipeID int64, body PatchApiRecipesRecipeIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchApiRecipesRecipeIDRequest(c.Server, recipeID, body)
+func (c *Client) PatchApiRecipesRecipeID(ctx context.Context, recipeID int64, params *PatchApiRecipesRecipeIDParams, body PatchApiRecipesRecipeIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiRecipesRecipeIDRequest(c.Server, recipeID, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -771,8 +891,8 @@ func (c *Client) PatchApiRecipesRecipeID(ctx context.Context, recipeID int64, bo
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiRecipesRecipeIDImage(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiRecipesRecipeIDImageRequest(c.Server, recipeID)
+func (c *Client) DeleteApiRecipesRecipeIDImage(ctx context.Context, recipeID int64, params *DeleteApiRecipesRecipeIDImageParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApiRecipesRecipeIDImageRequest(c.Server, recipeID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -783,8 +903,8 @@ func (c *Client) DeleteApiRecipesRecipeIDImage(ctx context.Context, recipeID int
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiRecipesRecipeIDImageWithBody(ctx context.Context, recipeID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiRecipesRecipeIDImageRequestWithBody(c.Server, recipeID, contentType, body)
+func (c *Client) PostApiRecipesRecipeIDImageWithBody(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiRecipesRecipeIDImageRequestWithBody(c.Server, recipeID, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -795,8 +915,8 @@ func (c *Client) PostApiRecipesRecipeIDImageWithBody(ctx context.Context, recipe
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiRecipesRecipeIDIngredients(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiRecipesRecipeIDIngredientsRequest(c.Server, recipeID)
+func (c *Client) PostApiRecipesRecipeIDIngredients(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDIngredientsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiRecipesRecipeIDIngredientsRequest(c.Server, recipeID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -807,8 +927,8 @@ func (c *Client) PostApiRecipesRecipeIDIngredients(ctx context.Context, recipeID
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, recipeID int64, ingredientID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiRecipesRecipeIDIngredientsIngredientIDRequest(c.Server, recipeID, ingredientID)
+func (c *Client) DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, recipeID int64, ingredientID int64, params *DeleteApiRecipesRecipeIDIngredientsIngredientIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApiRecipesRecipeIDIngredientsIngredientIDRequest(c.Server, recipeID, ingredientID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -819,8 +939,8 @@ func (c *Client) DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx context.Con
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody(c.Server, recipeID, ingredientID, contentType, body)
+func (c *Client) PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody(ctx context.Context, recipeID int64, ingredientID int64, params *PatchApiRecipesRecipeIDIngredientsIngredientIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody(c.Server, recipeID, ingredientID, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -831,8 +951,8 @@ func (c *Client) PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody(ctx cont
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, recipeID int64, ingredientID int64, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequest(c.Server, recipeID, ingredientID, body)
+func (c *Client) PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context, recipeID int64, ingredientID int64, params *PatchApiRecipesRecipeIDIngredientsIngredientIDParams, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequest(c.Server, recipeID, ingredientID, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -843,8 +963,8 @@ func (c *Client) PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Cont
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Context, recipeID int64, ingredientID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequest(c.Server, recipeID, ingredientID)
+func (c *Client) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Context, recipeID int64, ingredientID int64, params *DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequest(c.Server, recipeID, ingredientID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -855,8 +975,8 @@ func (c *Client) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx contex
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiRecipesRecipeIDIngredientsIngredientIDImageRequestWithBody(c.Server, recipeID, ingredientID, contentType, body)
+func (c *Client) PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody(ctx context.Context, recipeID int64, ingredientID int64, params *PostApiRecipesRecipeIDIngredientsIngredientIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiRecipesRecipeIDIngredientsIngredientIDImageRequestWithBody(c.Server, recipeID, ingredientID, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -879,8 +999,8 @@ func (c *Client) GetApiRecipesRecipeIDPublic(ctx context.Context, recipeID int64
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiRecipesRecipeIDSteps(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiRecipesRecipeIDStepsRequest(c.Server, recipeID)
+func (c *Client) PostApiRecipesRecipeIDSteps(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDStepsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiRecipesRecipeIDStepsRequest(c.Server, recipeID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -891,8 +1011,8 @@ func (c *Client) PostApiRecipesRecipeIDSteps(ctx context.Context, recipeID int64
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiRecipesRecipeIDStepsStepIDRequest(c.Server, recipeID, stepID)
+func (c *Client) DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, params *DeleteApiRecipesRecipeIDStepsStepIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApiRecipesRecipeIDStepsStepIDRequest(c.Server, recipeID, stepID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -903,8 +1023,8 @@ func (c *Client) DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context, recipe
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody(c.Server, recipeID, stepID, contentType, body)
+func (c *Client) PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx context.Context, recipeID int64, stepID int64, params *PatchApiRecipesRecipeIDStepsStepIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody(c.Server, recipeID, stepID, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -915,8 +1035,8 @@ func (c *Client) PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx context.Context,
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchApiRecipesRecipeIDStepsStepIDRequest(c.Server, recipeID, stepID, body)
+func (c *Client) PatchApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeID int64, stepID int64, params *PatchApiRecipesRecipeIDStepsStepIDParams, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiRecipesRecipeIDStepsStepIDRequest(c.Server, recipeID, stepID, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -927,8 +1047,8 @@ func (c *Client) PatchApiRecipesRecipeIDStepsStepID(ctx context.Context, recipeI
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiRecipesRecipeIDStepsStepIDImage(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiRecipesRecipeIDStepsStepIDImageRequest(c.Server, recipeID, stepID)
+func (c *Client) DeleteApiRecipesRecipeIDStepsStepIDImage(ctx context.Context, recipeID int64, stepID int64, params *DeleteApiRecipesRecipeIDStepsStepIDImageParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApiRecipesRecipeIDStepsStepIDImageRequest(c.Server, recipeID, stepID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -939,8 +1059,8 @@ func (c *Client) DeleteApiRecipesRecipeIDStepsStepIDImage(ctx context.Context, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiRecipesRecipeIDStepsStepIDImageRequestWithBody(c.Server, recipeID, stepID, contentType, body)
+func (c *Client) PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx context.Context, recipeID int64, stepID int64, params *PostApiRecipesRecipeIDStepsStepIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiRecipesRecipeIDStepsStepIDImageRequestWithBody(c.Server, recipeID, stepID, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -987,8 +1107,8 @@ func (c *Client) GetApiUser(ctx context.Context, reqEditors ...RequestEditorFn) 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiUserInviteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiUserInviteRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiUserInviteWithBody(ctx context.Context, params *PostApiUserInviteParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiUserInviteRequestWithBody(c.Server, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -999,8 +1119,8 @@ func (c *Client) PostApiUserInviteWithBody(ctx context.Context, contentType stri
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiUserInvite(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiUserInviteRequest(c.Server, body)
+func (c *Client) PostApiUserInvite(ctx context.Context, params *PostApiUserInviteParams, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiUserInviteRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1011,8 +1131,8 @@ func (c *Client) PostApiUserInvite(ctx context.Context, body PostApiUserInviteJS
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchApiUserPasswordWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchApiUserPasswordRequestWithBody(c.Server, contentType, body)
+func (c *Client) PatchApiUserPasswordWithBody(ctx context.Context, params *PatchApiUserPasswordParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiUserPasswordRequestWithBody(c.Server, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1023,8 +1143,8 @@ func (c *Client) PatchApiUserPasswordWithBody(ctx context.Context, contentType s
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchApiUserPassword(ctx context.Context, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchApiUserPasswordRequest(c.Server, body)
+func (c *Client) PatchApiUserPassword(ctx context.Context, params *PatchApiUserPasswordParams, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiUserPasswordRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1048,18 +1168,18 @@ func (c *Client) GetApiUsers(ctx context.Context, params *GetApiUsersParams, req
 }
 
 // NewPostApiAdminRequest calls the generic PostApiAdmin builder with application/json body
-func NewPostApiAdminRequest(server string, body PostApiAdminJSONRequestBody) (*http.Request, error) {
+func NewPostApiAdminRequest(server string, params *PostApiAdminParams, body PostApiAdminJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiAdminRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiAdminRequestWithBody(server, params, "application/json", bodyReader)
 }
 
 // NewPostApiAdminRequestWithBody generates requests for PostApiAdmin with any type of body
-func NewPostApiAdminRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostApiAdminRequestWithBody(server string, params *PostApiAdminParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -1084,22 +1204,37 @@ func NewPostApiAdminRequestWithBody(server string, contentType string, body io.R
 
 	req.Header.Add("Content-Type", contentType)
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewPostApiAdminUserRequest calls the generic PostApiAdminUser builder with application/json body
-func NewPostApiAdminUserRequest(server string, body PostApiAdminUserJSONRequestBody) (*http.Request, error) {
+func NewPostApiAdminUserRequest(server string, params *PostApiAdminUserParams, body PostApiAdminUserJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiAdminUserRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiAdminUserRequestWithBody(server, params, "application/json", bodyReader)
 }
 
 // NewPostApiAdminUserRequestWithBody generates requests for PostApiAdminUser with any type of body
-func NewPostApiAdminUserRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostApiAdminUserRequestWithBody(server string, params *PostApiAdminUserParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -1123,6 +1258,21 @@ func NewPostApiAdminUserRequestWithBody(server string, contentType string, body 
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
 
 	return req, nil
 }
@@ -1163,6 +1313,21 @@ func NewPostApiAuthRefreshRequestWithBody(server string, params *PostApiAuthRefr
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
 
 	if params != nil {
 
@@ -1399,7 +1564,7 @@ func NewGetApiRecipesRequest(server string) (*http.Request, error) {
 }
 
 // NewPostApiRecipesRequest generates requests for PostApiRecipes
-func NewPostApiRecipesRequest(server string) (*http.Request, error) {
+func NewPostApiRecipesRequest(server string, params *PostApiRecipesParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -1420,6 +1585,21 @@ func NewPostApiRecipesRequest(server string) (*http.Request, error) {
 	req, err := http.NewRequest("POST", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
 	}
 
 	return req, nil
@@ -1453,7 +1633,7 @@ func NewGetApiRecipesPublicRequest(server string) (*http.Request, error) {
 }
 
 // NewDeleteApiRecipesRecipeIDRequest generates requests for DeleteApiRecipesRecipeID
-func NewDeleteApiRecipesRecipeIDRequest(server string, recipeID int64) (*http.Request, error) {
+func NewDeleteApiRecipesRecipeIDRequest(server string, recipeID int64, params *DeleteApiRecipesRecipeIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1481,6 +1661,21 @@ func NewDeleteApiRecipesRecipeIDRequest(server string, recipeID int64) (*http.Re
 	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
 	}
 
 	return req, nil
@@ -1521,18 +1716,18 @@ func NewGetApiRecipesRecipeIDRequest(server string, recipeID int64) (*http.Reque
 }
 
 // NewPatchApiRecipesRecipeIDRequest calls the generic PatchApiRecipesRecipeID builder with application/json body
-func NewPatchApiRecipesRecipeIDRequest(server string, recipeID int64, body PatchApiRecipesRecipeIDJSONRequestBody) (*http.Request, error) {
+func NewPatchApiRecipesRecipeIDRequest(server string, recipeID int64, params *PatchApiRecipesRecipeIDParams, body PatchApiRecipesRecipeIDJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPatchApiRecipesRecipeIDRequestWithBody(server, recipeID, "application/json", bodyReader)
+	return NewPatchApiRecipesRecipeIDRequestWithBody(server, recipeID, params, "application/json", bodyReader)
 }
 
 // NewPatchApiRecipesRecipeIDRequestWithBody generates requests for PatchApiRecipesRecipeID with any type of body
-func NewPatchApiRecipesRecipeIDRequestWithBody(server string, recipeID int64, contentType string, body io.Reader) (*http.Request, error) {
+func NewPatchApiRecipesRecipeIDRequestWithBody(server string, recipeID int64, params *PatchApiRecipesRecipeIDParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1564,11 +1759,26 @@ func NewPatchApiRecipesRecipeIDRequestWithBody(server string, recipeID int64, co
 
 	req.Header.Add("Content-Type", contentType)
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewDeleteApiRecipesRecipeIDImageRequest generates requests for DeleteApiRecipesRecipeIDImage
-func NewDeleteApiRecipesRecipeIDImageRequest(server string, recipeID int64) (*http.Request, error) {
+func NewDeleteApiRecipesRecipeIDImageRequest(server string, recipeID int64, params *DeleteApiRecipesRecipeIDImageParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1598,11 +1808,26 @@ func NewDeleteApiRecipesRecipeIDImageRequest(server string, recipeID int64) (*ht
 		return nil, err
 	}
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewPostApiRecipesRecipeIDImageRequestWithBody generates requests for PostApiRecipesRecipeIDImage with any type of body
-func NewPostApiRecipesRecipeIDImageRequestWithBody(server string, recipeID int64, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostApiRecipesRecipeIDImageRequestWithBody(server string, recipeID int64, params *PostApiRecipesRecipeIDImageParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1634,11 +1859,26 @@ func NewPostApiRecipesRecipeIDImageRequestWithBody(server string, recipeID int64
 
 	req.Header.Add("Content-Type", contentType)
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewPostApiRecipesRecipeIDIngredientsRequest generates requests for PostApiRecipesRecipeIDIngredients
-func NewPostApiRecipesRecipeIDIngredientsRequest(server string, recipeID int64) (*http.Request, error) {
+func NewPostApiRecipesRecipeIDIngredientsRequest(server string, recipeID int64, params *PostApiRecipesRecipeIDIngredientsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1668,11 +1908,26 @@ func NewPostApiRecipesRecipeIDIngredientsRequest(server string, recipeID int64) 
 		return nil, err
 	}
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewDeleteApiRecipesRecipeIDIngredientsIngredientIDRequest generates requests for DeleteApiRecipesRecipeIDIngredientsIngredientID
-func NewDeleteApiRecipesRecipeIDIngredientsIngredientIDRequest(server string, recipeID int64, ingredientID int64) (*http.Request, error) {
+func NewDeleteApiRecipesRecipeIDIngredientsIngredientIDRequest(server string, recipeID int64, ingredientID int64, params *DeleteApiRecipesRecipeIDIngredientsIngredientIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1709,22 +1964,37 @@ func NewDeleteApiRecipesRecipeIDIngredientsIngredientIDRequest(server string, re
 		return nil, err
 	}
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequest calls the generic PatchApiRecipesRecipeIDIngredientsIngredientID builder with application/json body
-func NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequest(server string, recipeID int64, ingredientID int64, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody) (*http.Request, error) {
+func NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequest(server string, recipeID int64, ingredientID int64, params *PatchApiRecipesRecipeIDIngredientsIngredientIDParams, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody(server, recipeID, ingredientID, "application/json", bodyReader)
+	return NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody(server, recipeID, ingredientID, params, "application/json", bodyReader)
 }
 
 // NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody generates requests for PatchApiRecipesRecipeIDIngredientsIngredientID with any type of body
-func NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody(server string, recipeID int64, ingredientID int64, contentType string, body io.Reader) (*http.Request, error) {
+func NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody(server string, recipeID int64, ingredientID int64, params *PatchApiRecipesRecipeIDIngredientsIngredientIDParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1763,11 +2033,26 @@ func NewPatchApiRecipesRecipeIDIngredientsIngredientIDRequestWithBody(server str
 
 	req.Header.Add("Content-Type", contentType)
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewDeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequest generates requests for DeleteApiRecipesRecipeIDIngredientsIngredientIDImage
-func NewDeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequest(server string, recipeID int64, ingredientID int64) (*http.Request, error) {
+func NewDeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequest(server string, recipeID int64, ingredientID int64, params *DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1804,11 +2089,26 @@ func NewDeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequest(server strin
 		return nil, err
 	}
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewPostApiRecipesRecipeIDIngredientsIngredientIDImageRequestWithBody generates requests for PostApiRecipesRecipeIDIngredientsIngredientIDImage with any type of body
-func NewPostApiRecipesRecipeIDIngredientsIngredientIDImageRequestWithBody(server string, recipeID int64, ingredientID int64, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostApiRecipesRecipeIDIngredientsIngredientIDImageRequestWithBody(server string, recipeID int64, ingredientID int64, params *PostApiRecipesRecipeIDIngredientsIngredientIDImageParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1846,6 +2146,21 @@ func NewPostApiRecipesRecipeIDIngredientsIngredientIDImageRequestWithBody(server
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
 
 	return req, nil
 }
@@ -1885,7 +2200,7 @@ func NewGetApiRecipesRecipeIDPublicRequest(server string, recipeID int64) (*http
 }
 
 // NewPostApiRecipesRecipeIDStepsRequest generates requests for PostApiRecipesRecipeIDSteps
-func NewPostApiRecipesRecipeIDStepsRequest(server string, recipeID int64) (*http.Request, error) {
+func NewPostApiRecipesRecipeIDStepsRequest(server string, recipeID int64, params *PostApiRecipesRecipeIDStepsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1915,11 +2230,26 @@ func NewPostApiRecipesRecipeIDStepsRequest(server string, recipeID int64) (*http
 		return nil, err
 	}
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewDeleteApiRecipesRecipeIDStepsStepIDRequest generates requests for DeleteApiRecipesRecipeIDStepsStepID
-func NewDeleteApiRecipesRecipeIDStepsStepIDRequest(server string, recipeID int64, stepID int64) (*http.Request, error) {
+func NewDeleteApiRecipesRecipeIDStepsStepIDRequest(server string, recipeID int64, stepID int64, params *DeleteApiRecipesRecipeIDStepsStepIDParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1956,22 +2286,37 @@ func NewDeleteApiRecipesRecipeIDStepsStepIDRequest(server string, recipeID int64
 		return nil, err
 	}
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewPatchApiRecipesRecipeIDStepsStepIDRequest calls the generic PatchApiRecipesRecipeIDStepsStepID builder with application/json body
-func NewPatchApiRecipesRecipeIDStepsStepIDRequest(server string, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody) (*http.Request, error) {
+func NewPatchApiRecipesRecipeIDStepsStepIDRequest(server string, recipeID int64, stepID int64, params *PatchApiRecipesRecipeIDStepsStepIDParams, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody(server, recipeID, stepID, "application/json", bodyReader)
+	return NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody(server, recipeID, stepID, params, "application/json", bodyReader)
 }
 
 // NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody generates requests for PatchApiRecipesRecipeIDStepsStepID with any type of body
-func NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody(server string, recipeID int64, stepID int64, contentType string, body io.Reader) (*http.Request, error) {
+func NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody(server string, recipeID int64, stepID int64, params *PatchApiRecipesRecipeIDStepsStepIDParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2010,11 +2355,26 @@ func NewPatchApiRecipesRecipeIDStepsStepIDRequestWithBody(server string, recipeI
 
 	req.Header.Add("Content-Type", contentType)
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewDeleteApiRecipesRecipeIDStepsStepIDImageRequest generates requests for DeleteApiRecipesRecipeIDStepsStepIDImage
-func NewDeleteApiRecipesRecipeIDStepsStepIDImageRequest(server string, recipeID int64, stepID int64) (*http.Request, error) {
+func NewDeleteApiRecipesRecipeIDStepsStepIDImageRequest(server string, recipeID int64, stepID int64, params *DeleteApiRecipesRecipeIDStepsStepIDImageParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2051,11 +2411,26 @@ func NewDeleteApiRecipesRecipeIDStepsStepIDImageRequest(server string, recipeID 
 		return nil, err
 	}
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewPostApiRecipesRecipeIDStepsStepIDImageRequestWithBody generates requests for PostApiRecipesRecipeIDStepsStepIDImage with any type of body
-func NewPostApiRecipesRecipeIDStepsStepIDImageRequestWithBody(server string, recipeID int64, stepID int64, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostApiRecipesRecipeIDStepsStepIDImageRequestWithBody(server string, recipeID int64, stepID int64, params *PostApiRecipesRecipeIDStepsStepIDImageParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2093,6 +2468,21 @@ func NewPostApiRecipesRecipeIDStepsStepIDImageRequestWithBody(server string, rec
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
 
 	return req, nil
 }
@@ -2165,18 +2555,18 @@ func NewGetApiUserRequest(server string) (*http.Request, error) {
 }
 
 // NewPostApiUserInviteRequest calls the generic PostApiUserInvite builder with application/json body
-func NewPostApiUserInviteRequest(server string, body PostApiUserInviteJSONRequestBody) (*http.Request, error) {
+func NewPostApiUserInviteRequest(server string, params *PostApiUserInviteParams, body PostApiUserInviteJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiUserInviteRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiUserInviteRequestWithBody(server, params, "application/json", bodyReader)
 }
 
 // NewPostApiUserInviteRequestWithBody generates requests for PostApiUserInvite with any type of body
-func NewPostApiUserInviteRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostApiUserInviteRequestWithBody(server string, params *PostApiUserInviteParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -2201,22 +2591,37 @@ func NewPostApiUserInviteRequestWithBody(server string, contentType string, body
 
 	req.Header.Add("Content-Type", contentType)
 
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
 	return req, nil
 }
 
 // NewPatchApiUserPasswordRequest calls the generic PatchApiUserPassword builder with application/json body
-func NewPatchApiUserPasswordRequest(server string, body PatchApiUserPasswordJSONRequestBody) (*http.Request, error) {
+func NewPatchApiUserPasswordRequest(server string, params *PatchApiUserPasswordParams, body PatchApiUserPasswordJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPatchApiUserPasswordRequestWithBody(server, "application/json", bodyReader)
+	return NewPatchApiUserPasswordRequestWithBody(server, params, "application/json", bodyReader)
 }
 
 // NewPatchApiUserPasswordRequestWithBody generates requests for PatchApiUserPassword with any type of body
-func NewPatchApiUserPasswordRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+func NewPatchApiUserPasswordRequestWithBody(server string, params *PatchApiUserPasswordParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -2240,6 +2645,21 @@ func NewPatchApiUserPasswordRequestWithBody(server string, contentType string, b
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
 
 	return req, nil
 }
@@ -2353,14 +2773,14 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 	// PostApiAdminWithBodyWithResponse request with any body
-	PostApiAdminWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error)
+	PostApiAdminWithBodyWithResponse(ctx context.Context, params *PostApiAdminParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error)
 
-	PostApiAdminWithResponse(ctx context.Context, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error)
+	PostApiAdminWithResponse(ctx context.Context, params *PostApiAdminParams, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error)
 
 	// PostApiAdminUserWithBodyWithResponse request with any body
-	PostApiAdminUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error)
+	PostApiAdminUserWithBodyWithResponse(ctx context.Context, params *PostApiAdminUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error)
 
-	PostApiAdminUserWithResponse(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error)
+	PostApiAdminUserWithResponse(ctx context.Context, params *PostApiAdminUserParams, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error)
 
 	// PostApiAuthRefreshWithBodyWithResponse request with any body
 	PostApiAuthRefreshWithBodyWithResponse(ctx context.Context, params *PostApiAuthRefreshParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAuthRefreshResponse, error)
@@ -2388,64 +2808,64 @@ type ClientWithResponsesInterface interface {
 	GetApiRecipesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiRecipesResponse, error)
 
 	// PostApiRecipesWithResponse request
-	PostApiRecipesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostApiRecipesResponse, error)
+	PostApiRecipesWithResponse(ctx context.Context, params *PostApiRecipesParams, reqEditors ...RequestEditorFn) (*PostApiRecipesResponse, error)
 
 	// GetApiRecipesPublicWithResponse request
 	GetApiRecipesPublicWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiRecipesPublicResponse, error)
 
 	// DeleteApiRecipesRecipeIDWithResponse request
-	DeleteApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDResponse, error)
+	DeleteApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, params *DeleteApiRecipesRecipeIDParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDResponse, error)
 
 	// GetApiRecipesRecipeIDWithResponse request
 	GetApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*GetApiRecipesRecipeIDResponse, error)
 
 	// PatchApiRecipesRecipeIDWithBodyWithResponse request with any body
-	PatchApiRecipesRecipeIDWithBodyWithResponse(ctx context.Context, recipeID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDResponse, error)
+	PatchApiRecipesRecipeIDWithBodyWithResponse(ctx context.Context, recipeID int64, params *PatchApiRecipesRecipeIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDResponse, error)
 
-	PatchApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, body PatchApiRecipesRecipeIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDResponse, error)
+	PatchApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, params *PatchApiRecipesRecipeIDParams, body PatchApiRecipesRecipeIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDResponse, error)
 
 	// DeleteApiRecipesRecipeIDImageWithResponse request
-	DeleteApiRecipesRecipeIDImageWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDImageResponse, error)
+	DeleteApiRecipesRecipeIDImageWithResponse(ctx context.Context, recipeID int64, params *DeleteApiRecipesRecipeIDImageParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDImageResponse, error)
 
 	// PostApiRecipesRecipeIDImageWithBodyWithResponse request with any body
-	PostApiRecipesRecipeIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDImageResponse, error)
+	PostApiRecipesRecipeIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDImageResponse, error)
 
 	// PostApiRecipesRecipeIDIngredientsWithResponse request
-	PostApiRecipesRecipeIDIngredientsWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsResponse, error)
+	PostApiRecipesRecipeIDIngredientsWithResponse(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDIngredientsParams, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsResponse, error)
 
 	// DeleteApiRecipesRecipeIDIngredientsIngredientIDWithResponse request
-	DeleteApiRecipesRecipeIDIngredientsIngredientIDWithResponse(ctx context.Context, recipeID int64, ingredientID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDIngredientsIngredientIDResponse, error)
+	DeleteApiRecipesRecipeIDIngredientsIngredientIDWithResponse(ctx context.Context, recipeID int64, ingredientID int64, params *DeleteApiRecipesRecipeIDIngredientsIngredientIDParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDIngredientsIngredientIDResponse, error)
 
 	// PatchApiRecipesRecipeIDIngredientsIngredientIDWithBodyWithResponse request with any body
-	PatchApiRecipesRecipeIDIngredientsIngredientIDWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error)
+	PatchApiRecipesRecipeIDIngredientsIngredientIDWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, params *PatchApiRecipesRecipeIDIngredientsIngredientIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error)
 
-	PatchApiRecipesRecipeIDIngredientsIngredientIDWithResponse(ctx context.Context, recipeID int64, ingredientID int64, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error)
+	PatchApiRecipesRecipeIDIngredientsIngredientIDWithResponse(ctx context.Context, recipeID int64, ingredientID int64, params *PatchApiRecipesRecipeIDIngredientsIngredientIDParams, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error)
 
 	// DeleteApiRecipesRecipeIDIngredientsIngredientIDImageWithResponse request
-	DeleteApiRecipesRecipeIDIngredientsIngredientIDImageWithResponse(ctx context.Context, recipeID int64, ingredientID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDIngredientsIngredientIDImageResponse, error)
+	DeleteApiRecipesRecipeIDIngredientsIngredientIDImageWithResponse(ctx context.Context, recipeID int64, ingredientID int64, params *DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDIngredientsIngredientIDImageResponse, error)
 
 	// PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBodyWithResponse request with any body
-	PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsIngredientIDImageResponse, error)
+	PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, params *PostApiRecipesRecipeIDIngredientsIngredientIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsIngredientIDImageResponse, error)
 
 	// GetApiRecipesRecipeIDPublicWithResponse request
 	GetApiRecipesRecipeIDPublicWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*GetApiRecipesRecipeIDPublicResponse, error)
 
 	// PostApiRecipesRecipeIDStepsWithResponse request
-	PostApiRecipesRecipeIDStepsWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsResponse, error)
+	PostApiRecipesRecipeIDStepsWithResponse(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDStepsParams, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsResponse, error)
 
 	// DeleteApiRecipesRecipeIDStepsStepIDWithResponse request
-	DeleteApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDStepsStepIDResponse, error)
+	DeleteApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, params *DeleteApiRecipesRecipeIDStepsStepIDParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDStepsStepIDResponse, error)
 
 	// PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse request with any body
-	PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error)
+	PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, params *PatchApiRecipesRecipeIDStepsStepIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error)
 
-	PatchApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error)
+	PatchApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, params *PatchApiRecipesRecipeIDStepsStepIDParams, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error)
 
 	// DeleteApiRecipesRecipeIDStepsStepIDImageWithResponse request
-	DeleteApiRecipesRecipeIDStepsStepIDImageWithResponse(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDStepsStepIDImageResponse, error)
+	DeleteApiRecipesRecipeIDStepsStepIDImageWithResponse(ctx context.Context, recipeID int64, stepID int64, params *DeleteApiRecipesRecipeIDStepsStepIDImageParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDStepsStepIDImageResponse, error)
 
 	// PostApiRecipesRecipeIDStepsStepIDImageWithBodyWithResponse request with any body
-	PostApiRecipesRecipeIDStepsStepIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsStepIDImageResponse, error)
+	PostApiRecipesRecipeIDStepsStepIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, params *PostApiRecipesRecipeIDStepsStepIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsStepIDImageResponse, error)
 
 	// PostApiSignupWithBodyWithResponse request with any body
 	PostApiSignupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiSignupResponse, error)
@@ -2456,14 +2876,14 @@ type ClientWithResponsesInterface interface {
 	GetApiUserWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiUserResponse, error)
 
 	// PostApiUserInviteWithBodyWithResponse request with any body
-	PostApiUserInviteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error)
+	PostApiUserInviteWithBodyWithResponse(ctx context.Context, params *PostApiUserInviteParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error)
 
-	PostApiUserInviteWithResponse(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error)
+	PostApiUserInviteWithResponse(ctx context.Context, params *PostApiUserInviteParams, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error)
 
 	// PatchApiUserPasswordWithBodyWithResponse request with any body
-	PatchApiUserPasswordWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error)
+	PatchApiUserPasswordWithBodyWithResponse(ctx context.Context, params *PatchApiUserPasswordParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error)
 
-	PatchApiUserPasswordWithResponse(ctx context.Context, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error)
+	PatchApiUserPasswordWithResponse(ctx context.Context, params *PatchApiUserPasswordParams, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error)
 
 	// GetApiUsersWithResponse request
 	GetApiUsersWithResponse(ctx context.Context, params *GetApiUsersParams, reqEditors ...RequestEditorFn) (*GetApiUsersResponse, error)
@@ -3253,16 +3673,16 @@ func (r GetApiUsersResponse) StatusCode() int {
 }
 
 // PostApiAdminWithBodyWithResponse request with arbitrary body returning *PostApiAdminResponse
-func (c *ClientWithResponses) PostApiAdminWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error) {
-	rsp, err := c.PostApiAdminWithBody(ctx, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostApiAdminWithBodyWithResponse(ctx context.Context, params *PostApiAdminParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error) {
+	rsp, err := c.PostApiAdminWithBody(ctx, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePostApiAdminResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiAdminWithResponse(ctx context.Context, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error) {
-	rsp, err := c.PostApiAdmin(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiAdminWithResponse(ctx context.Context, params *PostApiAdminParams, body PostApiAdminJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminResponse, error) {
+	rsp, err := c.PostApiAdmin(ctx, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3270,16 +3690,16 @@ func (c *ClientWithResponses) PostApiAdminWithResponse(ctx context.Context, body
 }
 
 // PostApiAdminUserWithBodyWithResponse request with arbitrary body returning *PostApiAdminUserResponse
-func (c *ClientWithResponses) PostApiAdminUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error) {
-	rsp, err := c.PostApiAdminUserWithBody(ctx, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostApiAdminUserWithBodyWithResponse(ctx context.Context, params *PostApiAdminUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error) {
+	rsp, err := c.PostApiAdminUserWithBody(ctx, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePostApiAdminUserResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiAdminUserWithResponse(ctx context.Context, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error) {
-	rsp, err := c.PostApiAdminUser(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiAdminUserWithResponse(ctx context.Context, params *PostApiAdminUserParams, body PostApiAdminUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiAdminUserResponse, error) {
+	rsp, err := c.PostApiAdminUser(ctx, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3366,8 +3786,8 @@ func (c *ClientWithResponses) GetApiRecipesWithResponse(ctx context.Context, req
 }
 
 // PostApiRecipesWithResponse request returning *PostApiRecipesResponse
-func (c *ClientWithResponses) PostApiRecipesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*PostApiRecipesResponse, error) {
-	rsp, err := c.PostApiRecipes(ctx, reqEditors...)
+func (c *ClientWithResponses) PostApiRecipesWithResponse(ctx context.Context, params *PostApiRecipesParams, reqEditors ...RequestEditorFn) (*PostApiRecipesResponse, error) {
+	rsp, err := c.PostApiRecipes(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3384,8 +3804,8 @@ func (c *ClientWithResponses) GetApiRecipesPublicWithResponse(ctx context.Contex
 }
 
 // DeleteApiRecipesRecipeIDWithResponse request returning *DeleteApiRecipesRecipeIDResponse
-func (c *ClientWithResponses) DeleteApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDResponse, error) {
-	rsp, err := c.DeleteApiRecipesRecipeID(ctx, recipeID, reqEditors...)
+func (c *ClientWithResponses) DeleteApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, params *DeleteApiRecipesRecipeIDParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDResponse, error) {
+	rsp, err := c.DeleteApiRecipesRecipeID(ctx, recipeID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3402,16 +3822,16 @@ func (c *ClientWithResponses) GetApiRecipesRecipeIDWithResponse(ctx context.Cont
 }
 
 // PatchApiRecipesRecipeIDWithBodyWithResponse request with arbitrary body returning *PatchApiRecipesRecipeIDResponse
-func (c *ClientWithResponses) PatchApiRecipesRecipeIDWithBodyWithResponse(ctx context.Context, recipeID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDResponse, error) {
-	rsp, err := c.PatchApiRecipesRecipeIDWithBody(ctx, recipeID, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PatchApiRecipesRecipeIDWithBodyWithResponse(ctx context.Context, recipeID int64, params *PatchApiRecipesRecipeIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDResponse, error) {
+	rsp, err := c.PatchApiRecipesRecipeIDWithBody(ctx, recipeID, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePatchApiRecipesRecipeIDResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, body PatchApiRecipesRecipeIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDResponse, error) {
-	rsp, err := c.PatchApiRecipesRecipeID(ctx, recipeID, body, reqEditors...)
+func (c *ClientWithResponses) PatchApiRecipesRecipeIDWithResponse(ctx context.Context, recipeID int64, params *PatchApiRecipesRecipeIDParams, body PatchApiRecipesRecipeIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDResponse, error) {
+	rsp, err := c.PatchApiRecipesRecipeID(ctx, recipeID, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3419,8 +3839,8 @@ func (c *ClientWithResponses) PatchApiRecipesRecipeIDWithResponse(ctx context.Co
 }
 
 // DeleteApiRecipesRecipeIDImageWithResponse request returning *DeleteApiRecipesRecipeIDImageResponse
-func (c *ClientWithResponses) DeleteApiRecipesRecipeIDImageWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDImageResponse, error) {
-	rsp, err := c.DeleteApiRecipesRecipeIDImage(ctx, recipeID, reqEditors...)
+func (c *ClientWithResponses) DeleteApiRecipesRecipeIDImageWithResponse(ctx context.Context, recipeID int64, params *DeleteApiRecipesRecipeIDImageParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDImageResponse, error) {
+	rsp, err := c.DeleteApiRecipesRecipeIDImage(ctx, recipeID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3428,8 +3848,8 @@ func (c *ClientWithResponses) DeleteApiRecipesRecipeIDImageWithResponse(ctx cont
 }
 
 // PostApiRecipesRecipeIDImageWithBodyWithResponse request with arbitrary body returning *PostApiRecipesRecipeIDImageResponse
-func (c *ClientWithResponses) PostApiRecipesRecipeIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDImageResponse, error) {
-	rsp, err := c.PostApiRecipesRecipeIDImageWithBody(ctx, recipeID, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostApiRecipesRecipeIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDImageResponse, error) {
+	rsp, err := c.PostApiRecipesRecipeIDImageWithBody(ctx, recipeID, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3437,8 +3857,8 @@ func (c *ClientWithResponses) PostApiRecipesRecipeIDImageWithBodyWithResponse(ct
 }
 
 // PostApiRecipesRecipeIDIngredientsWithResponse request returning *PostApiRecipesRecipeIDIngredientsResponse
-func (c *ClientWithResponses) PostApiRecipesRecipeIDIngredientsWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsResponse, error) {
-	rsp, err := c.PostApiRecipesRecipeIDIngredients(ctx, recipeID, reqEditors...)
+func (c *ClientWithResponses) PostApiRecipesRecipeIDIngredientsWithResponse(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDIngredientsParams, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsResponse, error) {
+	rsp, err := c.PostApiRecipesRecipeIDIngredients(ctx, recipeID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3446,8 +3866,8 @@ func (c *ClientWithResponses) PostApiRecipesRecipeIDIngredientsWithResponse(ctx 
 }
 
 // DeleteApiRecipesRecipeIDIngredientsIngredientIDWithResponse request returning *DeleteApiRecipesRecipeIDIngredientsIngredientIDResponse
-func (c *ClientWithResponses) DeleteApiRecipesRecipeIDIngredientsIngredientIDWithResponse(ctx context.Context, recipeID int64, ingredientID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDIngredientsIngredientIDResponse, error) {
-	rsp, err := c.DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx, recipeID, ingredientID, reqEditors...)
+func (c *ClientWithResponses) DeleteApiRecipesRecipeIDIngredientsIngredientIDWithResponse(ctx context.Context, recipeID int64, ingredientID int64, params *DeleteApiRecipesRecipeIDIngredientsIngredientIDParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDIngredientsIngredientIDResponse, error) {
+	rsp, err := c.DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx, recipeID, ingredientID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3455,16 +3875,16 @@ func (c *ClientWithResponses) DeleteApiRecipesRecipeIDIngredientsIngredientIDWit
 }
 
 // PatchApiRecipesRecipeIDIngredientsIngredientIDWithBodyWithResponse request with arbitrary body returning *PatchApiRecipesRecipeIDIngredientsIngredientIDResponse
-func (c *ClientWithResponses) PatchApiRecipesRecipeIDIngredientsIngredientIDWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error) {
-	rsp, err := c.PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody(ctx, recipeID, ingredientID, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PatchApiRecipesRecipeIDIngredientsIngredientIDWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, params *PatchApiRecipesRecipeIDIngredientsIngredientIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error) {
+	rsp, err := c.PatchApiRecipesRecipeIDIngredientsIngredientIDWithBody(ctx, recipeID, ingredientID, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePatchApiRecipesRecipeIDIngredientsIngredientIDResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchApiRecipesRecipeIDIngredientsIngredientIDWithResponse(ctx context.Context, recipeID int64, ingredientID int64, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error) {
-	rsp, err := c.PatchApiRecipesRecipeIDIngredientsIngredientID(ctx, recipeID, ingredientID, body, reqEditors...)
+func (c *ClientWithResponses) PatchApiRecipesRecipeIDIngredientsIngredientIDWithResponse(ctx context.Context, recipeID int64, ingredientID int64, params *PatchApiRecipesRecipeIDIngredientsIngredientIDParams, body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDIngredientsIngredientIDResponse, error) {
+	rsp, err := c.PatchApiRecipesRecipeIDIngredientsIngredientID(ctx, recipeID, ingredientID, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3472,8 +3892,8 @@ func (c *ClientWithResponses) PatchApiRecipesRecipeIDIngredientsIngredientIDWith
 }
 
 // DeleteApiRecipesRecipeIDIngredientsIngredientIDImageWithResponse request returning *DeleteApiRecipesRecipeIDIngredientsIngredientIDImageResponse
-func (c *ClientWithResponses) DeleteApiRecipesRecipeIDIngredientsIngredientIDImageWithResponse(ctx context.Context, recipeID int64, ingredientID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDIngredientsIngredientIDImageResponse, error) {
-	rsp, err := c.DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx, recipeID, ingredientID, reqEditors...)
+func (c *ClientWithResponses) DeleteApiRecipesRecipeIDIngredientsIngredientIDImageWithResponse(ctx context.Context, recipeID int64, ingredientID int64, params *DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDIngredientsIngredientIDImageResponse, error) {
+	rsp, err := c.DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx, recipeID, ingredientID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3481,8 +3901,8 @@ func (c *ClientWithResponses) DeleteApiRecipesRecipeIDIngredientsIngredientIDIma
 }
 
 // PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBodyWithResponse request with arbitrary body returning *PostApiRecipesRecipeIDIngredientsIngredientIDImageResponse
-func (c *ClientWithResponses) PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsIngredientIDImageResponse, error) {
-	rsp, err := c.PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody(ctx, recipeID, ingredientID, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, ingredientID int64, params *PostApiRecipesRecipeIDIngredientsIngredientIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDIngredientsIngredientIDImageResponse, error) {
+	rsp, err := c.PostApiRecipesRecipeIDIngredientsIngredientIDImageWithBody(ctx, recipeID, ingredientID, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3499,8 +3919,8 @@ func (c *ClientWithResponses) GetApiRecipesRecipeIDPublicWithResponse(ctx contex
 }
 
 // PostApiRecipesRecipeIDStepsWithResponse request returning *PostApiRecipesRecipeIDStepsResponse
-func (c *ClientWithResponses) PostApiRecipesRecipeIDStepsWithResponse(ctx context.Context, recipeID int64, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsResponse, error) {
-	rsp, err := c.PostApiRecipesRecipeIDSteps(ctx, recipeID, reqEditors...)
+func (c *ClientWithResponses) PostApiRecipesRecipeIDStepsWithResponse(ctx context.Context, recipeID int64, params *PostApiRecipesRecipeIDStepsParams, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsResponse, error) {
+	rsp, err := c.PostApiRecipesRecipeIDSteps(ctx, recipeID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3508,8 +3928,8 @@ func (c *ClientWithResponses) PostApiRecipesRecipeIDStepsWithResponse(ctx contex
 }
 
 // DeleteApiRecipesRecipeIDStepsStepIDWithResponse request returning *DeleteApiRecipesRecipeIDStepsStepIDResponse
-func (c *ClientWithResponses) DeleteApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDStepsStepIDResponse, error) {
-	rsp, err := c.DeleteApiRecipesRecipeIDStepsStepID(ctx, recipeID, stepID, reqEditors...)
+func (c *ClientWithResponses) DeleteApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, params *DeleteApiRecipesRecipeIDStepsStepIDParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDStepsStepIDResponse, error) {
+	rsp, err := c.DeleteApiRecipesRecipeIDStepsStepID(ctx, recipeID, stepID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3517,16 +3937,16 @@ func (c *ClientWithResponses) DeleteApiRecipesRecipeIDStepsStepIDWithResponse(ct
 }
 
 // PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse request with arbitrary body returning *PatchApiRecipesRecipeIDStepsStepIDResponse
-func (c *ClientWithResponses) PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error) {
-	rsp, err := c.PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx, recipeID, stepID, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PatchApiRecipesRecipeIDStepsStepIDWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, params *PatchApiRecipesRecipeIDStepsStepIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error) {
+	rsp, err := c.PatchApiRecipesRecipeIDStepsStepIDWithBody(ctx, recipeID, stepID, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePatchApiRecipesRecipeIDStepsStepIDResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error) {
-	rsp, err := c.PatchApiRecipesRecipeIDStepsStepID(ctx, recipeID, stepID, body, reqEditors...)
+func (c *ClientWithResponses) PatchApiRecipesRecipeIDStepsStepIDWithResponse(ctx context.Context, recipeID int64, stepID int64, params *PatchApiRecipesRecipeIDStepsStepIDParams, body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiRecipesRecipeIDStepsStepIDResponse, error) {
+	rsp, err := c.PatchApiRecipesRecipeIDStepsStepID(ctx, recipeID, stepID, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3534,8 +3954,8 @@ func (c *ClientWithResponses) PatchApiRecipesRecipeIDStepsStepIDWithResponse(ctx
 }
 
 // DeleteApiRecipesRecipeIDStepsStepIDImageWithResponse request returning *DeleteApiRecipesRecipeIDStepsStepIDImageResponse
-func (c *ClientWithResponses) DeleteApiRecipesRecipeIDStepsStepIDImageWithResponse(ctx context.Context, recipeID int64, stepID int64, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDStepsStepIDImageResponse, error) {
-	rsp, err := c.DeleteApiRecipesRecipeIDStepsStepIDImage(ctx, recipeID, stepID, reqEditors...)
+func (c *ClientWithResponses) DeleteApiRecipesRecipeIDStepsStepIDImageWithResponse(ctx context.Context, recipeID int64, stepID int64, params *DeleteApiRecipesRecipeIDStepsStepIDImageParams, reqEditors ...RequestEditorFn) (*DeleteApiRecipesRecipeIDStepsStepIDImageResponse, error) {
+	rsp, err := c.DeleteApiRecipesRecipeIDStepsStepIDImage(ctx, recipeID, stepID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3543,8 +3963,8 @@ func (c *ClientWithResponses) DeleteApiRecipesRecipeIDStepsStepIDImageWithRespon
 }
 
 // PostApiRecipesRecipeIDStepsStepIDImageWithBodyWithResponse request with arbitrary body returning *PostApiRecipesRecipeIDStepsStepIDImageResponse
-func (c *ClientWithResponses) PostApiRecipesRecipeIDStepsStepIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsStepIDImageResponse, error) {
-	rsp, err := c.PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx, recipeID, stepID, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostApiRecipesRecipeIDStepsStepIDImageWithBodyWithResponse(ctx context.Context, recipeID int64, stepID int64, params *PostApiRecipesRecipeIDStepsStepIDImageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiRecipesRecipeIDStepsStepIDImageResponse, error) {
+	rsp, err := c.PostApiRecipesRecipeIDStepsStepIDImageWithBody(ctx, recipeID, stepID, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3578,16 +3998,16 @@ func (c *ClientWithResponses) GetApiUserWithResponse(ctx context.Context, reqEdi
 }
 
 // PostApiUserInviteWithBodyWithResponse request with arbitrary body returning *PostApiUserInviteResponse
-func (c *ClientWithResponses) PostApiUserInviteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error) {
-	rsp, err := c.PostApiUserInviteWithBody(ctx, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostApiUserInviteWithBodyWithResponse(ctx context.Context, params *PostApiUserInviteParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error) {
+	rsp, err := c.PostApiUserInviteWithBody(ctx, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePostApiUserInviteResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiUserInviteWithResponse(ctx context.Context, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error) {
-	rsp, err := c.PostApiUserInvite(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiUserInviteWithResponse(ctx context.Context, params *PostApiUserInviteParams, body PostApiUserInviteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiUserInviteResponse, error) {
+	rsp, err := c.PostApiUserInvite(ctx, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3595,16 +4015,16 @@ func (c *ClientWithResponses) PostApiUserInviteWithResponse(ctx context.Context,
 }
 
 // PatchApiUserPasswordWithBodyWithResponse request with arbitrary body returning *PatchApiUserPasswordResponse
-func (c *ClientWithResponses) PatchApiUserPasswordWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error) {
-	rsp, err := c.PatchApiUserPasswordWithBody(ctx, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PatchApiUserPasswordWithBodyWithResponse(ctx context.Context, params *PatchApiUserPasswordParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error) {
+	rsp, err := c.PatchApiUserPasswordWithBody(ctx, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePatchApiUserPasswordResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchApiUserPasswordWithResponse(ctx context.Context, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error) {
-	rsp, err := c.PatchApiUserPassword(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PatchApiUserPasswordWithResponse(ctx context.Context, params *PatchApiUserPasswordParams, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error) {
+	rsp, err := c.PatchApiUserPassword(ctx, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -5009,10 +5429,10 @@ func ParseGetApiUsersResponse(rsp *http.Response) (*GetApiUsersResponse, error) 
 type ServerInterface interface {
 	// Create an admin.
 	// (POST /api/admin)
-	PostApiAdmin(w http.ResponseWriter, r *http.Request)
+	PostApiAdmin(w http.ResponseWriter, r *http.Request, params PostApiAdminParams)
 	// Create a user.
 	// (POST /api/admin/user)
-	PostApiAdminUser(w http.ResponseWriter, r *http.Request)
+	PostApiAdminUser(w http.ResponseWriter, r *http.Request, params PostApiAdminUserParams)
 	// Refresh session tokens
 	// (POST /api/auth/refresh)
 	PostApiAuthRefresh(w http.ResponseWriter, r *http.Request, params PostApiAuthRefreshParams)
@@ -5036,58 +5456,58 @@ type ServerInterface interface {
 	GetApiRecipes(w http.ResponseWriter, r *http.Request)
 	// Create a new recipe
 	// (POST /api/recipes)
-	PostApiRecipes(w http.ResponseWriter, r *http.Request)
+	PostApiRecipes(w http.ResponseWriter, r *http.Request, params PostApiRecipesParams)
 	// Get all public recipes
 	// (GET /api/recipes/public)
 	GetApiRecipesPublic(w http.ResponseWriter, r *http.Request)
 	// Delete a recipe
 	// (DELETE /api/recipes/{recipeID})
-	DeleteApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64)
+	DeleteApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64, params DeleteApiRecipesRecipeIDParams)
 	// Get a personal recipe and the owner information
 	// (GET /api/recipes/{recipeID})
 	GetApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64)
 	// Update a recipe
 	// (PATCH /api/recipes/{recipeID})
-	PatchApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64)
+	PatchApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64, params PatchApiRecipesRecipeIDParams)
 	// Delete a cover image from a recipe.
 	// (DELETE /api/recipes/{recipeID}/image)
-	DeleteApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64)
+	DeleteApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, params DeleteApiRecipesRecipeIDImageParams)
 	// Create an cover image for a recipe.
 	// (POST /api/recipes/{recipeID}/image)
-	PostApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64)
+	PostApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, params PostApiRecipesRecipeIDImageParams)
 	// Create an ingredient for a recipe.
 	// (POST /api/recipes/{recipeID}/ingredients)
-	PostApiRecipesRecipeIDIngredients(w http.ResponseWriter, r *http.Request, recipeID int64)
+	PostApiRecipesRecipeIDIngredients(w http.ResponseWriter, r *http.Request, recipeID int64, params PostApiRecipesRecipeIDIngredientsParams)
 	// Delete an ingredient from a recipe.
 	// (DELETE /api/recipes/{recipeID}/ingredients/{ingredientID})
-	DeleteApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64)
+	DeleteApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params DeleteApiRecipesRecipeIDIngredientsIngredientIDParams)
 	// Update an ingredient for a recipe.
 	// (PATCH /api/recipes/{recipeID}/ingredients/{ingredientID})
-	PatchApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64)
+	PatchApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params PatchApiRecipesRecipeIDIngredientsIngredientIDParams)
 	// Delete an image from a recipe ingredient
 	// (DELETE /api/recipes/{recipeID}/ingredients/{ingredientID}/image)
-	DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64)
+	DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams)
 	// Upload an image for a recipe ingredient
 	// (POST /api/recipes/{recipeID}/ingredients/{ingredientID}/image)
-	PostApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64)
+	PostApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params PostApiRecipesRecipeIDIngredientsIngredientIDImageParams)
 	// Get a public recipe and its owner's information
 	// (GET /api/recipes/{recipeID}/public)
 	GetApiRecipesRecipeIDPublic(w http.ResponseWriter, r *http.Request, recipeID int64)
 	// Create a step for a recipe.
 	// (POST /api/recipes/{recipeID}/steps)
-	PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64)
+	PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64, params PostApiRecipesRecipeIDStepsParams)
 	// Delete a step from a recipe.
 	// (DELETE /api/recipes/{recipeID}/steps/{stepID})
-	DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64)
+	DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params DeleteApiRecipesRecipeIDStepsStepIDParams)
 	// Update a step for a recipe.
 	// (PATCH /api/recipes/{recipeID}/steps/{stepID})
-	PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64)
+	PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params PatchApiRecipesRecipeIDStepsStepIDParams)
 	// Delete an image from a recipe step
 	// (DELETE /api/recipes/{recipeID}/steps/{stepID}/image)
-	DeleteApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64)
+	DeleteApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params DeleteApiRecipesRecipeIDStepsStepIDImageParams)
 	// Upload an image for a recipe step
 	// (POST /api/recipes/{recipeID}/steps/{stepID}/image)
-	PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64)
+	PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params PostApiRecipesRecipeIDStepsStepIDImageParams)
 	// Sign up
 	// (POST /api/signup)
 	PostApiSignup(w http.ResponseWriter, r *http.Request)
@@ -5096,10 +5516,10 @@ type ServerInterface interface {
 	GetApiUser(w http.ResponseWriter, r *http.Request)
 	// Invite a user
 	// (POST /api/user/invite)
-	PostApiUserInvite(w http.ResponseWriter, r *http.Request)
+	PostApiUserInvite(w http.ResponseWriter, r *http.Request, params PostApiUserInviteParams)
 	// Update password
 	// (PATCH /api/user/password)
-	PatchApiUserPassword(w http.ResponseWriter, r *http.Request)
+	PatchApiUserPassword(w http.ResponseWriter, r *http.Request, params PatchApiUserPasswordParams)
 	// Get users
 	// (GET /api/users)
 	GetApiUsers(w http.ResponseWriter, r *http.Request, params GetApiUsersParams)
@@ -5111,13 +5531,13 @@ type Unimplemented struct{}
 
 // Create an admin.
 // (POST /api/admin)
-func (_ Unimplemented) PostApiAdmin(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) PostApiAdmin(w http.ResponseWriter, r *http.Request, params PostApiAdminParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Create a user.
 // (POST /api/admin/user)
-func (_ Unimplemented) PostApiAdminUser(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) PostApiAdminUser(w http.ResponseWriter, r *http.Request, params PostApiAdminUserParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5165,7 +5585,7 @@ func (_ Unimplemented) GetApiRecipes(w http.ResponseWriter, r *http.Request) {
 
 // Create a new recipe
 // (POST /api/recipes)
-func (_ Unimplemented) PostApiRecipes(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) PostApiRecipes(w http.ResponseWriter, r *http.Request, params PostApiRecipesParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5177,7 +5597,7 @@ func (_ Unimplemented) GetApiRecipesPublic(w http.ResponseWriter, r *http.Reques
 
 // Delete a recipe
 // (DELETE /api/recipes/{recipeID})
-func (_ Unimplemented) DeleteApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (_ Unimplemented) DeleteApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64, params DeleteApiRecipesRecipeIDParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5189,49 +5609,49 @@ func (_ Unimplemented) GetApiRecipesRecipeID(w http.ResponseWriter, r *http.Requ
 
 // Update a recipe
 // (PATCH /api/recipes/{recipeID})
-func (_ Unimplemented) PatchApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (_ Unimplemented) PatchApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64, params PatchApiRecipesRecipeIDParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Delete a cover image from a recipe.
 // (DELETE /api/recipes/{recipeID}/image)
-func (_ Unimplemented) DeleteApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (_ Unimplemented) DeleteApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, params DeleteApiRecipesRecipeIDImageParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Create an cover image for a recipe.
 // (POST /api/recipes/{recipeID}/image)
-func (_ Unimplemented) PostApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (_ Unimplemented) PostApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, params PostApiRecipesRecipeIDImageParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Create an ingredient for a recipe.
 // (POST /api/recipes/{recipeID}/ingredients)
-func (_ Unimplemented) PostApiRecipesRecipeIDIngredients(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (_ Unimplemented) PostApiRecipesRecipeIDIngredients(w http.ResponseWriter, r *http.Request, recipeID int64, params PostApiRecipesRecipeIDIngredientsParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Delete an ingredient from a recipe.
 // (DELETE /api/recipes/{recipeID}/ingredients/{ingredientID})
-func (_ Unimplemented) DeleteApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
+func (_ Unimplemented) DeleteApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params DeleteApiRecipesRecipeIDIngredientsIngredientIDParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Update an ingredient for a recipe.
 // (PATCH /api/recipes/{recipeID}/ingredients/{ingredientID})
-func (_ Unimplemented) PatchApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
+func (_ Unimplemented) PatchApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params PatchApiRecipesRecipeIDIngredientsIngredientIDParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Delete an image from a recipe ingredient
 // (DELETE /api/recipes/{recipeID}/ingredients/{ingredientID}/image)
-func (_ Unimplemented) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
+func (_ Unimplemented) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Upload an image for a recipe ingredient
 // (POST /api/recipes/{recipeID}/ingredients/{ingredientID}/image)
-func (_ Unimplemented) PostApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
+func (_ Unimplemented) PostApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params PostApiRecipesRecipeIDIngredientsIngredientIDImageParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5243,31 +5663,31 @@ func (_ Unimplemented) GetApiRecipesRecipeIDPublic(w http.ResponseWriter, r *htt
 
 // Create a step for a recipe.
 // (POST /api/recipes/{recipeID}/steps)
-func (_ Unimplemented) PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (_ Unimplemented) PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64, params PostApiRecipesRecipeIDStepsParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Delete a step from a recipe.
 // (DELETE /api/recipes/{recipeID}/steps/{stepID})
-func (_ Unimplemented) DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+func (_ Unimplemented) DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params DeleteApiRecipesRecipeIDStepsStepIDParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Update a step for a recipe.
 // (PATCH /api/recipes/{recipeID}/steps/{stepID})
-func (_ Unimplemented) PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+func (_ Unimplemented) PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params PatchApiRecipesRecipeIDStepsStepIDParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Delete an image from a recipe step
 // (DELETE /api/recipes/{recipeID}/steps/{stepID}/image)
-func (_ Unimplemented) DeleteApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+func (_ Unimplemented) DeleteApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params DeleteApiRecipesRecipeIDStepsStepIDImageParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Upload an image for a recipe step
 // (POST /api/recipes/{recipeID}/steps/{stepID}/image)
-func (_ Unimplemented) PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+func (_ Unimplemented) PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params PostApiRecipesRecipeIDStepsStepIDImageParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5285,13 +5705,13 @@ func (_ Unimplemented) GetApiUser(w http.ResponseWriter, r *http.Request) {
 
 // Invite a user
 // (POST /api/user/invite)
-func (_ Unimplemented) PostApiUserInvite(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) PostApiUserInvite(w http.ResponseWriter, r *http.Request, params PostApiUserInviteParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Update password
 // (PATCH /api/user/password)
-func (_ Unimplemented) PatchApiUserPassword(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) PatchApiUserPassword(w http.ResponseWriter, r *http.Request, params PatchApiUserPasswordParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5313,14 +5733,40 @@ type MiddlewareFunc func(http.Handler) http.Handler
 // PostApiAdmin operation middleware
 func (siw *ServerInterfaceWrapper) PostApiAdmin(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+
 	ctx := r.Context()
 
 	ctx = context.WithValue(ctx, AccessTokenAdminBearerScopes, []string{})
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostApiAdminParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiAdmin(w, r)
+		siw.Handler.PostApiAdmin(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5333,14 +5779,40 @@ func (siw *ServerInterfaceWrapper) PostApiAdmin(w http.ResponseWriter, r *http.R
 // PostApiAdminUser operation middleware
 func (siw *ServerInterfaceWrapper) PostApiAdminUser(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+
 	ctx := r.Context()
 
 	ctx = context.WithValue(ctx, AccessTokenAdminBearerScopes, []string{})
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostApiAdminUserParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiAdminUser(w, r)
+		siw.Handler.PostApiAdminUser(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5357,6 +5829,27 @@ func (siw *ServerInterfaceWrapper) PostApiAuthRefresh(w http.ResponseWriter, r *
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PostApiAuthRefreshParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
 
 	{
 		var cookie *http.Cookie
@@ -5511,14 +6004,40 @@ func (siw *ServerInterfaceWrapper) GetApiRecipes(w http.ResponseWriter, r *http.
 // PostApiRecipes operation middleware
 func (siw *ServerInterfaceWrapper) PostApiRecipes(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+
 	ctx := r.Context()
 
 	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostApiRecipesParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiRecipes(w, r)
+		siw.Handler.PostApiRecipes(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5562,8 +6081,32 @@ func (siw *ServerInterfaceWrapper) DeleteApiRecipesRecipeID(w http.ResponseWrite
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteApiRecipesRecipeIDParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteApiRecipesRecipeID(w, r, recipeID)
+		siw.Handler.DeleteApiRecipesRecipeID(w, r, recipeID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5624,8 +6167,32 @@ func (siw *ServerInterfaceWrapper) PatchApiRecipesRecipeID(w http.ResponseWriter
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PatchApiRecipesRecipeIDParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PatchApiRecipesRecipeID(w, r, recipeID)
+		siw.Handler.PatchApiRecipesRecipeID(w, r, recipeID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5655,8 +6222,32 @@ func (siw *ServerInterfaceWrapper) DeleteApiRecipesRecipeIDImage(w http.Response
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteApiRecipesRecipeIDImageParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteApiRecipesRecipeIDImage(w, r, recipeID)
+		siw.Handler.DeleteApiRecipesRecipeIDImage(w, r, recipeID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5686,8 +6277,32 @@ func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDImage(w http.ResponseWr
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostApiRecipesRecipeIDImageParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiRecipesRecipeIDImage(w, r, recipeID)
+		siw.Handler.PostApiRecipesRecipeIDImage(w, r, recipeID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5717,8 +6332,32 @@ func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDIngredients(w http.Resp
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostApiRecipesRecipeIDIngredientsParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiRecipesRecipeIDIngredients(w, r, recipeID)
+		siw.Handler.PostApiRecipesRecipeIDIngredients(w, r, recipeID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5757,8 +6396,32 @@ func (siw *ServerInterfaceWrapper) DeleteApiRecipesRecipeIDIngredientsIngredient
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteApiRecipesRecipeIDIngredientsIngredientIDParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteApiRecipesRecipeIDIngredientsIngredientID(w, r, recipeID, ingredientID)
+		siw.Handler.DeleteApiRecipesRecipeIDIngredientsIngredientID(w, r, recipeID, ingredientID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5797,8 +6460,32 @@ func (siw *ServerInterfaceWrapper) PatchApiRecipesRecipeIDIngredientsIngredientI
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PatchApiRecipesRecipeIDIngredientsIngredientIDParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PatchApiRecipesRecipeIDIngredientsIngredientID(w, r, recipeID, ingredientID)
+		siw.Handler.PatchApiRecipesRecipeIDIngredientsIngredientID(w, r, recipeID, ingredientID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5837,8 +6524,32 @@ func (siw *ServerInterfaceWrapper) DeleteApiRecipesRecipeIDIngredientsIngredient
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(w, r, recipeID, ingredientID)
+		siw.Handler.DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(w, r, recipeID, ingredientID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5877,8 +6588,32 @@ func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDIngredientsIngredientID
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostApiRecipesRecipeIDIngredientsIngredientIDImageParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiRecipesRecipeIDIngredientsIngredientIDImage(w, r, recipeID, ingredientID)
+		siw.Handler.PostApiRecipesRecipeIDIngredientsIngredientIDImage(w, r, recipeID, ingredientID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5933,8 +6668,32 @@ func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDSteps(w http.ResponseWr
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostApiRecipesRecipeIDStepsParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiRecipesRecipeIDSteps(w, r, recipeID)
+		siw.Handler.PostApiRecipesRecipeIDSteps(w, r, recipeID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5973,8 +6732,32 @@ func (siw *ServerInterfaceWrapper) DeleteApiRecipesRecipeIDStepsStepID(w http.Re
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteApiRecipesRecipeIDStepsStepIDParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteApiRecipesRecipeIDStepsStepID(w, r, recipeID, stepID)
+		siw.Handler.DeleteApiRecipesRecipeIDStepsStepID(w, r, recipeID, stepID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6013,8 +6796,32 @@ func (siw *ServerInterfaceWrapper) PatchApiRecipesRecipeIDStepsStepID(w http.Res
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PatchApiRecipesRecipeIDStepsStepIDParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PatchApiRecipesRecipeIDStepsStepID(w, r, recipeID, stepID)
+		siw.Handler.PatchApiRecipesRecipeIDStepsStepID(w, r, recipeID, stepID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6053,8 +6860,32 @@ func (siw *ServerInterfaceWrapper) DeleteApiRecipesRecipeIDStepsStepIDImage(w ht
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteApiRecipesRecipeIDStepsStepIDImageParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteApiRecipesRecipeIDStepsStepIDImage(w, r, recipeID, stepID)
+		siw.Handler.DeleteApiRecipesRecipeIDStepsStepIDImage(w, r, recipeID, stepID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6093,8 +6924,32 @@ func (siw *ServerInterfaceWrapper) PostApiRecipesRecipeIDStepsStepIDImage(w http
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostApiRecipesRecipeIDStepsStepIDImageParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiRecipesRecipeIDStepsStepIDImage(w, r, recipeID, stepID)
+		siw.Handler.PostApiRecipesRecipeIDStepsStepIDImage(w, r, recipeID, stepID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6141,14 +6996,40 @@ func (siw *ServerInterfaceWrapper) GetApiUser(w http.ResponseWriter, r *http.Req
 // PostApiUserInvite operation middleware
 func (siw *ServerInterfaceWrapper) PostApiUserInvite(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+
 	ctx := r.Context()
 
 	ctx = context.WithValue(ctx, AccessTokenAdminBearerScopes, []string{})
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostApiUserInviteParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiUserInvite(w, r)
+		siw.Handler.PostApiUserInvite(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6161,14 +7042,40 @@ func (siw *ServerInterfaceWrapper) PostApiUserInvite(w http.ResponseWriter, r *h
 // PatchApiUserPassword operation middleware
 func (siw *ServerInterfaceWrapper) PatchApiUserPassword(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+
 	ctx := r.Context()
 
 	ctx = context.WithValue(ctx, AccessTokenUserBearerScopes, []string{})
 
 	r = r.WithContext(ctx)
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PatchApiUserPasswordParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PatchApiUserPassword(w, r)
+		siw.Handler.PatchApiUserPassword(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6433,7 +7340,8 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 }
 
 type PostApiAdminRequestObject struct {
-	Body *PostApiAdminJSONRequestBody
+	Params PostApiAdminParams
+	Body   *PostApiAdminJSONRequestBody
 }
 
 type PostApiAdminResponseObject interface {
@@ -6477,7 +7385,8 @@ func (response PostApiAdmin500JSONResponse) VisitPostApiAdminResponse(w http.Res
 }
 
 type PostApiAdminUserRequestObject struct {
-	Body *PostApiAdminUserJSONRequestBody
+	Params PostApiAdminUserParams
+	Body   *PostApiAdminUserJSONRequestBody
 }
 
 type PostApiAdminUserResponseObject interface {
@@ -6777,6 +7686,7 @@ func (response GetApiRecipes500JSONResponse) VisitGetApiRecipesResponse(w http.R
 }
 
 type PostApiRecipesRequestObject struct {
+	Params PostApiRecipesParams
 }
 
 type PostApiRecipesResponseObject interface {
@@ -6855,6 +7765,7 @@ func (response GetApiRecipesPublic500JSONResponse) VisitGetApiRecipesPublicRespo
 
 type DeleteApiRecipesRecipeIDRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
+	Params   DeleteApiRecipesRecipeIDParams
 }
 
 type DeleteApiRecipesRecipeIDResponseObject interface {
@@ -6951,6 +7862,7 @@ func (response GetApiRecipesRecipeID500JSONResponse) VisitGetApiRecipesRecipeIDR
 
 type PatchApiRecipesRecipeIDRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
+	Params   PatchApiRecipesRecipeIDParams
 	Body     *PatchApiRecipesRecipeIDJSONRequestBody
 }
 
@@ -6996,6 +7908,7 @@ func (response PatchApiRecipesRecipeID500JSONResponse) VisitPatchApiRecipesRecip
 
 type DeleteApiRecipesRecipeIDImageRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
+	Params   DeleteApiRecipesRecipeIDImageParams
 }
 
 type DeleteApiRecipesRecipeIDImageResponseObject interface {
@@ -7030,6 +7943,7 @@ func (response DeleteApiRecipesRecipeIDImage500JSONResponse) VisitDeleteApiRecip
 
 type PostApiRecipesRecipeIDImageRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
+	Params   PostApiRecipesRecipeIDImageParams
 	Body     *multipart.Reader
 }
 
@@ -7075,6 +7989,7 @@ func (response PostApiRecipesRecipeIDImage500JSONResponse) VisitPostApiRecipesRe
 
 type PostApiRecipesRecipeIDIngredientsRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
+	Params   PostApiRecipesRecipeIDIngredientsParams
 }
 
 type PostApiRecipesRecipeIDIngredientsResponseObject interface {
@@ -7111,6 +8026,7 @@ func (response PostApiRecipesRecipeIDIngredients500JSONResponse) VisitPostApiRec
 type DeleteApiRecipesRecipeIDIngredientsIngredientIDRequestObject struct {
 	RecipeID     int64 `json:"recipeID"`
 	IngredientID int64 `json:"ingredientID"`
+	Params       DeleteApiRecipesRecipeIDIngredientsIngredientIDParams
 }
 
 type DeleteApiRecipesRecipeIDIngredientsIngredientIDResponseObject interface {
@@ -7155,6 +8071,7 @@ func (response DeleteApiRecipesRecipeIDIngredientsIngredientID500JSONResponse) V
 type PatchApiRecipesRecipeIDIngredientsIngredientIDRequestObject struct {
 	RecipeID     int64 `json:"recipeID"`
 	IngredientID int64 `json:"ingredientID"`
+	Params       PatchApiRecipesRecipeIDIngredientsIngredientIDParams
 	Body         *PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody
 }
 
@@ -7201,6 +8118,7 @@ func (response PatchApiRecipesRecipeIDIngredientsIngredientID500JSONResponse) Vi
 type DeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequestObject struct {
 	RecipeID     int64 `json:"recipeID"`
 	IngredientID int64 `json:"ingredientID"`
+	Params       DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams
 }
 
 type DeleteApiRecipesRecipeIDIngredientsIngredientIDImageResponseObject interface {
@@ -7245,6 +8163,7 @@ func (response DeleteApiRecipesRecipeIDIngredientsIngredientIDImage500JSONRespon
 type PostApiRecipesRecipeIDIngredientsIngredientIDImageRequestObject struct {
 	RecipeID     int64 `json:"recipeID"`
 	IngredientID int64 `json:"ingredientID"`
+	Params       PostApiRecipesRecipeIDIngredientsIngredientIDImageParams
 	Body         *multipart.Reader
 }
 
@@ -7334,6 +8253,7 @@ func (response GetApiRecipesRecipeIDPublic500JSONResponse) VisitGetApiRecipesRec
 
 type PostApiRecipesRecipeIDStepsRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
+	Params   PostApiRecipesRecipeIDStepsParams
 }
 
 type PostApiRecipesRecipeIDStepsResponseObject interface {
@@ -7379,6 +8299,7 @@ func (response PostApiRecipesRecipeIDSteps500JSONResponse) VisitPostApiRecipesRe
 type DeleteApiRecipesRecipeIDStepsStepIDRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
 	StepID   int64 `json:"stepID"`
+	Params   DeleteApiRecipesRecipeIDStepsStepIDParams
 }
 
 type DeleteApiRecipesRecipeIDStepsStepIDResponseObject interface {
@@ -7423,6 +8344,7 @@ func (response DeleteApiRecipesRecipeIDStepsStepID500JSONResponse) VisitDeleteAp
 type PatchApiRecipesRecipeIDStepsStepIDRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
 	StepID   int64 `json:"stepID"`
+	Params   PatchApiRecipesRecipeIDStepsStepIDParams
 	Body     *PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody
 }
 
@@ -7469,6 +8391,7 @@ func (response PatchApiRecipesRecipeIDStepsStepID500JSONResponse) VisitPatchApiR
 type DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
 	StepID   int64 `json:"stepID"`
+	Params   DeleteApiRecipesRecipeIDStepsStepIDImageParams
 }
 
 type DeleteApiRecipesRecipeIDStepsStepIDImageResponseObject interface {
@@ -7513,6 +8436,7 @@ func (response DeleteApiRecipesRecipeIDStepsStepIDImage500JSONResponse) VisitDel
 type PostApiRecipesRecipeIDStepsStepIDImageRequestObject struct {
 	RecipeID int64 `json:"recipeID"`
 	StepID   int64 `json:"stepID"`
+	Params   PostApiRecipesRecipeIDStepsStepIDImageParams
 	Body     *multipart.Reader
 }
 
@@ -7679,7 +8603,8 @@ func (response GetApiUser500JSONResponse) VisitGetApiUserResponse(w http.Respons
 }
 
 type PostApiUserInviteRequestObject struct {
-	Body *PostApiUserInviteJSONRequestBody
+	Params PostApiUserInviteParams
+	Body   *PostApiUserInviteJSONRequestBody
 }
 
 type PostApiUserInviteResponseObject interface {
@@ -7722,7 +8647,8 @@ func (response PostApiUserInvite500JSONResponse) VisitPostApiUserInviteResponse(
 }
 
 type PatchApiUserPasswordRequestObject struct {
-	Body *PatchApiUserPasswordJSONRequestBody
+	Params PatchApiUserPasswordParams
+	Body   *PatchApiUserPasswordJSONRequestBody
 }
 
 type PatchApiUserPasswordResponseObject interface {
@@ -7947,8 +8873,10 @@ type strictHandler struct {
 }
 
 // PostApiAdmin operation middleware
-func (sh *strictHandler) PostApiAdmin(w http.ResponseWriter, r *http.Request) {
+func (sh *strictHandler) PostApiAdmin(w http.ResponseWriter, r *http.Request, params PostApiAdminParams) {
 	var request PostApiAdminRequestObject
+
+	request.Params = params
 
 	var body PostApiAdminJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -7978,8 +8906,10 @@ func (sh *strictHandler) PostApiAdmin(w http.ResponseWriter, r *http.Request) {
 }
 
 // PostApiAdminUser operation middleware
-func (sh *strictHandler) PostApiAdminUser(w http.ResponseWriter, r *http.Request) {
+func (sh *strictHandler) PostApiAdminUser(w http.ResponseWriter, r *http.Request, params PostApiAdminUserParams) {
 	var request PostApiAdminUserRequestObject
+
+	request.Params = params
 
 	var body PostApiAdminUserJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -8195,8 +9125,10 @@ func (sh *strictHandler) GetApiRecipes(w http.ResponseWriter, r *http.Request) {
 }
 
 // PostApiRecipes operation middleware
-func (sh *strictHandler) PostApiRecipes(w http.ResponseWriter, r *http.Request) {
+func (sh *strictHandler) PostApiRecipes(w http.ResponseWriter, r *http.Request, params PostApiRecipesParams) {
 	var request PostApiRecipesRequestObject
+
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.PostApiRecipes(ctx, request.(PostApiRecipesRequestObject))
@@ -8243,10 +9175,11 @@ func (sh *strictHandler) GetApiRecipesPublic(w http.ResponseWriter, r *http.Requ
 }
 
 // DeleteApiRecipesRecipeID operation middleware
-func (sh *strictHandler) DeleteApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (sh *strictHandler) DeleteApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64, params DeleteApiRecipesRecipeIDParams) {
 	var request DeleteApiRecipesRecipeIDRequestObject
 
 	request.RecipeID = recipeID
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteApiRecipesRecipeID(ctx, request.(DeleteApiRecipesRecipeIDRequestObject))
@@ -8295,10 +9228,11 @@ func (sh *strictHandler) GetApiRecipesRecipeID(w http.ResponseWriter, r *http.Re
 }
 
 // PatchApiRecipesRecipeID operation middleware
-func (sh *strictHandler) PatchApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (sh *strictHandler) PatchApiRecipesRecipeID(w http.ResponseWriter, r *http.Request, recipeID int64, params PatchApiRecipesRecipeIDParams) {
 	var request PatchApiRecipesRecipeIDRequestObject
 
 	request.RecipeID = recipeID
+	request.Params = params
 
 	var body PatchApiRecipesRecipeIDJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -8328,10 +9262,11 @@ func (sh *strictHandler) PatchApiRecipesRecipeID(w http.ResponseWriter, r *http.
 }
 
 // DeleteApiRecipesRecipeIDImage operation middleware
-func (sh *strictHandler) DeleteApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (sh *strictHandler) DeleteApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, params DeleteApiRecipesRecipeIDImageParams) {
 	var request DeleteApiRecipesRecipeIDImageRequestObject
 
 	request.RecipeID = recipeID
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteApiRecipesRecipeIDImage(ctx, request.(DeleteApiRecipesRecipeIDImageRequestObject))
@@ -8354,10 +9289,11 @@ func (sh *strictHandler) DeleteApiRecipesRecipeIDImage(w http.ResponseWriter, r 
 }
 
 // PostApiRecipesRecipeIDImage operation middleware
-func (sh *strictHandler) PostApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (sh *strictHandler) PostApiRecipesRecipeIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, params PostApiRecipesRecipeIDImageParams) {
 	var request PostApiRecipesRecipeIDImageRequestObject
 
 	request.RecipeID = recipeID
+	request.Params = params
 
 	if reader, err := r.MultipartReader(); err != nil {
 		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode multipart body: %w", err))
@@ -8387,10 +9323,11 @@ func (sh *strictHandler) PostApiRecipesRecipeIDImage(w http.ResponseWriter, r *h
 }
 
 // PostApiRecipesRecipeIDIngredients operation middleware
-func (sh *strictHandler) PostApiRecipesRecipeIDIngredients(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (sh *strictHandler) PostApiRecipesRecipeIDIngredients(w http.ResponseWriter, r *http.Request, recipeID int64, params PostApiRecipesRecipeIDIngredientsParams) {
 	var request PostApiRecipesRecipeIDIngredientsRequestObject
 
 	request.RecipeID = recipeID
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.PostApiRecipesRecipeIDIngredients(ctx, request.(PostApiRecipesRecipeIDIngredientsRequestObject))
@@ -8413,11 +9350,12 @@ func (sh *strictHandler) PostApiRecipesRecipeIDIngredients(w http.ResponseWriter
 }
 
 // DeleteApiRecipesRecipeIDIngredientsIngredientID operation middleware
-func (sh *strictHandler) DeleteApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
+func (sh *strictHandler) DeleteApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params DeleteApiRecipesRecipeIDIngredientsIngredientIDParams) {
 	var request DeleteApiRecipesRecipeIDIngredientsIngredientIDRequestObject
 
 	request.RecipeID = recipeID
 	request.IngredientID = ingredientID
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx, request.(DeleteApiRecipesRecipeIDIngredientsIngredientIDRequestObject))
@@ -8440,11 +9378,12 @@ func (sh *strictHandler) DeleteApiRecipesRecipeIDIngredientsIngredientID(w http.
 }
 
 // PatchApiRecipesRecipeIDIngredientsIngredientID operation middleware
-func (sh *strictHandler) PatchApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
+func (sh *strictHandler) PatchApiRecipesRecipeIDIngredientsIngredientID(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params PatchApiRecipesRecipeIDIngredientsIngredientIDParams) {
 	var request PatchApiRecipesRecipeIDIngredientsIngredientIDRequestObject
 
 	request.RecipeID = recipeID
 	request.IngredientID = ingredientID
+	request.Params = params
 
 	var body PatchApiRecipesRecipeIDIngredientsIngredientIDJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -8474,11 +9413,12 @@ func (sh *strictHandler) PatchApiRecipesRecipeIDIngredientsIngredientID(w http.R
 }
 
 // DeleteApiRecipesRecipeIDIngredientsIngredientIDImage operation middleware
-func (sh *strictHandler) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
+func (sh *strictHandler) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params DeleteApiRecipesRecipeIDIngredientsIngredientIDImageParams) {
 	var request DeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequestObject
 
 	request.RecipeID = recipeID
 	request.IngredientID = ingredientID
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx, request.(DeleteApiRecipesRecipeIDIngredientsIngredientIDImageRequestObject))
@@ -8501,11 +9441,12 @@ func (sh *strictHandler) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(w 
 }
 
 // PostApiRecipesRecipeIDIngredientsIngredientIDImage operation middleware
-func (sh *strictHandler) PostApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64) {
+func (sh *strictHandler) PostApiRecipesRecipeIDIngredientsIngredientIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, ingredientID int64, params PostApiRecipesRecipeIDIngredientsIngredientIDImageParams) {
 	var request PostApiRecipesRecipeIDIngredientsIngredientIDImageRequestObject
 
 	request.RecipeID = recipeID
 	request.IngredientID = ingredientID
+	request.Params = params
 
 	if reader, err := r.MultipartReader(); err != nil {
 		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode multipart body: %w", err))
@@ -8561,10 +9502,11 @@ func (sh *strictHandler) GetApiRecipesRecipeIDPublic(w http.ResponseWriter, r *h
 }
 
 // PostApiRecipesRecipeIDSteps operation middleware
-func (sh *strictHandler) PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64) {
+func (sh *strictHandler) PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *http.Request, recipeID int64, params PostApiRecipesRecipeIDStepsParams) {
 	var request PostApiRecipesRecipeIDStepsRequestObject
 
 	request.RecipeID = recipeID
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.PostApiRecipesRecipeIDSteps(ctx, request.(PostApiRecipesRecipeIDStepsRequestObject))
@@ -8587,11 +9529,12 @@ func (sh *strictHandler) PostApiRecipesRecipeIDSteps(w http.ResponseWriter, r *h
 }
 
 // DeleteApiRecipesRecipeIDStepsStepID operation middleware
-func (sh *strictHandler) DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+func (sh *strictHandler) DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params DeleteApiRecipesRecipeIDStepsStepIDParams) {
 	var request DeleteApiRecipesRecipeIDStepsStepIDRequestObject
 
 	request.RecipeID = recipeID
 	request.StepID = stepID
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteApiRecipesRecipeIDStepsStepID(ctx, request.(DeleteApiRecipesRecipeIDStepsStepIDRequestObject))
@@ -8614,11 +9557,12 @@ func (sh *strictHandler) DeleteApiRecipesRecipeIDStepsStepID(w http.ResponseWrit
 }
 
 // PatchApiRecipesRecipeIDStepsStepID operation middleware
-func (sh *strictHandler) PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+func (sh *strictHandler) PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params PatchApiRecipesRecipeIDStepsStepIDParams) {
 	var request PatchApiRecipesRecipeIDStepsStepIDRequestObject
 
 	request.RecipeID = recipeID
 	request.StepID = stepID
+	request.Params = params
 
 	var body PatchApiRecipesRecipeIDStepsStepIDJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -8648,11 +9592,12 @@ func (sh *strictHandler) PatchApiRecipesRecipeIDStepsStepID(w http.ResponseWrite
 }
 
 // DeleteApiRecipesRecipeIDStepsStepIDImage operation middleware
-func (sh *strictHandler) DeleteApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+func (sh *strictHandler) DeleteApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params DeleteApiRecipesRecipeIDStepsStepIDImageParams) {
 	var request DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject
 
 	request.RecipeID = recipeID
 	request.StepID = stepID
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteApiRecipesRecipeIDStepsStepIDImage(ctx, request.(DeleteApiRecipesRecipeIDStepsStepIDImageRequestObject))
@@ -8675,11 +9620,12 @@ func (sh *strictHandler) DeleteApiRecipesRecipeIDStepsStepIDImage(w http.Respons
 }
 
 // PostApiRecipesRecipeIDStepsStepIDImage operation middleware
-func (sh *strictHandler) PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64) {
+func (sh *strictHandler) PostApiRecipesRecipeIDStepsStepIDImage(w http.ResponseWriter, r *http.Request, recipeID int64, stepID int64, params PostApiRecipesRecipeIDStepsStepIDImageParams) {
 	var request PostApiRecipesRecipeIDStepsStepIDImageRequestObject
 
 	request.RecipeID = recipeID
 	request.StepID = stepID
+	request.Params = params
 
 	if reader, err := r.MultipartReader(); err != nil {
 		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode multipart body: %w", err))
@@ -8764,8 +9710,10 @@ func (sh *strictHandler) GetApiUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // PostApiUserInvite operation middleware
-func (sh *strictHandler) PostApiUserInvite(w http.ResponseWriter, r *http.Request) {
+func (sh *strictHandler) PostApiUserInvite(w http.ResponseWriter, r *http.Request, params PostApiUserInviteParams) {
 	var request PostApiUserInviteRequestObject
+
+	request.Params = params
 
 	var body PostApiUserInviteJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -8795,8 +9743,10 @@ func (sh *strictHandler) PostApiUserInvite(w http.ResponseWriter, r *http.Reques
 }
 
 // PatchApiUserPassword operation middleware
-func (sh *strictHandler) PatchApiUserPassword(w http.ResponseWriter, r *http.Request) {
+func (sh *strictHandler) PatchApiUserPassword(w http.ResponseWriter, r *http.Request, params PatchApiUserPasswordParams) {
 	var request PatchApiUserPasswordRequestObject
+
+	request.Params = params
 
 	var body PatchApiUserPasswordJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
