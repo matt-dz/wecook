@@ -112,19 +112,7 @@ Login with the admin credentials you set in `.env.backend` (default: `admin@exam
 
 ## Kubernetes Deployment
 
-Kubernetes manifests that mirror the Docker Compose stack are available in [`k8s/`](k8s/). Review and update the bundled secrets before applying them:
-
-```bash
-kubectl apply -f k8s/storage.yaml
-kubectl apply -f k8s/database.yaml
-kubectl apply -f k8s/backend.yaml
-kubectl apply -f k8s/frontend.yaml
-kubectl apply -f k8s/swagger-ui.yaml
-kubectl apply -f k8s/fileserver.yaml
-kubectl apply -f k8s/ingress.yaml
-```
-
-See [`k8s/README.md`](k8s/README.md) for configuration notes.
+Kubernetes manifests that mirror the Docker Compose stack are available in [`k8s/`](k8s/). See [`k8s/README.md`](k8s/README.md) for configuration notes.
 
 ## License
 

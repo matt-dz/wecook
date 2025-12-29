@@ -15,7 +15,8 @@ This directory provides Kubernetes manifests mirroring the existing Docker Compo
 1. Update the secrets in `k8s/backend.yaml` and `k8s/database.yaml` with production-grade values:
    - `wecook-app-secret` for `APP_SECRET`, `ADMIN_PASSWORD`, and `SMTP_PASSWORD`.
    - `wecook-db-secret` for `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB`.
-2. Confirm the storage class supports the requested access modes. `wecook-files` is defined as `ReadWriteMany` so nginx and the backend can both read the uploaded files.
+   - **Note**: Generate secure passwords with openssl: `openssl rand --base64 32`.
+2. Update `HOST_ORIGIN` in `k8s/backend.yaml` to the origin the app will be served at (i.e. wecook.deguzman.cloud).
 3. Ensure an Ingress controller (for example, `ingress-nginx`) is installed in your cluster before applying `k8s/ingress.yaml`.
 
 ## Apply order
@@ -23,25 +24,25 @@ This directory provides Kubernetes manifests mirroring the existing Docker Compo
 1. Deploy the PVCs, fileserver, frontend, database. Wait for the database to be ready before continuing.
 
 ```bash
-kubectl apply -f k8s/storage.yaml
-kubectl apply -f k8s/fileserver.yaml
-kubectl apply -f k8s/frontend.yaml
-kubectl apply -f k8s/database.yaml
+kubectl apply -f https://raw.githubusercontent.com/matt-dz/wecook/refs/heads/main/k8s/storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/matt-dz/wecook/refs/heads/main/k8s/fileserver.yaml
+kubectl apply -f https://raw.githubusercontent.com/matt-dz/wecook/refs/heads/main/k8s/frontend.yaml
+kubectl apply -f https://raw.githubusercontent.com/matt-dz/wecook/refs/heads/main/k8s/database.yaml
 kubectl wait --for=condition=Ready pods -l app=wecook-database
 ```
 
 2. Deploy and wait for the backend.
 
 ```bash
-kubectl apply -f k8s/backend.yaml
+kubectl apply -f https://raw.githubusercontent.com/matt-dz/wecook/refs/heads/main/k8s/backend.yaml
 kubectl wait --for=condition=Ready pods -l app=wecook-backend
 ```
 
 3. Deploy swagger-ui and the ingress.
 
 ```bash
-kubectl apply -f k8s/swagger-ui.yaml
-kubectl apply -f k8s/ingress.yaml
+kubectl apply -f https://raw.githubusercontent.com/matt-dz/wecook/refs/heads/main/k8s/swagger-ui.yaml
+kubectl apply -f https://raw.githubusercontent.com/matt-dz/wecook/refs/heads/main/k8s/ingress.yaml
 ```
 
 The Ingress routes `/api` to the backend, `/files` to the dedicated nginx fileserver, `/docs` to Swagger UI, and `/` to the frontend.
