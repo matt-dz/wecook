@@ -28,6 +28,7 @@ var (
 
 const (
 	AuthorizationHeader = "Authorization"
+	CSRFTokenHeader     = "X-CSRF-Token"
 )
 
 const (

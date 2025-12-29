@@ -3,6 +3,7 @@ package middleware
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -162,12 +163,44 @@ func OAPIAuthFunc(ctx context.Context, input *openapi3filter.AuthenticationInput
 			env.Logger.ErrorContext(ctx, "failed to parse authorization header", slog.Any("error", err))
 			return &apiError.Error{
 				Code:    apiError.InvalidCredentials,
-				Status:  apiError.InvalidAccessToken.StatusCode(),
+				Status:  apiError.InvalidCredentials.StatusCode(),
 				Message: "access token invalid or missing",
 				ErrorID: requestID,
 			}
 		}
 	} else {
+		// User is using cookie auth - ensure CSRF tokes match and are present
+		env.Logger.DebugContext(ctx, "user using cookie auth - comparing csrf tokens")
+		csrfHeader := input.RequestValidationInput.Request.Header.Get(token.CSRFTokenHeader)
+		if csrfHeader == "" {
+			env.Logger.ErrorContext(ctx, "missing csrf header")
+			return &apiError.Error{
+				Code:    apiError.InvalidCredentials,
+				Status:  apiError.InvalidCredentials.StatusCode(),
+				Message: "csrf token invalid or missing",
+				ErrorID: requestID,
+			}
+		}
+		csrfCookie, err := input.RequestValidationInput.Request.Cookie(token.CSRFTokenName())
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "missing csrf cookie", slog.Any("error", err))
+			return &apiError.Error{
+				Code:    apiError.InvalidCredentials,
+				Status:  apiError.InvalidCredentials.StatusCode(),
+				Message: "csrf token invalid or missing",
+				ErrorID: requestID,
+			}
+		}
+		if subtle.ConstantTimeCompare([]byte(csrfCookie.Value), []byte(csrfHeader)) == 0 {
+			env.Logger.ErrorContext(ctx, "csrf token mismatch")
+			return &apiError.Error{
+				Code:    apiError.InvalidCredentials,
+				Status:  apiError.InvalidCredentials.StatusCode(),
+				Message: "csrf token invalid or missing",
+				ErrorID: requestID,
+			}
+		}
+		env.Logger.DebugContext(ctx, "csrf tokens match")
 		accessToken = cookie.Value
 	}
 
