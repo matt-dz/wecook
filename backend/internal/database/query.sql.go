@@ -220,11 +220,7 @@ type CreateRecipeIngredientParams struct {
 }
 
 func (q *Queries) CreateRecipeIngredient(ctx context.Context, arg CreateRecipeIngredientParams) (int64, error) {
-	row := q.db.QueryRow(ctx, createRecipeIngredient,
-		arg.RecipeID,
-		arg.Description,
-		arg.ImageUrl,
-	)
+	row := q.db.QueryRow(ctx, createRecipeIngredient, arg.RecipeID, arg.Description, arg.ImageUrl)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -700,7 +696,12 @@ func (q *Queries) GetRecipeIngredientImageURL(ctx context.Context, id int64) (pg
 
 const getRecipeIngredients = `-- name: GetRecipeIngredients :many
 SELECT
-  id, recipe_id, description, image_url, created_at, updated_at
+  id,
+  recipe_id,
+  description,
+  image_url,
+  created_at,
+  updated_at
 FROM
   recipe_ingredients
 WHERE
@@ -1297,7 +1298,12 @@ SET
 WHERE
   id = $1
 RETURNING
-  id, recipe_id, description, image_url, created_at, updated_at
+  id,
+  recipe_id,
+  description,
+  image_url,
+  created_at,
+  updated_at
 `
 
 type UpdateRecipeIngredientParams struct {

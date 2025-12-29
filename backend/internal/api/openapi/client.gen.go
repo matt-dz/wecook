@@ -57,9 +57,9 @@ type CreateAdminResponse struct {
 
 // CreateIngredientResponse defines model for CreateIngredientResponse.
 type CreateIngredientResponse struct {
-	Description *string `json:"description,omitempty"`
-	Id          int64   `json:"id"`
-	ImageUrl    *string `json:"image_url,omitempty"`
+	Description nullable.Nullable[string] `json:"description,omitempty"`
+	Id          int64                     `json:"id"`
+	ImageUrl    *string                   `json:"image_url,omitempty"`
 }
 
 // CreateRecipeResponse defines model for CreateRecipeResponse.
@@ -154,10 +154,10 @@ type RecipeAndOwner struct {
 
 // RecipeIngredient defines model for RecipeIngredient.
 type RecipeIngredient struct {
-	Description *string `json:"description,omitempty"`
-	Id          int64   `json:"id"`
-	ImageUrl    *string `json:"image_url,omitempty"`
-	RecipeId    int64   `json:"recipe_id"`
+	Description nullable.Nullable[string] `json:"description,omitempty"`
+	Id          int64                     `json:"id"`
+	ImageUrl    *string                   `json:"image_url,omitempty"`
+	RecipeId    int64                     `json:"recipe_id"`
 }
 
 // RecipeOwner defines model for RecipeOwner.
@@ -229,9 +229,9 @@ type UpdateIngredientImageForm struct {
 
 // UpdateIngredientResponse defines model for UpdateIngredientResponse.
 type UpdateIngredientResponse struct {
-	Description *string `json:"description,omitempty"`
-	Id          int64   `json:"id"`
-	ImageUrl    *string `json:"image_url,omitempty"`
+	Description nullable.Nullable[string] `json:"description,omitempty"`
+	Id          int64                     `json:"id"`
+	ImageUrl    *string                   `json:"image_url,omitempty"`
 }
 
 // UpdatePasswordRequest defines model for UpdatePasswordRequest.

@@ -104,12 +104,7 @@ RETURNING
 INSERT INTO recipe_ingredients (recipe_id)
   VALUES ($1)
 RETURNING
-  id,
-  recipe_id,
-  description,
-  image_url,
-  created_at,
-  updated_at;
+  id, recipe_id, description, image_url, created_at, updated_at;
 
 -- name: UpdateRecipeIngredientImage :exec
 UPDATE
