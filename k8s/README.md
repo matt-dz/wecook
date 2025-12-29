@@ -20,14 +20,36 @@ This directory provides Kubernetes manifests mirroring the existing Docker Compo
 
 ## Apply order
 
+1. Deploy the PVCs, fileserver, frontend, database. Wait for the database to be ready before continuing.
+
 ```bash
 kubectl apply -f k8s/storage.yaml
-kubectl apply -f k8s/database.yaml
-kubectl apply -f k8s/backend.yaml
-kubectl apply -f k8s/frontend.yaml
-kubectl apply -f k8s/swagger-ui.yaml
 kubectl apply -f k8s/fileserver.yaml
+kubectl apply -f k8s/frontend.yaml
+kubectl apply -f k8s/database.yaml
+kubectl wait --for=condition=Ready pods -l app=wecook-database
+```
+
+2. Deploy and wait for the backend.
+
+```bash
+kubectl apply -f k8s/backend.yaml
+kubectl wait --for=condition=Ready pods -l app=wecook-backend
+```
+
+3. Deploy swagger-ui and the ingress.
+
+```bash
+kubectl apply -f k8s/swagger-ui.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 
 The Ingress routes `/api` to the backend, `/files` to the dedicated nginx fileserver, `/docs` to Swagger UI, and `/` to the frontend.
+
+4. (optional) If using minikube, run
+
+```bash
+minikube tunnel
+```
+
+The app will be available at http://127.0.0.1.
