@@ -2,12 +2,24 @@
 
 A self-hosted recipe manager for organizing and sharing your favorite recipes. Checkout the demo website [wecook.deguzman.cloud](https://wecook.deguzman.cloud).
 
-<img width="1466" height="832" alt="Screenshot 2025-12-28 at 3 47 20 PM" src="https://github.com/user-attachments/assets/a0f1eb94-ad8e-46ad-b56e-c9c939101b9d" />
+<img width="1466" height="832" alt="Screenshot 2025-12-28 at 3 47 20 PM" src="https://github.com/user-attachments/assets/a0f1eb94-ad8e-46ad-b56e-c9c939101b9d" />
 
-<img width="1464" height="833" alt="Screenshot 2025-12-28 at 3 48 59 PM" src="https://github.com/user-attachments/assets/be497486-20b1-40df-bbaa-59749eb89c25" />
+<img width="1464" height="833" alt="Screenshot 2025-12-28 at 3 48 59 PM" src="https://github.com/user-attachments/assets/be497486-20b1-40df-bbaa-59749eb89c25" />
 
-<img width="1466" height="831" alt="Screenshot 2025-12-28 at 3 49 40 PM" src="https://github.com/user-attachments/assets/abb688c7-e7a0-4046-a5e5-673b1dc9c1f0" />
+<img width="1466" height="831" alt="Screenshot 2025-12-28 at 3 49 40 PM" src="https://github.com/user-attachments/assets/abb688c7-e7a0-4046-a5e5-673b1dc9c1f0" />
 
+## Table of Contents
+
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Quick Start with Docker](#quick-start-with-docker)
+- [Configuration](#configuration)
+  - [Backend Environment Variables](#backend-environment-variables)
+  - [Database Environment Variables](#database-environment-variables)
+  - [Frontend Environment Variables](#frontend-environment-variables)
+- [Kubernetes Deployment](#kubernetes-deployment)
+- [License](#license)
 
 ## Features
 
@@ -109,6 +121,73 @@ The application will be available at `http://localhost:8080`
 - **API Documentation**: http://localhost:8080/docs/
 
 Login with the admin credentials you set in `.env.backend` (default: `admin@example.com` / `Change-m3!`)
+
+## Configuration
+
+### Backend Environment Variables
+
+Configuration file: `.env.backend`
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `APP_SECRET` | JWT signing secret (auto-generated if not set, must be at least 32 bytes if provided) | Auto-generated | No |
+| `APP_SECRET_PATH` | Path to store auto-generated secret | `/data/secret` | No |
+| `APP_SECRET_VERSION` | Version identifier for JWT secret (for key rotation) | `1` | No |
+| `ENV` | Environment mode (`PROD` for production, anything else for development) | Development | No |
+| `HOST_ORIGIN` | Application host URL for CORS and cookies | `http://localhost:8080` | Yes |
+| `DATABASE_USER` | PostgreSQL username | - | Yes |
+| `DATABASE_PASSWORD` | PostgreSQL password | - | Yes |
+| `DATABASE_HOST` | PostgreSQL hostname | `localhost` | Yes |
+| `DATABASE_PORT` | PostgreSQL port | `5432` | Yes |
+| `DATABASE` | PostgreSQL database name | - | Yes |
+| `FILESERVER_VOLUME` | Path for uploaded files | `/data/files` | Yes |
+| `FILESERVER_URL_PREFIX` | URL prefix for served files | `/files` | No |
+| `ADMIN_FIRST_NAME` | Initial admin user first name | - | No* |
+| `ADMIN_LAST_NAME` | Initial admin user last name | - | No* |
+| `ADMIN_EMAIL` | Initial admin user email | - | No* |
+| `ADMIN_PASSWORD` | Initial admin password (min 10 chars, requires number, special char, upper/lowercase) | - | No* |
+| `SMTP_HOST` | SMTP server hostname for email invitations | - | No** |
+| `SMTP_PORT` | SMTP server port | `587` | No** |
+| `SMTP_USERNAME` | SMTP authentication username | - | No** |
+| `SMTP_PASSWORD` | SMTP authentication password | - | No** |
+| `SMTP_FROM` | Email sender address | - | No** |
+| `SMTP_TLS_MODE` | TLS mode: `auto`, `starttls`, `implicit`, or `none` | `auto` | No** |
+| `SMTP_TLS_SKIP_VERIFY` | Skip TLS certificate verification (development only) | `false` | No** |
+
+\* Required if you want to create an admin user on first startup
+
+\** Required only if you want email invitation functionality
+
+**Notes:**
+- With `SMTP_TLS_MODE=auto`: port 587 uses STARTTLS, port 465 uses implicit TLS, other ports send without TLS
+- Admin credentials are only used on first startup when no admin exists
+- `APP_SECRET` is automatically generated and persisted if not provided
+
+### Database Environment Variables
+
+Configuration file: `.env.database`
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `POSTGRES_USER` | PostgreSQL database username | - | Yes |
+| `POSTGRES_PASSWORD` | PostgreSQL database password | - | Yes |
+| `POSTGRES_DB` | PostgreSQL database name | - | Yes |
+
+**Important:** `POSTGRES_PASSWORD` must match `DATABASE_PASSWORD` in `.env.backend`
+
+### Frontend Environment Variables
+
+Configuration file: `.env.frontend`
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `INTERNAL_BACKEND_URL` | Internal backend API URL for server-side requests | `http://wecook-backend:8080` | Yes |
+| `CHOKIDAR_USEPOLLING` | Enable polling for file watching (development only) | `true` | No |
+| `WATCHPACK_POLLING` | Enable polling for webpack watching (development only) | `true` | No |
+
+**Notes:**
+- `INTERNAL_BACKEND_URL` is used for server-side API calls within the Docker network
+- Polling variables are only needed for development with Docker on certain filesystems
 
 ## Kubernetes Deployment
 

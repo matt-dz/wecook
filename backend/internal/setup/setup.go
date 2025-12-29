@@ -33,12 +33,12 @@ const (
 func SMTP() (*email.SMTPSender, error) {
 	host := os.Getenv("SMTP_HOST")
 	if host == "" {
-		return nil, fmt.Errorf("SMTP_HOST environment variable not set")
+		return nil, NewEnvironmentVariableMissingError("SMTP_HOST")
 	}
 
 	portStr := os.Getenv("SMTP_PORT")
 	if portStr == "" {
-		return nil, fmt.Errorf("SMTP_PORT environment variable not set")
+		return nil, NewEnvironmentVariableMissingError("SMTP_PORT")
 	}
 
 	port, err := strconv.Atoi(portStr)
@@ -48,17 +48,17 @@ func SMTP() (*email.SMTPSender, error) {
 
 	username := os.Getenv("SMTP_USERNAME")
 	if username == "" {
-		return nil, fmt.Errorf("SMTP_USERNAME environment variable not set")
+		return nil, NewEnvironmentVariableMissingError("SMTP_PORT")
 	}
 
 	password := os.Getenv("SMTP_PASSWORD")
 	if password == "" {
-		return nil, fmt.Errorf("SMTP_PASSWORD environment variable not set")
+		return nil, NewEnvironmentVariableMissingError("SMTP_PASSWORD")
 	}
 
 	from := os.Getenv("SMTP_FROM")
 	if from == "" {
-		return nil, fmt.Errorf("SMTP_FROM environment variable not set")
+		return nil, NewEnvironmentVariableMissingError("SMTP_FROM")
 	}
 
 	tlsMode, err := email.ParseTLSMode(os.Getenv("SMTP_TLS_MODE"))
@@ -90,23 +90,23 @@ func SMTP() (*email.SMTPSender, error) {
 func Database(ctx context.Context) (*database.Database, error) {
 	dbUser := os.Getenv("DATABASE_USER")
 	if dbUser == "" {
-		return nil, errors.New("environment variable DATABASE_USER must be set")
+		return nil, NewEnvironmentVariableMissingError("DATABASE_USER")
 	}
 	dbPassword := os.Getenv("DATABASE_PASSWORD")
 	if dbPassword == "" {
-		return nil, errors.New("environment variable DATABASE_PASSWORD must be set")
+		return nil, NewEnvironmentVariableMissingError("DATABASE_PASSWORD")
 	}
 	dbHost := os.Getenv("DATABASE_HOST")
 	if dbHost == "" {
-		return nil, errors.New("environment variable DATABASE_HOST must be set")
+		return nil, NewEnvironmentVariableMissingError("DATABASE_HOST")
 	}
 	dbPort := os.Getenv("DATABASE_PORT")
 	if dbPort == "" {
-		return nil, errors.New("environment variable DATABASE_PORT must be set")
+		return nil, NewEnvironmentVariableMissingError("DATABASE_PORT")
 	}
 	defaultDB := os.Getenv("DATABASE")
 	if defaultDB == "" {
-		return nil, errors.New("environment variable DATABASE must be set")
+		return nil, NewEnvironmentVariableMissingError("DATABASE")
 	}
 
 	poolConfig, err := pgxpool.ParseConfig("")
@@ -141,20 +141,6 @@ func Database(ctx context.Context) (*database.Database, error) {
 
 // Admin setups an admin user if one does not exist. Requires env.Database.
 func Admin(ctx context.Context, env *env.Env) error {
-	adminEmail, adminPassword := env.Get("ADMIN_EMAIL"), env.Get("ADMIN_PASSWORD")
-	if adminEmail == "" || adminPassword == "" {
-		env.Logger.Info("ADMIN_EMAIL and ADMIN_PASSWORD not setup, skipping admin setup")
-		return nil
-	}
-
-	// Validate email and password
-	if _, err := mail.ParseAddress(adminEmail); err != nil {
-		return fmt.Errorf("parsing admin email: %w", err)
-	}
-	if err := password.ValidatePassword(adminPassword); err != nil {
-		return fmt.Errorf("validating admin password: %w", err)
-	}
-
 	// Check admin count
 	count, err := env.Database.GetAdminCount(ctx)
 	if err != nil {
@@ -165,6 +151,29 @@ func Admin(ctx context.Context, env *env.Env) error {
 		return nil
 	}
 
+	// Get admin info
+	adminEmail, adminPassword := env.Get("ADMIN_EMAIL"), env.Get("ADMIN_PASSWORD")
+	if adminEmail == "" || adminPassword == "" {
+		env.Logger.Info("ADMIN_EMAIL and ADMIN_PASSWORD not setup, skipping admin setup")
+		return nil
+	}
+	adminFirstName := env.Get("ADMIN_FIRST_NAME")
+	if adminFirstName == "" {
+		return NewEnvironmentVariableMissingError("ADMIN_FIRST_NAME")
+	}
+	adminLastName := env.Get("ADMIN_LAST_NAME")
+	if adminLastName == "" {
+		return NewEnvironmentVariableMissingError("ADMIN_LAST_NAME")
+	}
+
+	// Validate email and password
+	if _, err := mail.ParseAddress(adminEmail); err != nil {
+		return fmt.Errorf("parsing admin email: %w", err)
+	}
+	if err := password.ValidatePassword(adminPassword); err != nil {
+		return fmt.Errorf("validating admin password: %w", err)
+	}
+
 	hashedPassword, err := argon2id.EncodeHash(adminPassword, argon2id.DefaultParams)
 	if err != nil {
 		return fmt.Errorf("hashing password: %w", err)
@@ -172,8 +181,8 @@ func Admin(ctx context.Context, env *env.Env) error {
 
 	// Create admin
 	_, err = env.Database.CreateAdmin(ctx, database.CreateAdminParams{
-		FirstName:    "admin",
-		LastName:     "admin",
+		FirstName:    adminFirstName,
+		LastName:     adminLastName,
 		PasswordHash: hashedPassword,
 		Email:        adminEmail,
 	})
@@ -189,7 +198,7 @@ func FileStore() (filestore.FileStore, error) {
 	var fs filestore.FileStore
 	fileserverVolume := os.Getenv("FILESERVER_VOLUME")
 	if fileserverVolume == "" {
-		return fs, errors.New("environment variable FILESERVER_VOLUME not defined")
+		return fs, NewEnvironmentVariableMissingError("FILESERVER_VOLUME")
 	}
 	fileserverPath, err := filepath.Abs(fileserverVolume)
 	if err != nil {
@@ -201,7 +210,7 @@ func FileStore() (filestore.FileStore, error) {
 	}
 	filestoreHost := os.Getenv("HOST_ORIGIN")
 	if filestoreHost == "" {
-		return fs, errors.New("HOST_ORIGIN must be set")
+		return fs, NewEnvironmentVariableMissingError("HOST_ORIGIN")
 	}
 	return filestore.New(fileserverPath, urlPrefix, filestoreHost), nil
 }

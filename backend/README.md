@@ -341,6 +341,8 @@ for _, tt := range tests {
 | `DATABASE_PORT` | PostgreSQL port | `5432` |
 | `DATABASE` | Database name | - |
 | `FILESERVER_VOLUME` | Path for uploaded files | `/data/files` |
+| `ADMIN_FIRST_NAME` | Initial admin first name | - |
+| `ADMIN_LAST_NAME` | Initial admin last name | - |
 | `ADMIN_EMAIL` | Initial admin email | - |
 | `ADMIN_PASSWORD` | Initial admin password (min 10 chars, requires number, special char, upper/lowercase) | - |
 | `SMTP_HOST` | SMTP server (optional) | - |
