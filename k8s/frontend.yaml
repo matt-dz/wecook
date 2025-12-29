@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wecook-frontend
+  labels:
+    app: wecook-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wecook-frontend
+  template:
+    metadata:
+      labels:
+        app: wecook-frontend
+    spec:
+      containers:
+        - name: web
+          image: matthew10125/wecook-frontend:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: INTERNAL_BACKEND_URL
+              value: http://wecook-backend.default.svc.cluster.local:8080
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wecook-frontend
+  labels:
+    app: wecook-frontend
+spec:
+  selector:
+    app: wecook-frontend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000

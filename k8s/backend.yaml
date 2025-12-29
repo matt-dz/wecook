@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wecook-backend-config
+  labels:
+    app: wecook-backend
+data:
+  HOST_ORIGIN: http://127.0.0.1 # change to host where this is served
+  DATABASE_HOST: wecook-database
+  DATABASE_PORT: "5432"
+  DATABASE: wecook
+  FILESERVER_VOLUME: /data/files
+  APP_SECRET_PATH: /data/secret
+  ADMIN_EMAIL: admin@example.com
+  SMTP_HOST: smtp.example.com
+  SMTP_PORT: "587"
+  SMTP_USERNAME: user@example.com
+  SMTP_FROM: noreply@example.com
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wecook-app-secret
+  labels:
+    app: wecook-backend
+type: Opaque
+stringData:
+  # APP_SECRET: random-32-bit-string
+  ADMIN_PASSWORD: Change-m3!
+  SMTP_PASSWORD: your-smtp-password
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wecook-backend
+  labels:
+    app: wecook-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wecook-backend
+  template:
+    metadata:
+      labels:
+        app: wecook-backend
+    spec:
+      containers:
+        - name: backend
+          image: matthew10125/wecook-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: wecook-backend-config
+            - secretRef:
+                name: wecook-app-secret
+          env:
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wecook-db-secret
+                  key: POSTGRES_USER
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wecook-db-secret
+                  key: POSTGRES_PASSWORD
+          livenessProbe:
+            httpGet:
+              path: /api/ping
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/ping
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: files
+              mountPath: /data/files
+            - name: backend-data
+              mountPath: /data
+      volumes:
+        - name: files
+          persistentVolumeClaim:
+            claimName: wecook-files
+        - name: backend-data
+          persistentVolumeClaim:
+            claimName: wecook-backend-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wecook-backend
+  labels:
+    app: wecook-backend
+spec:
+  selector:
+    app: wecook-backend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
