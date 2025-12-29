@@ -1632,7 +1632,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				if v.Id != 456 {
 					t.Errorf("expected ingredient ID 456, got %d", v.Id)
 				}
-				if v.Description == nil || *v.Description != "Finely chopped basil" {
+				if v.Description.IsNull() || v.Description.MustGet() != "Finely chopped basil" {
 					t.Errorf("expected description 'Finely chopped basil', got %v", v.Description)
 				}
 			},
@@ -1732,7 +1732,7 @@ func TestPatchApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 				if v.Id != 456 {
 					t.Errorf("expected ingredient ID 456, got %d", v.Id)
 				}
-				if v.Description == nil || *v.Description != "Existing ingredient" {
+				if v.Description.IsNull() || v.Description.MustGet() != "Existing ingredient" {
 					t.Errorf("expected description 'Existing ingredient', got %v", v.Description)
 				}
 			},

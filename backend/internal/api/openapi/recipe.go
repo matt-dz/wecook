@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/oapi-codegen/nullable"
 
 	apiError "github.com/matt-dz/wecook/internal/api/error"
 	"github.com/matt-dz/wecook/internal/api/requestid"
@@ -117,8 +118,8 @@ func buildRecipeWithIngredientsAndSteps(
 			RecipeId: ingredient.RecipeID,
 		}
 		if ingredient.Description.Valid {
-			description := ingredient.Description.String
-			newIngredient.Description = &description
+			newIngredient.Description = nullable.NewNullableWithValue(
+				ingredient.Description.String)
 		}
 		if ingredient.ImageUrl.Valid {
 			imageURL := env.FileStore.FileURL(ingredient.ImageUrl.String)
@@ -590,8 +591,7 @@ func (Server) PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context
 		Id: row.ID,
 	}
 	if row.Description.Valid {
-		description := row.Description.String
-		res.Description = &description
+		res.Description = nullable.NewNullableWithValue(row.Description.String)
 	}
 	if row.ImageUrl.Valid {
 		imageURL := env.FileStore.FileURL(row.ImageUrl.String)
@@ -750,8 +750,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Con
 		Description: nil,
 	}
 	if ingredient.Description.Valid {
-		description := ingredient.Description.String
-		res.Description = &description
+		res.Description = nullable.NewNullableWithValue(ingredient.Description.String)
 	}
 	return res, nil
 }
