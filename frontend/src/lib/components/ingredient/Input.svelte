@@ -7,9 +7,7 @@
 
 	interface Props {
 		ingredient: Ingredient;
-		onQuantityChange?: (ingredientID: number) => void;
-		onUnitChange?: (ingredientID: number) => void;
-		onNameChange?: (ingredientID: number) => void;
+		onDescriptionChange?: (ingredientID: number) => void;
 		onDelete?: (ingredientID: number) => void;
 		onImageUpload?: (ingredientID: number, image: File) => void;
 		onImageDeletion?: (ingredientID: number) => void;
@@ -17,20 +15,13 @@
 
 	let {
 		ingredient = $bindable(),
-		onQuantityChange,
-		onUnitChange,
-		onNameChange,
+		onDescriptionChange,
 		onDelete,
 		onImageUpload,
 		onImageDeletion
 	}: Props = $props();
 
 	let fileInput: HTMLInputElement;
-
-	const onlyPositiveNumbers = (e: KeyboardEvent) => {
-		const invalid = ['e', 'E', '+', '-'];
-		if (invalid.includes(e.key)) e.preventDefault();
-	};
 
 	const handleFileSelect = (e: Event) => {
 		const target = e.target as HTMLInputElement;
@@ -52,25 +43,10 @@
 <div class="space-y-2">
 	<div class="flex items-center gap-2">
 		<Input
-			class="w-20"
-			placeholder="Quantity"
-			type="number"
-			onkeydown={onlyPositiveNumbers}
-			bind:value={ingredient.quantity}
-			oninput={() => onQuantityChange?.(ingredient.id)}
-		/>
-		<Input
-			class="w-20"
-			placeholder="Unit"
-			bind:value={ingredient.unit}
-			oninput={() => onUnitChange?.(ingredient.id)}
-		/>
-		<p class="inline-block">of</p>
-		<Input
-			class="w-60"
-			bind:value={ingredient.name}
-			placeholder="Name"
-			oninput={() => onNameChange?.(ingredient.id)}
+			class="w-full"
+			bind:value={ingredient.description}
+			placeholder="Ingredient description"
+			oninput={() => onDescriptionChange?.(ingredient.id)}
 		/>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger class="-mr-1 rounded-lg p-1 hover:bg-gray-200">
@@ -101,7 +77,7 @@
 		<div class="pt-1">
 			<ImagePreview
 				src={ingredient.image_url}
-				alt={ingredient.name || 'Ingredient'}
+				alt={ingredient.description || 'Ingredient'}
 				onRemove={removeImage}
 			/>
 		</div>

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { formatDuration } from '$lib/time';
-	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import ShareDialog from '$lib/components/share-dialog/Dialog.svelte';
 	import type { RecipeWithStepsIngredientsAndOwner } from '$lib/recipes';
@@ -11,27 +10,7 @@
 	}
 
 	let { recipe }: Props = $props();
-	let portion: number = $state(1);
 	let shareDialogOpen = $state(false);
-
-	let ingredients = $derived.by(() => {
-		const adjustedPortion = portion === null || portion <= 0 ? 1 : portion;
-		return recipe.recipe.ingredients.map((i) => ({
-			...i,
-			quantity: (i.quantity ?? 0) * adjustedPortion
-		}));
-	});
-
-	const onlyPositiveNumbers = (e: KeyboardEvent) => {
-		const invalid = ['e', 'E', '+', '-'];
-		if (invalid.includes(e.key)) e.preventDefault();
-	};
-
-	const formatLocale = (n: number, decimals: number) => {
-		return new Intl.NumberFormat(undefined, {
-			maximumFractionDigits: decimals
-		}).format(n);
-	};
 
 	const title =
 		recipe.recipe.title.trim().length > 0 ? recipe.recipe.title.trim() : 'Untitled Recipe';
@@ -94,32 +73,15 @@
 
 			{#if recipe.recipe.ingredients}
 				<h1 class="mt-12 mb-2 text-3xl">Ingredients</h1>
-				<div class="mb-4 flex flex-col">
-					<label for="portion" class="font-inter"
-						>Portion <span class="text-sm text-gray-500">(Default 1)</span></label
-					>
-					<Input
-						bind:value={portion}
-						name="portion"
-						onkeydown={onlyPositiveNumbers}
-						class="w-fit"
-						type="number"
-						min={1}
-						defaultValue={1}
-					/>
-				</div>
 				<ul class="list-inside list-disc space-y-2">
-					{#each ingredients as ingredient (ingredient.id)}
+					{#each recipe.recipe.ingredients as ingredient (ingredient.id)}
 						<li>
-							<div class="inline-block">
-								{formatLocale(ingredient.quantity, 3)}{ingredient.unit && ` ${ingredient.unit} of`}
-								{ingredient.name}
-							</div>
+							<p class="inline-block whitespace-pre-wrap">{ingredient.description}</p>
 							{#if ingredient.image_url}
 								<div class="mt-2 ml-6">
 									<img
 										src={ingredient.image_url}
-										alt={ingredient.name || 'Ingredient'}
+										alt={ingredient.description || 'Ingredient'}
 										class="h-full max-h-96 object-cover"
 									/>
 								</div>

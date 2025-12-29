@@ -132,20 +132,10 @@
 	const onCookTimeChange = () => updateRecipeField('cook_time_amount', cookTime ?? null);
 	const onCookTimeUnitChange = () => updateRecipeField('cook_time_unit', cookTimeUnit ?? null);
 
-	const onIngredientQuantityChange = (ingredientID: number) => {
+	const onIngredientDescriptionChange = (ingredientID: number) => {
 		const ingredient = ingredients.find((i) => i.id === ingredientID);
 		if (!ingredient) return;
-		updateIngredientField(ingredientID, 'quantity', ingredient.quantity);
-	};
-	const onIngredientUnitChange = (ingredientID: number) => {
-		const ingredient = ingredients.find((i) => i.id === ingredientID);
-		if (!ingredient) return;
-		updateIngredientField(ingredientID, 'unit', ingredient.unit);
-	};
-	const onIngredientNameChange = (ingredientID: number) => {
-		const ingredient = ingredients.find((i) => i.id === ingredientID);
-		if (!ingredient) return;
-		updateIngredientField(ingredientID, 'name', ingredient.name);
+		updateIngredientField(ingredientID, 'description', ingredient.description ?? null);
 	};
 
 	const onStepInstructionChange = (stepID: number) => {
@@ -599,9 +589,7 @@
 				{#each ingredients as ingredient, idx (ingredient.id)}
 					<IngredientInput
 						bind:ingredient={ingredients[idx]}
-						onQuantityChange={onIngredientQuantityChange}
-						onUnitChange={onIngredientUnitChange}
-						onNameChange={onIngredientNameChange}
+						onDescriptionChange={onIngredientDescriptionChange}
 						onDelete={handleDeleteIngredient}
 						onImageUpload={onIngredientImageUpload}
 						onImageDeletion={onIngredientImageDeletion}
