@@ -131,10 +131,10 @@
 
 			{#if recipe.recipe.steps}
 				<h1 class="mt-12 mb-2 text-3xl">Steps</h1>
-				<ol class="list-inside list-decimal space-y-2">
+				<ol class="steps list-inside space-y-4">
 					{#each recipe.recipe.steps as step (step.id)}
 						<li>
-							<div class="inline-block">{step.instruction}</div>
+							<p class="whitespace-pre-wrap">{step.instruction}</p>
 							{#if step.image_url}
 								<div class="mt-2 ml-6">
 									<img
@@ -153,3 +153,19 @@
 </Tooltip.Provider>
 
 <ShareDialog bind:open={shareDialogOpen} recipeId={recipe.recipe.id} />
+
+<style>
+	.steps {
+		counter-reset: step;
+	}
+
+	.steps > li {
+		counter-increment: step;
+	}
+
+	.steps > li::marker {
+		content: 'Step ' counter(step) '.';
+		font-weight: 600;
+		font-size: 1.125rem;
+	}
+</style>
