@@ -32,7 +32,7 @@
 	/>
 
 	<!-- Primary Meta Tags -->
-	<title>WeCook - Self-Hosted Recipe Manager</title>
+	<title>WeCook</title>
 	<meta name="title" content="WeCook - Self-Hosted Recipe Manager" />
 	<meta
 		name="description"
