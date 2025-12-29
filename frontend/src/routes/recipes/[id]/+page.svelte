@@ -5,8 +5,4 @@
 	let { data }: PageProps = $props();
 </script>
 
-<svelte:head>
-	<title>{data.recipe.recipe.title} | WeCook</title>
-</svelte:head>
-
 <RecipePage recipe={data.recipe} />

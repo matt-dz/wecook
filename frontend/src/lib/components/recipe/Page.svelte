@@ -17,7 +17,7 @@
 </script>
 
 <svelte:head>
-	<title>{recipe.recipe.title}</title>
+	<title>{title} | WeCook</title>
 </svelte:head>
 
 <Tooltip.Provider>
