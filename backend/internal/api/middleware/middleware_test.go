@@ -43,13 +43,15 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 	tests := []struct {
 		name               string
 		securitySchemeName string
+		httpMethod         string
 		setupRequest       func(*http.Request)
 		wantError          bool
 		wantErrorCode      apiError.ErrorCode
 	}{
 		{
-			name:               "cookie auth with valid CSRF tokens",
+			name:               "cookie auth with valid CSRF tokens on POST",
 			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodPost,
 			setupRequest: func(r *http.Request) {
 				accessToken := createAccessToken(t, role.RoleUser)
 				csrfToken, _ := token.NewCSRFToken()
@@ -70,8 +72,84 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name:               "cookie auth with missing CSRF header",
+			name:               "cookie auth with valid CSRF tokens on PUT",
 			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodPut,
+			setupRequest: func(r *http.Request) {
+				accessToken := createAccessToken(t, role.RoleUser)
+				csrfToken, _ := token.NewCSRFToken()
+
+				r.AddCookie(&http.Cookie{
+					Name:  token.AccessTokenName(),
+					Value: accessToken,
+				})
+				r.AddCookie(&http.Cookie{
+					Name:  token.CSRFTokenName(),
+					Value: csrfToken,
+				})
+				r.Header.Set(token.CSRFTokenHeader, csrfToken)
+			},
+			wantError: false,
+		},
+		{
+			name:               "cookie auth with valid CSRF tokens on PATCH",
+			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodPatch,
+			setupRequest: func(r *http.Request) {
+				accessToken := createAccessToken(t, role.RoleUser)
+				csrfToken, _ := token.NewCSRFToken()
+
+				r.AddCookie(&http.Cookie{
+					Name:  token.AccessTokenName(),
+					Value: accessToken,
+				})
+				r.AddCookie(&http.Cookie{
+					Name:  token.CSRFTokenName(),
+					Value: csrfToken,
+				})
+				r.Header.Set(token.CSRFTokenHeader, csrfToken)
+			},
+			wantError: false,
+		},
+		{
+			name:               "cookie auth with valid CSRF tokens on DELETE",
+			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodDelete,
+			setupRequest: func(r *http.Request) {
+				accessToken := createAccessToken(t, role.RoleUser)
+				csrfToken, _ := token.NewCSRFToken()
+
+				r.AddCookie(&http.Cookie{
+					Name:  token.AccessTokenName(),
+					Value: accessToken,
+				})
+				r.AddCookie(&http.Cookie{
+					Name:  token.CSRFTokenName(),
+					Value: csrfToken,
+				})
+				r.Header.Set(token.CSRFTokenHeader, csrfToken)
+			},
+			wantError: false,
+		},
+		{
+			name:               "cookie auth on GET request without CSRF tokens - should pass",
+			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodGet,
+			setupRequest: func(r *http.Request) {
+				accessToken := createAccessToken(t, role.RoleUser)
+
+				// Set only access token cookie, no CSRF tokens
+				r.AddCookie(&http.Cookie{
+					Name:  token.AccessTokenName(),
+					Value: accessToken,
+				})
+			},
+			wantError: false,
+		},
+		{
+			name:               "cookie auth with missing CSRF header on POST - should fail",
+			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodPost,
 			setupRequest: func(r *http.Request) {
 				accessToken := createAccessToken(t, role.RoleUser)
 				csrfToken, _ := token.NewCSRFToken()
@@ -92,8 +170,9 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 			wantErrorCode: apiError.InvalidCredentials,
 		},
 		{
-			name:               "cookie auth with missing CSRF cookie",
+			name:               "cookie auth with missing CSRF cookie on POST - should fail",
 			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodPost,
 			setupRequest: func(r *http.Request) {
 				accessToken := createAccessToken(t, role.RoleUser)
 				csrfToken, _ := token.NewCSRFToken()
@@ -111,8 +190,9 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 			wantErrorCode: apiError.InvalidCredentials,
 		},
 		{
-			name:               "cookie auth with mismatched CSRF tokens",
+			name:               "cookie auth with mismatched CSRF tokens on POST - should fail",
 			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodPost,
 			setupRequest: func(r *http.Request) {
 				accessToken := createAccessToken(t, role.RoleUser)
 				csrfToken1, _ := token.NewCSRFToken()
@@ -135,8 +215,9 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 			wantErrorCode: apiError.InvalidCredentials,
 		},
 		{
-			name:               "bearer token auth (no CSRF required)",
+			name:               "bearer token auth on POST (no CSRF required)",
 			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodPost,
 			setupRequest: func(r *http.Request) {
 				accessToken := createAccessToken(t, role.RoleUser)
 				// Use Authorization header instead of cookie - no CSRF needed
@@ -145,8 +226,19 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 			wantError: false,
 		},
 		{
+			name:               "bearer token auth on GET (no CSRF required)",
+			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodGet,
+			setupRequest: func(r *http.Request) {
+				accessToken := createAccessToken(t, role.RoleUser)
+				r.Header.Set(token.AuthorizationHeader, "Bearer "+accessToken)
+			},
+			wantError: false,
+		},
+		{
 			name:               "bearer token auth with invalid format",
 			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodPost,
 			setupRequest: func(r *http.Request) {
 				accessToken := createAccessToken(t, role.RoleUser)
 				// Missing "Bearer " prefix
@@ -158,14 +250,16 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 		{
 			name:               "no authentication required",
 			securitySchemeName: "", // Empty security scheme
+			httpMethod:         http.MethodGet,
 			setupRequest: func(r *http.Request) {
 				// No auth needed for public endpoints
 			},
 			wantError: false,
 		},
 		{
-			name:               "user role accessing user endpoint",
+			name:               "user role accessing user endpoint with bearer token",
 			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodGet,
 			setupRequest: func(r *http.Request) {
 				accessToken := createAccessToken(t, role.RoleUser)
 				r.Header.Set(token.AuthorizationHeader, "Bearer "+accessToken)
@@ -173,8 +267,9 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name:               "admin role accessing admin endpoint",
+			name:               "admin role accessing admin endpoint with bearer token",
 			securitySchemeName: "AccessTokenAdminBearer",
+			httpMethod:         http.MethodGet,
 			setupRequest: func(r *http.Request) {
 				accessToken := createAccessToken(t, role.RoleAdmin)
 				r.Header.Set(token.AuthorizationHeader, "Bearer "+accessToken)
@@ -184,6 +279,7 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 		{
 			name:               "user role accessing admin endpoint - insufficient permissions",
 			securitySchemeName: "AccessTokenAdminBearer",
+			httpMethod:         http.MethodGet,
 			setupRequest: func(r *http.Request) {
 				accessToken := createAccessToken(t, role.RoleUser)
 				r.Header.Set(token.AuthorizationHeader, "Bearer "+accessToken)
@@ -194,6 +290,7 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 		{
 			name:               "invalid access token",
 			securitySchemeName: "AccessTokenUserBearer",
+			httpMethod:         http.MethodPost,
 			setupRequest: func(r *http.Request) {
 				r.Header.Set(token.AuthorizationHeader, "Bearer invalid-token-12345")
 			},
@@ -201,8 +298,9 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 			wantErrorCode: apiError.InvalidAccessToken,
 		},
 		{
-			name:               "cookie auth with valid CSRF for admin endpoint",
+			name:               "cookie auth with valid CSRF for admin endpoint on POST",
 			securitySchemeName: "AccessTokenAdminBearer",
+			httpMethod:         http.MethodPost,
 			setupRequest: func(r *http.Request) {
 				accessToken := createAccessToken(t, role.RoleAdmin)
 				csrfToken, _ := token.NewCSRFToken()
@@ -226,8 +324,12 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create test request
-			req := httptest.NewRequest(http.MethodGet, "/test", nil)
+			// Create test request with specified HTTP method
+			method := tt.httpMethod
+			if method == "" {
+				method = http.MethodGet // default to GET if not specified
+			}
+			req := httptest.NewRequest(method, "/test", nil)
 			tt.setupRequest(req)
 
 			// Setup context with environment

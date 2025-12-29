@@ -140,7 +140,6 @@ func NewCSRFTokenCookie(token string, secure bool) *http.Cookie {
 		Name:     CSRFTokenName(),
 		Value:    token,
 		Path:     "/",
-		HttpOnly: false,
 		MaxAge:   0, // will exist the duration of the session
 		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,
