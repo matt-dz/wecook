@@ -11,7 +11,9 @@ data:
   DATABASE: wecook
   FILESERVER_VOLUME: /data/files
   APP_SECRET_PATH: /data/secret
-  ADMIN_EMAIL: admin@example.com
+  ADMIN_FIRST_NAME: John
+  ADMIN_LAST_NAME: Doe
+  ADMIN_EMAIL: admin@example.com # change to your email
   SMTP_HOST: smtp.example.com
   SMTP_PORT: "587"
   SMTP_USERNAME: user@example.com
@@ -25,8 +27,7 @@ metadata:
     app: wecook-backend
 type: Opaque
 stringData:
-  # APP_SECRET: random-32-bit-string
-  ADMIN_PASSWORD: Change-m3!
+  ADMIN_PASSWORD: Change-m3! # change to secure password
   SMTP_PASSWORD: your-smtp-password
 ---
 apiVersion: apps/v1
