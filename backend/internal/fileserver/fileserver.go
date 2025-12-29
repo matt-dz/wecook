@@ -12,7 +12,7 @@ import (
 
 const (
 	directoryPerms = 0o755
-	newFilePerms   = 0o600
+	newFilePerms   = 0o644
 )
 
 var (
