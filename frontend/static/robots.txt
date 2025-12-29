@@ -1,3 +1,26 @@
-# allow crawling everything by default
 User-agent: *
-Disallow:
+
+# Allow crawling of public content
+Allow: /
+Allow: /recipes/
+
+# Disallow crawling of private/authenticated areas
+Disallow: /home
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /logout
+
+# Disallow crawling of admin areas
+Disallow: /admin/
+
+# Disallow crawling of API endpoints and documentation
+Disallow: /api/
+Disallow: /docs/
+
+# Disallow crawling of recipe previews and edit pages
+Disallow: /recipes/*/preview
+Disallow: /recipes/*/edit
+
+# Sitemap
+Sitemap: /sitemap.xml

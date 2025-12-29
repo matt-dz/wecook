@@ -46,6 +46,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Login | WeCook</title>
+</svelte:head>
+
 <div class="absolute top-0 bottom-0 flex w-full items-center justify-center px-4">
 	<form
 		class="flex w-full max-w-[375px] flex-col gap-2 rounded-2xl border border-solid p-6 shadow-lg"

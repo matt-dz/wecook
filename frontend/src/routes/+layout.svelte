@@ -17,7 +17,6 @@
 
 	// Check if current route is an admin route
 	let isAdminRoute = $derived(page.route.id?.startsWith('/(admin)'));
-	let innerWidth: number = $state(9999); // Start large to prevent sidebar flash on desktop
 	let sidebarOpen = $state(false);
 </script>
 
@@ -31,9 +30,42 @@
 		href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
 		rel="stylesheet"
 	/>
-</svelte:head>
 
-<svelte:window bind:innerWidth />
+	<!-- Primary Meta Tags -->
+	<title>WeCook</title>
+	<meta name="title" content="WeCook - Self-Hosted Recipe Manager" />
+	<meta
+		name="description"
+		content="A self-hosted recipe manager for organizing and sharing your favorite recipes. Create, edit, and publish recipes with ingredients, steps, and images."
+	/>
+	<meta
+		name="keywords"
+		content="recipe manager, self-hosted, recipe organizer, cooking, recipes, open source"
+	/>
+	<meta name="author" content="WeCook" />
+
+	<!-- Open Graph / Facebook -->
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content={page.url.href} />
+	<meta property="og:title" content="WeCook - Self-Hosted Recipe Manager" />
+	<meta
+		property="og:description"
+		content="A self-hosted recipe manager for organizing and sharing your favorite recipes."
+	/>
+	<meta property="og:site_name" content="WeCook" />
+
+	<!-- Twitter -->
+	<meta property="twitter:card" content="summary_large_image" />
+	<meta property="twitter:url" content={page.url.href} />
+	<meta property="twitter:title" content="WeCook - Self-Hosted Recipe Manager" />
+	<meta
+		property="twitter:description"
+		content="A self-hosted recipe manager for organizing and sharing your favorite recipes."
+	/>
+
+	<!-- Canonical URL -->
+	<link rel="canonical" href={page.url.href} />
+</svelte:head>
 
 <Toaster position="top-center" richColors />
 
