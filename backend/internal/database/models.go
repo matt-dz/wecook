@@ -122,14 +122,12 @@ type Recipe struct {
 }
 
 type RecipeIngredient struct {
-	ID        int64
-	RecipeID  int64
-	Quantity  pgtype.Float4
-	Unit      pgtype.Text
-	Name      pgtype.Text
-	ImageUrl  pgtype.Text
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID          int64
+	RecipeID    int64
+	Description pgtype.Text
+	ImageUrl    pgtype.Text
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
 }
 
 type RecipeStep struct {
