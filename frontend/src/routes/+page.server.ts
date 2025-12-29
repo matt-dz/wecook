@@ -5,7 +5,6 @@ import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async () => {
 	try {
-		console.log('backend url', env.INTERNAL_BACKEND_URL);
 		const recipes = await getRecipes(fetch, {}, env.INTERNAL_BACKEND_URL);
 		return {
 			recipes
