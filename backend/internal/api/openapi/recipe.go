@@ -116,17 +116,9 @@ func buildRecipeWithIngredientsAndSteps(
 			Id:       ingredient.ID,
 			RecipeId: ingredient.RecipeID,
 		}
-		if ingredient.Quantity.Valid {
-			quantity := ingredient.Quantity.Float32
-			newIngredient.Quantity = &quantity
-		}
-		if ingredient.Name.Valid {
-			name := ingredient.Name.String
-			newIngredient.Name = &name
-		}
-		if ingredient.Unit.Valid {
-			unit := ingredient.Unit.String
-			newIngredient.Unit = &unit
+		if ingredient.Description.Valid {
+			description := ingredient.Description.String
+			newIngredient.Description = &description
 		}
 		if ingredient.ImageUrl.Valid {
 			imageURL := env.FileStore.FileURL(ingredient.ImageUrl.String)
@@ -564,37 +556,15 @@ func (Server) PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context
 	updateParams := database.UpdateRecipeIngredientParams{
 		ID: request.IngredientID,
 	}
-	// Name - nullable
-	if request.Body.Name.IsSpecified() {
-		updateParams.UpdateName.Bool = true
-		updateParams.UpdateName.Valid = true
-		if request.Body.Name.IsNull() {
-			updateParams.Name.Valid = false
+	// Description - nullable
+	if request.Body.Description.IsSpecified() {
+		updateParams.UpdateDescription.Bool = true
+		updateParams.UpdateDescription.Valid = true
+		if request.Body.Description.IsNull() {
+			updateParams.Description.Valid = false
 		} else {
-			updateParams.Name.String = request.Body.Name.MustGet()
-			updateParams.Name.Valid = true
-		}
-	}
-	// Quantity - nullable
-	if request.Body.Quantity.IsSpecified() {
-		updateParams.UpdateQuantity.Bool = true
-		updateParams.UpdateQuantity.Valid = true
-		if request.Body.Quantity.IsNull() {
-			updateParams.Quantity.Valid = false
-		} else {
-			updateParams.Quantity.Float32 = request.Body.Quantity.MustGet()
-			updateParams.Quantity.Valid = true
-		}
-	}
-	// Unit - nullable
-	if request.Body.Unit.IsSpecified() {
-		updateParams.UpdateUnit.Bool = true
-		updateParams.UpdateUnit.Valid = true
-		if request.Body.Unit.IsNull() {
-			updateParams.Unit.Valid = false
-		} else {
-			updateParams.Unit.String = request.Body.Unit.MustGet()
-			updateParams.Unit.Valid = true
+			updateParams.Description.String = request.Body.Description.MustGet()
+			updateParams.Description.Valid = true
 		}
 	}
 	row, err := env.Database.UpdateRecipeIngredient(ctx, updateParams)
@@ -617,14 +587,11 @@ func (Server) PatchApiRecipesRecipeIDIngredientsIngredientID(ctx context.Context
 	}
 
 	res := PatchApiRecipesRecipeIDIngredientsIngredientID200JSONResponse{
-		Id:   row.ID,
-		Name: row.Name.String,
+		Id: row.ID,
 	}
-	if row.Quantity.Valid {
-		res.Quantity = &row.Quantity.Float32
-	}
-	if row.Unit.Valid {
-		res.Unit = &row.Unit.String
+	if row.Description.Valid {
+		description := row.Description.String
+		res.Description = &description
 	}
 	if row.ImageUrl.Valid {
 		imageURL := env.FileStore.FileURL(row.ImageUrl.String)
@@ -778,17 +745,13 @@ func (Server) PostApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Con
 
 	imageURL := env.FileStore.FileURL(ingredient.ImageUrl.String)
 	res := PostApiRecipesRecipeIDIngredientsIngredientIDImage200JSONResponse{
-		Id:       ingredient.ID,
-		ImageUrl: &imageURL,
-		Name:     ingredient.Name.String,
+		Id:          ingredient.ID,
+		ImageUrl:    &imageURL,
+		Description: nil,
 	}
-	if ingredient.Unit.Valid {
-		unit := ingredient.Unit.String
-		res.Unit = &unit
-	}
-	if ingredient.Quantity.Valid {
-		quantity := ingredient.Quantity.Float32
-		res.Quantity = &quantity
+	if ingredient.Description.Valid {
+		description := ingredient.Description.String
+		res.Description = &description
 	}
 	return res, nil
 }

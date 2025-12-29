@@ -129,10 +129,8 @@ const bulkUpdateRecipeIngredients = `-- name: BulkUpdateRecipeIngredients :batch
 UPDATE
   recipe_ingredients
 SET
-  quantity = $2,
-  unit = $3,
-  name = $4,
-  image_url = $5
+  description = $2,
+  image_url = $3
 WHERE
   id = $1
 `
@@ -144,11 +142,9 @@ type BulkUpdateRecipeIngredientsBatchResults struct {
 }
 
 type BulkUpdateRecipeIngredientsParams struct {
-	ID       int64
-	Quantity pgtype.Float4
-	Unit     pgtype.Text
-	Name     pgtype.Text
-	ImageUrl pgtype.Text
+	ID          int64
+	Description pgtype.Text
+	ImageUrl    pgtype.Text
 }
 
 func (q *Queries) BulkUpdateRecipeIngredients(ctx context.Context, arg []BulkUpdateRecipeIngredientsParams) *BulkUpdateRecipeIngredientsBatchResults {
@@ -156,9 +152,7 @@ func (q *Queries) BulkUpdateRecipeIngredients(ctx context.Context, arg []BulkUpd
 	for _, a := range arg {
 		vals := []interface{}{
 			a.ID,
-			a.Quantity,
-			a.Unit,
-			a.Name,
+			a.Description,
 			a.ImageUrl,
 		}
 		batch.Queue(bulkUpdateRecipeIngredients, vals...)

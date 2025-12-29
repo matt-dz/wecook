@@ -68,9 +68,7 @@ CREATE TABLE recipes (
 CREATE TABLE recipe_ingredients (
   id bigserial PRIMARY KEY,
   recipe_id bigint NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
-  quantity real CHECK (quantity > 0),
-  unit text,
-  name text,
+  description text,
   image_url text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()

@@ -95,8 +95,8 @@ WHERE
   id = $1;
 
 -- name: CreateRecipeIngredient :one
-INSERT INTO recipe_ingredients (recipe_id, quantity, unit, name, image_url)
-  VALUES ($1, $2, $3, $4, $5)
+INSERT INTO recipe_ingredients (recipe_id, description, image_url)
+  VALUES ($1, $2, $3)
 RETURNING
   id;
 
@@ -104,7 +104,12 @@ RETURNING
 INSERT INTO recipe_ingredients (recipe_id)
   VALUES ($1)
 RETURNING
-  *;
+  id,
+  recipe_id,
+  description,
+  image_url,
+  created_at,
+  updated_at;
 
 -- name: UpdateRecipeIngredientImage :exec
 UPDATE
@@ -234,7 +239,12 @@ ORDER BY
 
 -- name: GetRecipeIngredients :many
 SELECT
-  *
+  id,
+  recipe_id,
+  description,
+  image_url,
+  created_at,
+  updated_at
 FROM
   recipe_ingredients
 WHERE
@@ -371,20 +381,10 @@ RETURNING
 UPDATE
   recipe_ingredients
 SET
-  quantity = CASE WHEN sqlc.narg ('update_quantity')::boolean THEN
-    sqlc.narg ('quantity')
+  description = CASE WHEN sqlc.narg ('update_description')::boolean THEN
+    sqlc.narg ('description')
   ELSE
-    quantity
-  END,
-  unit = CASE WHEN sqlc.narg ('update_unit')::boolean THEN
-    sqlc.narg ('unit')
-  ELSE
-    unit
-  END,
-  name = CASE WHEN sqlc.narg ('update_name')::boolean THEN
-    sqlc.narg ('name')
-  ELSE
-    name
+    description
   END,
   image_url = CASE WHEN sqlc.narg ('update_image_url')::boolean THEN
     sqlc.narg ('image_url')
@@ -394,7 +394,12 @@ SET
 WHERE
   id = $1
 RETURNING
-  *;
+  id,
+  recipe_id,
+  description,
+  image_url,
+  created_at,
+  updated_at;
 
 -- name: UpdateRecipe :one
 UPDATE
@@ -488,8 +493,8 @@ WHERE recipe_id = $1
   AND id = ANY (@ids::bigint[]);
 
 -- name: BulkInsertRecipeIngredients :copyfrom
-INSERT INTO recipe_ingredients (recipe_id, quantity, unit, name, image_url)
-  VALUES ($1, $2, $3, $4, $5);
+INSERT INTO recipe_ingredients (recipe_id, description, image_url)
+  VALUES ($1, $2, $3);
 
 -- name: BulkInsertRecipeSteps :copyfrom
 INSERT INTO recipe_steps (recipe_id, instruction, image_url, step_number)
@@ -499,10 +504,8 @@ INSERT INTO recipe_steps (recipe_id, instruction, image_url, step_number)
 UPDATE
   recipe_ingredients
 SET
-  quantity = $2,
-  unit = $3,
-  name = $4,
-  image_url = $5
+  description = $2,
+  image_url = $3
 WHERE
   id = $1;
 
