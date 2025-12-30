@@ -48,90 +48,6 @@ paths:
                 $ref: "#/components/schemas/Error"
       security: []
 
-  /api/admin:
-    post:
-      summary: Create an admin.
-      tags:
-        - Admin
-      parameters:
-        - $ref: "#/components/parameters/CsrfTokenHeader"
-      requestBody:
-        description: Create Admin Request
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateAdminRequest"
-      responses:
-        "204":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CreateAdminResponse"
-        "409":
-          description: Status Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "422":
-          description: Unprocessible Entity
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-      security:
-        - AccessTokenAdminBearer: []
-
-  /api/admin/user:
-    post:
-      summary: Create a user.
-      tags:
-        - User
-      parameters:
-        - $ref: "#/components/parameters/CsrfTokenHeader"
-      requestBody:
-        description: Create User Request
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateUserRequest"
-      responses:
-        "204":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CreateUserResponse"
-        "409":
-          description: Status Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "422":
-          description: Unprocessible Entity
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-      security:
-        - AccessTokenAdminBearer: []
-
   /api/auth/refresh:
     post:
       summary: Refresh session tokens
@@ -1570,30 +1486,6 @@ components:
             - ingredients
             - steps
 
-    CreateAdminRequest:
-      type: object
-      required:
-        - email
-        - first_name
-        - last_name
-        - password
-      properties:
-        email:
-          type: string
-          format: email
-        first_name:
-          type: string
-        last_name:
-          type: string
-        password:
-          type: string
-
-    CreateAdminResponse:
-      type: object
-      properties:
-        user_id:
-          type: integer
-
     CreateRecipeResponse:
       type: object
       properties:
@@ -1625,30 +1517,6 @@ components:
       required:
         - owner
         - recipe
-
-    CreateUserRequest:
-      type: object
-      required:
-        - email
-        - first_name
-        - last_name
-        - password
-      properties:
-        email:
-          type: string
-          format: email
-        first_name:
-          type: string
-        last_name:
-          type: string
-        password:
-          type: string
-
-    CreateUserResponse:
-      type: object
-      properties:
-        user_id:
-          type: integer
 
     UserLoginRequest:
       type: object
