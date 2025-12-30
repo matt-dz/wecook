@@ -158,6 +158,8 @@ The admin dashboard provides tools for managing users and configuring applicatio
 
 ### User Management
 
+<img width="1470" height="835" alt="Screenshot 2025-12-30 at 5 28 35 PM" src="https://github.com/user-attachments/assets/df913b7f-4179-4fc1-9830-e995f671e0e8" />
+
 As an admin, you have full control over user accounts:
 
 - **View All Users** - See a list of all registered users with their email addresses, names, and roles
@@ -170,6 +172,8 @@ As an admin, you have full control over user accounts:
   - This action cannot be undone
 
 ### Application Preferences
+
+<img width="1470" height="835" alt="Screenshot 2025-12-30 at 5 29 11 PM" src="https://github.com/user-attachments/assets/91c123ff-5184-45a9-a159-addc88ded354" />
 
 Control how WeCook operates for all users:
 
