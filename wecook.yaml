@@ -1,31 +1,137 @@
-env: "DEV"
-host_origin: "http://localhost:8080"
+# WeCook Configuration File
+#
+# This file should be mounted to /data/wecook.yaml in the container.
+# All fields are optional unless marked as required.
+#
+# Example Docker Compose mount:
+#   volumes:
+#     - ./wecook.yaml:/data/wecook.yaml:ro
 
+# =============================================================================
+# Application Settings
+# =============================================================================
+
+# Environment mode: PROD or DEV
+# - PROD: Production mode with stricter security
+# - DEV: Development mode (default)
+env: DEV
+
+# Application host URL used for CORS, cookies, and invite links
+# Required in production. Must be a valid URL.
+# Examples: https://wecook.example.com, http://localhost:8080
+host_origin: http://localhost:8080
+
+# =============================================================================
+# Application Secret (JWT Signing Key)
+# =============================================================================
 app_secret:
-  path: "/data/secret"
+  # Path where the auto-generated secret will be stored
+  # If not provided inline, a secure random secret will be generated
+  # and saved to this path on first startup
+  path: /data/secret
+
+  # Optional: Provide the secret directly (must be at least 32 bytes)
+  # If not set, a secret will be auto-generated and persisted to the path above
+  # value: ""
+
+  # Version identifier for the secret (used for key rotation)
+  # Change this when rotating secrets to invalidate old tokens
   version: "1"
 
+# =============================================================================
+# Database Configuration
+# =============================================================================
 database:
-  user: wecook
-  password: secure-password
+  # PostgreSQL hostname (required)
+  # In Docker Compose, use the service name (e.g., "postgres" or "wecook-db")
+  host: localhost
+
+  # PostgreSQL port (default: 5432)
   port: 5432
+
+  # Database name (required)
   database: wecook
 
+  # Database username (required)
+  user: wecook
+
+  # Database password (required)
+  # Generate a secure password: openssl rand -base64 32
+  password: changeme
+
+# =============================================================================
+# File Storage
+# =============================================================================
 fileserver:
-  volume: "/data/files"
-  url_prefix: "/files"
+  # Directory path where uploaded files (recipe images, etc.) will be stored
+  # This should be a persistent volume in production
+  volume: /data/files
 
-admin:
-  first_name: John
-  last_name: Doe
-  email: admin@example.com
-  password: Change-m3!
+  # URL prefix for serving files
+  # Files will be accessible at {host_origin}{url_prefix}/{filename}
+  url_prefix: /files
 
+# =============================================================================
+# Email Configuration (Optional)
+# =============================================================================
+# Required only if you want to send user invitation emails
+# Leave fields empty to disable email functionality
 smtp:
-  host: smtp.example.com
+  # SMTP server hostname
+  # Examples: smtp.gmail.com, smtp.sendgrid.net, smtp.mailgun.org
+  host: ""
+
+  # SMTP server port (default: 587)
+  # Common ports:
+  # - 587: STARTTLS (recommended)
+  # - 465: Implicit TLS
+  # - 25: No TLS (not recommended)
   port: 587
-  username: user@example.com
-  password: your-smtp-password
-  from: noreply@example.com
+
+  # SMTP username for authentication
+  username: ""
+
+  # SMTP password for authentication
+  password: ""
+
+  # Email address to use as the sender
+  # Example: noreply@your-domain.com
+  from: ""
+
+  # TLS mode: auto, starttls, implicit, or none
+  # - auto: Uses STARTTLS on port 587, implicit TLS on 465, no TLS otherwise
+  # - starttls: Always use STARTTLS (recommended for port 587)
+  # - implicit: Use implicit TLS (recommended for port 465)
+  # - none: No TLS (not recommended for production)
   tls_mode: auto
-  tls_mode_skip_verify: false
+
+  # Skip TLS certificate verification (DANGEROUS - development only)
+  # Set to true only for testing with self-signed certificates
+  # Never use in production
+  tls_skip_verify: false
+
+# =============================================================================
+# Admin User Setup
+# =============================================================================
+# These credentials are used to create an initial admin user on first startup
+# If an admin already exists in the database, these settings are ignored
+#
+# Important: All fields required together - if you set email and password,
+# you must also set first_name and last_name
+admin:
+  # Admin first name
+  first_name: ""
+
+  # Admin last name
+  last_name: ""
+
+  # Admin email address (must be valid email format)
+  # This will be the login username
+  email: ""
+
+  # Admin password
+  # Requirements:
+  # - At least 10 characters
+  # - Must contain: uppercase letter, lowercase letter, number, special character
+  # Example: SecureP@ssw0rd123!
+  password: ""

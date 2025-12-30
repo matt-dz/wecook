@@ -4,7 +4,6 @@ services:
     container_name: wecook_backend
     hostname: wecook-backend
     restart: unless-stopped
-    env_file: .env.backend
     depends_on:
       database:
         condition: service_healthy
@@ -16,6 +15,7 @@ services:
     volumes:
       - files-data:/data/files
       - backend-data:/data
+      - ./wecook.yaml:/data/wecook.yaml:ro
 
   web:
     image: matthew10125/wecook-frontend:latest
