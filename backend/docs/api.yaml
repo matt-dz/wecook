@@ -305,11 +305,91 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /api/preferences:
+    get:
+      summary: Get app preferences
+      tags:
+        - Admin
+      security:
+        - AccessTokenAdminBearer: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preferences"
+        "401":
+          description: Unauthorized — missing or invalid access token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    patch:
+      summary: Update app preferences
+      tags:
+        - Admin
+      security:
+        - AccessTokenAdminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfTokenHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePreferencesRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preferences"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized — missing or invalid access token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/user/invite:
     post:
       summary: Invite a user
       tags:
         - User
+        - Admin
       description: >
         Invites a new user to the platform by sending them an
         email. The email will contain a unique signup link that
@@ -1817,6 +1897,23 @@ components:
       required:
         - current_password
         - new_password
+
+    UpdatePreferencesRequest:
+      type: object
+      properties:
+        allow_public_signup:
+          type: boolean
+          description: >
+            If enabled, anyone can signup for the platform.
+            If disabled, users may only join via an invitation.
+
+    Preferences:
+      type: object
+      properties:
+        allow_public_signup:
+          type: boolean
+      required:
+        - allow_public_signup
 
   securitySchemes:
     AccessTokenUserBearer:

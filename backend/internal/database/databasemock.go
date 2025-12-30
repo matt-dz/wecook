@@ -232,6 +232,20 @@ func (mr *MockQuerierMockRecorder) CreateInviteCode(ctx, arg any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInviteCode", reflect.TypeOf((*MockQuerier)(nil).CreateInviteCode), ctx, arg)
 }
 
+// CreatePreferences mocks base method.
+func (m *MockQuerier) CreatePreferences(ctx context.Context, id int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePreferences", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreatePreferences indicates an expected call of CreatePreferences.
+func (mr *MockQuerierMockRecorder) CreatePreferences(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePreferences", reflect.TypeOf((*MockQuerier)(nil).CreatePreferences), ctx, id)
+}
+
 // CreateRecipe mocks base method.
 func (m *MockQuerier) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (int64, error) {
 	m.ctrl.T.Helper()
@@ -418,6 +432,21 @@ func (m *MockQuerier) GetInvitationCode(ctx context.Context, id int64) (string, 
 func (mr *MockQuerierMockRecorder) GetInvitationCode(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInvitationCode", reflect.TypeOf((*MockQuerier)(nil).GetInvitationCode), ctx, id)
+}
+
+// GetPreferences mocks base method.
+func (m *MockQuerier) GetPreferences(ctx context.Context, id int32) (Preference, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPreferences", ctx, id)
+	ret0, _ := ret[0].(Preference)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPreferences indicates an expected call of GetPreferences.
+func (mr *MockQuerierMockRecorder) GetPreferences(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreferences", reflect.TypeOf((*MockQuerier)(nil).GetPreferences), ctx, id)
 }
 
 // GetPublicRecipes mocks base method.
@@ -733,6 +762,21 @@ func (m *MockQuerier) RedeemInvitationCode(ctx context.Context, id int64) (int64
 func (mr *MockQuerierMockRecorder) RedeemInvitationCode(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RedeemInvitationCode", reflect.TypeOf((*MockQuerier)(nil).RedeemInvitationCode), ctx, id)
+}
+
+// UpdatePreferences mocks base method.
+func (m *MockQuerier) UpdatePreferences(ctx context.Context, arg UpdatePreferencesParams) (Preference, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePreferences", ctx, arg)
+	ret0, _ := ret[0].(Preference)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdatePreferences indicates an expected call of UpdatePreferences.
+func (mr *MockQuerierMockRecorder) UpdatePreferences(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePreferences", reflect.TypeOf((*MockQuerier)(nil).UpdatePreferences), ctx, arg)
 }
 
 // UpdateRecipe mocks base method.

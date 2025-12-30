@@ -103,6 +103,11 @@ type LoginResponse struct {
 	TokenType *string `json:"token_type,omitempty"`
 }
 
+// Preferences defines model for Preferences.
+type Preferences struct {
+	AllowPublicSignup bool `json:"allow_public_signup"`
+}
+
 // Recipe defines model for Recipe.
 type Recipe struct {
 	CookTimeAmount *int32    `json:"cook_time_amount,omitempty"`
@@ -217,6 +222,12 @@ type UpdatePasswordRequest struct {
 	NewPassword string `json:"new_password"`
 }
 
+// UpdatePreferencesRequest defines model for UpdatePreferencesRequest.
+type UpdatePreferencesRequest struct {
+	// AllowPublicSignup If enabled, anyone can signup for the platform. If disabled, users may only join via an invitation.
+	AllowPublicSignup *bool `json:"allow_public_signup,omitempty"`
+}
+
 // UpdateRecipe defines model for UpdateRecipe.
 type UpdateRecipe struct {
 	CookTimeAmount nullable.Nullable[int32]    `json:"cook_time_amount,omitempty"`
@@ -286,6 +297,12 @@ type GetApiAuthVerifyParams struct {
 
 	// Access Access token
 	Access *string `form:"access,omitempty" json:"access,omitempty"`
+}
+
+// PatchApiPreferencesParams defines parameters for PatchApiPreferences.
+type PatchApiPreferencesParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
 }
 
 // PostApiRecipesParams defines parameters for PostApiRecipes.
@@ -401,6 +418,9 @@ type PostApiAuthRefreshJSONRequestBody = RefreshToken
 
 // PostApiLoginJSONRequestBody defines body for PostApiLogin for application/json ContentType.
 type PostApiLoginJSONRequestBody = UserLoginRequest
+
+// PatchApiPreferencesJSONRequestBody defines body for PatchApiPreferences for application/json ContentType.
+type PatchApiPreferencesJSONRequestBody = UpdatePreferencesRequest
 
 // PatchApiRecipesRecipeIDJSONRequestBody defines body for PatchApiRecipesRecipeID for application/json ContentType.
 type PatchApiRecipesRecipeIDJSONRequestBody = UpdateRecipe
@@ -523,6 +543,14 @@ type ClientInterface interface {
 
 	// GetApiPing request
 	GetApiPing(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetApiPreferences request
+	GetApiPreferences(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchApiPreferencesWithBody request with any body
+	PatchApiPreferencesWithBody(ctx context.Context, params *PatchApiPreferencesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchApiPreferences(ctx context.Context, params *PatchApiPreferencesParams, body PatchApiPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiRecipes request
 	GetApiRecipes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -695,6 +723,42 @@ func (c *Client) GetApiOpenapiYaml(ctx context.Context, reqEditors ...RequestEdi
 
 func (c *Client) GetApiPing(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiPingRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetApiPreferences(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiPreferencesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchApiPreferencesWithBody(ctx context.Context, params *PatchApiPreferencesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiPreferencesRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchApiPreferences(ctx context.Context, params *PatchApiPreferencesParams, body PatchApiPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiPreferencesRequest(c.Server, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1319,6 +1383,88 @@ func NewGetApiPingRequest(server string) (*http.Request, error) {
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetApiPreferencesRequest generates requests for GetApiPreferences
+func NewGetApiPreferencesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/preferences")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchApiPreferencesRequest calls the generic PatchApiPreferences builder with application/json body
+func NewPatchApiPreferencesRequest(server string, params *PatchApiPreferencesParams, body PatchApiPreferencesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchApiPreferencesRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewPatchApiPreferencesRequestWithBody generates requests for PatchApiPreferences with any type of body
+func NewPatchApiPreferencesRequestWithBody(server string, params *PatchApiPreferencesParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/preferences")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
 	}
 
 	return req, nil
@@ -2582,6 +2728,14 @@ type ClientWithResponsesInterface interface {
 	// GetApiPingWithResponse request
 	GetApiPingWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiPingResponse, error)
 
+	// GetApiPreferencesWithResponse request
+	GetApiPreferencesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiPreferencesResponse, error)
+
+	// PatchApiPreferencesWithBodyWithResponse request with any body
+	PatchApiPreferencesWithBodyWithResponse(ctx context.Context, params *PatchApiPreferencesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiPreferencesResponse, error)
+
+	PatchApiPreferencesWithResponse(ctx context.Context, params *PatchApiPreferencesParams, body PatchApiPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiPreferencesResponse, error)
+
 	// GetApiRecipesWithResponse request
 	GetApiRecipesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiRecipesResponse, error)
 
@@ -2800,6 +2954,57 @@ func (r GetApiPingResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetApiPingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetApiPreferencesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Preferences
+	JSON401      *Error
+	JSON403      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiPreferencesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiPreferencesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchApiPreferencesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Preferences
+	JSON400      *Error
+	JSON401      *Error
+	JSON403      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchApiPreferencesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchApiPreferencesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -3470,6 +3675,32 @@ func (c *ClientWithResponses) GetApiPingWithResponse(ctx context.Context, reqEdi
 	return ParseGetApiPingResponse(rsp)
 }
 
+// GetApiPreferencesWithResponse request returning *GetApiPreferencesResponse
+func (c *ClientWithResponses) GetApiPreferencesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiPreferencesResponse, error) {
+	rsp, err := c.GetApiPreferences(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiPreferencesResponse(rsp)
+}
+
+// PatchApiPreferencesWithBodyWithResponse request with arbitrary body returning *PatchApiPreferencesResponse
+func (c *ClientWithResponses) PatchApiPreferencesWithBodyWithResponse(ctx context.Context, params *PatchApiPreferencesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiPreferencesResponse, error) {
+	rsp, err := c.PatchApiPreferencesWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiPreferencesResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchApiPreferencesWithResponse(ctx context.Context, params *PatchApiPreferencesParams, body PatchApiPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiPreferencesResponse, error) {
+	rsp, err := c.PatchApiPreferences(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiPreferencesResponse(rsp)
+}
+
 // GetApiRecipesWithResponse request returning *GetApiRecipesResponse
 func (c *ClientWithResponses) GetApiRecipesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiRecipesResponse, error) {
 	rsp, err := c.GetApiRecipes(ctx, reqEditors...)
@@ -3927,6 +4158,107 @@ func ParseGetApiPingResponse(rsp *http.Response) (*GetApiPingResponse, error) {
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiPreferencesResponse parses an HTTP response from a GetApiPreferencesWithResponse call
+func ParseGetApiPreferencesResponse(rsp *http.Response) (*GetApiPreferencesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiPreferencesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Preferences
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchApiPreferencesResponse parses an HTTP response from a PatchApiPreferencesWithResponse call
+func ParsePatchApiPreferencesResponse(rsp *http.Response) (*PatchApiPreferencesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchApiPreferencesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Preferences
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -5045,6 +5377,12 @@ type ServerInterface interface {
 	// Ping endpoint.
 	// (GET /api/ping)
 	GetApiPing(w http.ResponseWriter, r *http.Request)
+	// Get app preferences
+	// (GET /api/preferences)
+	GetApiPreferences(w http.ResponseWriter, r *http.Request)
+	// Update app preferences
+	// (PATCH /api/preferences)
+	PatchApiPreferences(w http.ResponseWriter, r *http.Request, params PatchApiPreferencesParams)
 	// Get all personal recipes
 	// (GET /api/recipes)
 	GetApiRecipes(w http.ResponseWriter, r *http.Request)
@@ -5156,6 +5494,18 @@ func (_ Unimplemented) GetApiOpenapiYaml(w http.ResponseWriter, r *http.Request)
 // Ping endpoint.
 // (GET /api/ping)
 func (_ Unimplemented) GetApiPing(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get app preferences
+// (GET /api/preferences)
+func (_ Unimplemented) GetApiPreferences(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update app preferences
+// (PATCH /api/preferences)
+func (_ Unimplemented) PatchApiPreferences(w http.ResponseWriter, r *http.Request, params PatchApiPreferencesParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5462,6 +5812,72 @@ func (siw *ServerInterfaceWrapper) GetApiPing(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetApiPing(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetApiPreferences operation middleware
+func (siw *ServerInterfaceWrapper) GetApiPreferences(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenAdminBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetApiPreferences(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PatchApiPreferences operation middleware
+func (siw *ServerInterfaceWrapper) PatchApiPreferences(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenAdminBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PatchApiPreferencesParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PatchApiPreferences(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6748,6 +7164,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/api/ping", wrapper.GetApiPing)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/preferences", wrapper.GetApiPreferences)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/preferences", wrapper.PatchApiPreferences)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/recipes", wrapper.GetApiRecipes)
 	})
 	r.Group(func(r chi.Router) {
@@ -7030,6 +7452,103 @@ func (response GetApiPing200Response) VisitGetApiPingResponse(w http.ResponseWri
 type GetApiPing500JSONResponse Error
 
 func (response GetApiPing500JSONResponse) VisitGetApiPingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiPreferencesRequestObject struct {
+}
+
+type GetApiPreferencesResponseObject interface {
+	VisitGetApiPreferencesResponse(w http.ResponseWriter) error
+}
+
+type GetApiPreferences200JSONResponse Preferences
+
+func (response GetApiPreferences200JSONResponse) VisitGetApiPreferencesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiPreferences401JSONResponse Error
+
+func (response GetApiPreferences401JSONResponse) VisitGetApiPreferencesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiPreferences403JSONResponse Error
+
+func (response GetApiPreferences403JSONResponse) VisitGetApiPreferencesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetApiPreferences500JSONResponse Error
+
+func (response GetApiPreferences500JSONResponse) VisitGetApiPreferencesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiPreferencesRequestObject struct {
+	Params PatchApiPreferencesParams
+	Body   *PatchApiPreferencesJSONRequestBody
+}
+
+type PatchApiPreferencesResponseObject interface {
+	VisitPatchApiPreferencesResponse(w http.ResponseWriter) error
+}
+
+type PatchApiPreferences200JSONResponse Preferences
+
+func (response PatchApiPreferences200JSONResponse) VisitPatchApiPreferencesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiPreferences400JSONResponse Error
+
+func (response PatchApiPreferences400JSONResponse) VisitPatchApiPreferencesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiPreferences401JSONResponse Error
+
+func (response PatchApiPreferences401JSONResponse) VisitPatchApiPreferencesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiPreferences403JSONResponse Error
+
+func (response PatchApiPreferences403JSONResponse) VisitPatchApiPreferencesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchApiPreferences500JSONResponse Error
+
+func (response PatchApiPreferences500JSONResponse) VisitPatchApiPreferencesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -8157,6 +8676,12 @@ type StrictServerInterface interface {
 	// Ping endpoint.
 	// (GET /api/ping)
 	GetApiPing(ctx context.Context, request GetApiPingRequestObject) (GetApiPingResponseObject, error)
+	// Get app preferences
+	// (GET /api/preferences)
+	GetApiPreferences(ctx context.Context, request GetApiPreferencesRequestObject) (GetApiPreferencesResponseObject, error)
+	// Update app preferences
+	// (PATCH /api/preferences)
+	PatchApiPreferences(ctx context.Context, request PatchApiPreferencesRequestObject) (PatchApiPreferencesResponseObject, error)
 	// Get all personal recipes
 	// (GET /api/recipes)
 	GetApiRecipes(ctx context.Context, request GetApiRecipesRequestObject) (GetApiRecipesResponseObject, error)
@@ -8415,6 +8940,63 @@ func (sh *strictHandler) GetApiPing(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetApiPingResponseObject); ok {
 		if err := validResponse.VisitGetApiPingResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetApiPreferences operation middleware
+func (sh *strictHandler) GetApiPreferences(w http.ResponseWriter, r *http.Request) {
+	var request GetApiPreferencesRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetApiPreferences(ctx, request.(GetApiPreferencesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetApiPreferences")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetApiPreferencesResponseObject); ok {
+		if err := validResponse.VisitGetApiPreferencesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PatchApiPreferences operation middleware
+func (sh *strictHandler) PatchApiPreferences(w http.ResponseWriter, r *http.Request, params PatchApiPreferencesParams) {
+	var request PatchApiPreferencesRequestObject
+
+	request.Params = params
+
+	var body PatchApiPreferencesJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PatchApiPreferences(ctx, request.(PatchApiPreferencesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PatchApiPreferences")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PatchApiPreferencesResponseObject); ok {
+		if err := validResponse.VisitPatchApiPreferencesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

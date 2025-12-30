@@ -16,6 +16,10 @@ import (
 )
 
 const (
+	PreferenceID = 1
+)
+
+const (
 	configFilePath     = "/data/wecook.yaml"
 	appSecretBytes     = 32
 	appSecretFilePerms = 0o600

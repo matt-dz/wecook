@@ -187,6 +187,18 @@ func (q *Queries) CreateInviteCode(ctx context.Context, arg CreateInviteCodePara
 	return id, err
 }
 
+const createPreferences = `-- name: CreatePreferences :exec
+INSERT INTO preferences (id)
+  VALUES ($1)
+ON CONFLICT (id)
+  DO NOTHING
+`
+
+func (q *Queries) CreatePreferences(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, createPreferences, id)
+	return err
+}
+
 const createRecipe = `-- name: CreateRecipe :one
 INSERT INTO recipes (user_id, title)
   VALUES ($1, $2)
@@ -396,6 +408,23 @@ func (q *Queries) GetInvitationCode(ctx context.Context, id int64) (string, erro
 	var code_hash string
 	err := row.Scan(&code_hash)
 	return code_hash, err
+}
+
+const getPreferences = `-- name: GetPreferences :one
+SELECT
+  id,
+  allow_public_signup
+FROM
+  preferences
+WHERE
+  id = $1
+`
+
+func (q *Queries) GetPreferences(ctx context.Context, id int32) (Preference, error) {
+	row := q.db.QueryRow(ctx, getPreferences, id)
+	var i Preference
+	err := row.Scan(&i.ID, &i.AllowPublicSignup)
+	return i, err
 }
 
 const getPublicRecipes = `-- name: GetPublicRecipes :many
@@ -1117,6 +1146,35 @@ func (q *Queries) RedeemInvitationCode(ctx context.Context, id int64) (int64, er
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const updatePreferences = `-- name: UpdatePreferences :one
+UPDATE
+  preferences
+SET
+  allow_public_signup = CASE WHEN $2::boolean THEN
+    $3
+  ELSE
+    allow_public_signup
+  END
+WHERE
+  id = $1
+RETURNING
+  id,
+  allow_public_signup
+`
+
+type UpdatePreferencesParams struct {
+	ID                      int32
+	UpdateAllowPublicSignup pgtype.Bool
+	AllowPublicSignup       pgtype.Bool
+}
+
+func (q *Queries) UpdatePreferences(ctx context.Context, arg UpdatePreferencesParams) (Preference, error) {
+	row := q.db.QueryRow(ctx, updatePreferences, arg.ID, arg.UpdateAllowPublicSignup, arg.AllowPublicSignup)
+	var i Preference
+	err := row.Scan(&i.ID, &i.AllowPublicSignup)
+	return i, err
 }
 
 const updateRecipe = `-- name: UpdateRecipe :one
