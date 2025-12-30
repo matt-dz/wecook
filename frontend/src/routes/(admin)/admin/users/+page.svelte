@@ -2,15 +2,29 @@
 	import Button from '$lib/components/button/Button.svelte';
 	import DataTable from '$lib/components/users-table/Table.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { columns } from '$lib/components/users-table/columns';
+	import { getColumns } from '$lib/components/users-table/columns';
 	import type { PageProps } from './$types';
 	import InviteUserDialog from '$lib/components/invite-user-dialog/Dialog.svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let { data }: PageProps = $props();
-	const users = $state(data.users);
+	let users = $state(data.users.users);
+	let currentUserId = $state(data.currentUserId);
 
 	let inviteDialogOpen = $state(false);
 	let inviteEmail = $state('');
+
+	const handleUserDeleted = (userId: number) => {
+		users = users.filter((user) => user.id !== userId);
+
+		// If the deleted user is the current user, redirect to logout
+		if (userId === currentUserId) {
+			goto(resolve('/logout'));
+		}
+	};
+
+	const columns = $derived(getColumns(handleUserDeleted, currentUserId, users.length));
 
 	$effect(() => {
 		if (!inviteDialogOpen) {
@@ -28,7 +42,7 @@
 					>Invite User</Button
 				>
 			</Dialog.Trigger>
-			<DataTable data={users.users} {columns} />
+			<DataTable data={users} {columns} />
 		</div>
 	</div>
 	<InviteUserDialog bind:email={inviteEmail} />

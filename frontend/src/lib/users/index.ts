@@ -111,3 +111,16 @@ export async function changePassword(
 		json: request
 	});
 }
+
+export type DeleteUserRequest = {
+	user_id: number;
+};
+
+export async function deleteUser(
+	fetch: FetchType,
+	request: DeleteUserRequest,
+	options?: Options,
+	apiUrl?: string
+): Promise<void> {
+	await fetch.delete(`${apiUrl ?? ''}/api/user/${request.user_id}`, options);
+}

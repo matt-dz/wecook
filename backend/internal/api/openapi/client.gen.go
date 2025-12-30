@@ -407,6 +407,12 @@ type PatchApiUserPasswordParams struct {
 	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
 }
 
+// DeleteApiUserIdParams defines parameters for DeleteApiUserId.
+type DeleteApiUserIdParams struct {
+	// XCSRFToken CSRF token required when authenticating via cookies. Must match the CSRF cookie value.
+	XCSRFToken *CsrfTokenHeader `json:"X-CSRF-Token,omitempty"`
+}
+
 // GetApiUsersParams defines parameters for GetApiUsers.
 type GetApiUsersParams struct {
 	After *int64 `form:"after,omitempty" json:"after,omitempty"`
@@ -632,6 +638,9 @@ type ClientInterface interface {
 	PatchApiUserPasswordWithBody(ctx context.Context, params *PatchApiUserPasswordParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PatchApiUserPassword(ctx context.Context, params *PatchApiUserPasswordParams, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteApiUserId request
+	DeleteApiUserId(ctx context.Context, id int64, params *DeleteApiUserIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiUsers request
 	GetApiUsers(ctx context.Context, params *GetApiUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1107,6 +1116,18 @@ func (c *Client) PatchApiUserPasswordWithBody(ctx context.Context, params *Patch
 
 func (c *Client) PatchApiUserPassword(ctx context.Context, params *PatchApiUserPasswordParams, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPatchApiUserPasswordRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteApiUserId(ctx context.Context, id int64, params *DeleteApiUserIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApiUserIdRequest(c.Server, id, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2598,6 +2619,55 @@ func NewPatchApiUserPasswordRequestWithBody(server string, params *PatchApiUserP
 	return req, nil
 }
 
+// NewDeleteApiUserIdRequest generates requests for DeleteApiUserId
+func NewDeleteApiUserIdRequest(server string, id int64, params *DeleteApiUserIdParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/user/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XCSRFToken != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-CSRF-Token", runtime.ParamLocationHeader, *params.XCSRFToken)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-CSRF-Token", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewGetApiUsersRequest generates requests for GetApiUsers
 func NewGetApiUsersRequest(server string, params *GetApiUsersParams) (*http.Request, error) {
 	var err error
@@ -2816,6 +2886,9 @@ type ClientWithResponsesInterface interface {
 	PatchApiUserPasswordWithBodyWithResponse(ctx context.Context, params *PatchApiUserPasswordParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error)
 
 	PatchApiUserPasswordWithResponse(ctx context.Context, params *PatchApiUserPasswordParams, body PatchApiUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiUserPasswordResponse, error)
+
+	// DeleteApiUserIdWithResponse request
+	DeleteApiUserIdWithResponse(ctx context.Context, id int64, params *DeleteApiUserIdParams, reqEditors ...RequestEditorFn) (*DeleteApiUserIdResponse, error)
 
 	// GetApiUsersWithResponse request
 	GetApiUsersWithResponse(ctx context.Context, params *GetApiUsersParams, reqEditors ...RequestEditorFn) (*GetApiUsersResponse, error)
@@ -3580,6 +3653,32 @@ func (r PatchApiUserPasswordResponse) StatusCode() int {
 	return 0
 }
 
+type DeleteApiUserIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *Error
+	JSON401      *Error
+	JSON403      *Error
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteApiUserIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteApiUserIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetApiUsersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -3954,6 +4053,15 @@ func (c *ClientWithResponses) PatchApiUserPasswordWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParsePatchApiUserPasswordResponse(rsp)
+}
+
+// DeleteApiUserIdWithResponse request returning *DeleteApiUserIdResponse
+func (c *ClientWithResponses) DeleteApiUserIdWithResponse(ctx context.Context, id int64, params *DeleteApiUserIdParams, reqEditors ...RequestEditorFn) (*DeleteApiUserIdResponse, error) {
+	rsp, err := c.DeleteApiUserId(ctx, id, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteApiUserIdResponse(rsp)
 }
 
 // GetApiUsersWithResponse request returning *GetApiUsersResponse
@@ -5310,6 +5418,60 @@ func ParsePatchApiUserPasswordResponse(rsp *http.Response) (*PatchApiUserPasswor
 	return response, nil
 }
 
+// ParseDeleteApiUserIdResponse parses an HTTP response from a DeleteApiUserIdWithResponse call
+func ParseDeleteApiUserIdResponse(rsp *http.Response) (*DeleteApiUserIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteApiUserIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetApiUsersResponse parses an HTTP response from a GetApiUsersWithResponse call
 func ParseGetApiUsersResponse(rsp *http.Response) (*GetApiUsersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -5452,6 +5614,9 @@ type ServerInterface interface {
 	// Update password
 	// (PATCH /api/user/password)
 	PatchApiUserPassword(w http.ResponseWriter, r *http.Request, params PatchApiUserPasswordParams)
+	// Delete user
+	// (DELETE /api/user/{id})
+	DeleteApiUserId(w http.ResponseWriter, r *http.Request, id int64, params DeleteApiUserIdParams)
 	// Get users
 	// (GET /api/users)
 	GetApiUsers(w http.ResponseWriter, r *http.Request, params GetApiUsersParams)
@@ -5644,6 +5809,12 @@ func (_ Unimplemented) PostApiUserInvite(w http.ResponseWriter, r *http.Request,
 // Update password
 // (PATCH /api/user/password)
 func (_ Unimplemented) PatchApiUserPassword(w http.ResponseWriter, r *http.Request, params PatchApiUserPasswordParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete user
+// (DELETE /api/user/{id})
+func (_ Unimplemented) DeleteApiUserId(w http.ResponseWriter, r *http.Request, id int64, params DeleteApiUserIdParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6991,6 +7162,61 @@ func (siw *ServerInterfaceWrapper) PatchApiUserPassword(w http.ResponseWriter, r
 	handler.ServeHTTP(w, r)
 }
 
+// DeleteApiUserId operation middleware
+func (siw *ServerInterfaceWrapper) DeleteApiUserId(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, AccessTokenAdminBearerScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteApiUserIdParams
+
+	headers := r.Header
+
+	// ------------- Optional header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfTokenHeader
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = &XCSRFToken
+
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteApiUserId(w, r, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetApiUsers operation middleware
 func (siw *ServerInterfaceWrapper) GetApiUsers(w http.ResponseWriter, r *http.Request) {
 
@@ -7237,6 +7463,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Patch(options.BaseURL+"/api/user/password", wrapper.PatchApiUserPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/user/{id}", wrapper.DeleteApiUserId)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/users", wrapper.GetApiUsers)
@@ -8612,6 +8841,68 @@ func (response PatchApiUserPassword500JSONResponse) VisitPatchApiUserPasswordRes
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteApiUserIdRequestObject struct {
+	Id     int64 `json:"id"`
+	Params DeleteApiUserIdParams
+}
+
+type DeleteApiUserIdResponseObject interface {
+	VisitDeleteApiUserIdResponse(w http.ResponseWriter) error
+}
+
+type DeleteApiUserId204Response struct {
+}
+
+func (response DeleteApiUserId204Response) VisitDeleteApiUserIdResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteApiUserId400JSONResponse Error
+
+func (response DeleteApiUserId400JSONResponse) VisitDeleteApiUserIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApiUserId401JSONResponse Error
+
+func (response DeleteApiUserId401JSONResponse) VisitDeleteApiUserIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApiUserId403JSONResponse Error
+
+func (response DeleteApiUserId403JSONResponse) VisitDeleteApiUserIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApiUserId404JSONResponse Error
+
+func (response DeleteApiUserId404JSONResponse) VisitDeleteApiUserIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteApiUserId500JSONResponse Error
+
+func (response DeleteApiUserId500JSONResponse) VisitDeleteApiUserIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetApiUsersRequestObject struct {
 	Params GetApiUsersParams
 }
@@ -8751,6 +9042,9 @@ type StrictServerInterface interface {
 	// Update password
 	// (PATCH /api/user/password)
 	PatchApiUserPassword(ctx context.Context, request PatchApiUserPasswordRequestObject) (PatchApiUserPasswordResponseObject, error)
+	// Delete user
+	// (DELETE /api/user/{id})
+	DeleteApiUserId(ctx context.Context, request DeleteApiUserIdRequestObject) (DeleteApiUserIdResponseObject, error)
 	// Get users
 	// (GET /api/users)
 	GetApiUsers(ctx context.Context, request GetApiUsersRequestObject) (GetApiUsersResponseObject, error)
@@ -9672,6 +9966,33 @@ func (sh *strictHandler) PatchApiUserPassword(w http.ResponseWriter, r *http.Req
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PatchApiUserPasswordResponseObject); ok {
 		if err := validResponse.VisitPatchApiUserPasswordResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteApiUserId operation middleware
+func (sh *strictHandler) DeleteApiUserId(w http.ResponseWriter, r *http.Request, id int64, params DeleteApiUserIdParams) {
+	var request DeleteApiUserIdRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteApiUserId(ctx, request.(DeleteApiUserIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteApiUserId")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteApiUserIdResponseObject); ok {
+		if err := validResponse.VisitDeleteApiUserIdResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

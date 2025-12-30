@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -556,4 +557,91 @@ func (Server) PatchApiUserPassword(ctx context.Context,
 	}
 
 	return PatchApiUserPassword204Response{}, nil
+}
+
+func (Server) DeleteApiUserId(ctx context.Context,
+	request DeleteApiUserIdRequestObject) (
+	DeleteApiUserIdResponseObject, error,
+) {
+	env := env.EnvFromCtx(ctx)
+	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
+
+	// Get all user images
+	env.Logger.DebugContext(ctx, "getting user images")
+	coverImages, err := env.Database.GetUserRecipeImages(ctx, pgtype.Int8{
+		Int64: request.Id,
+		Valid: true,
+	})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe images", slog.Any("error", err))
+		return DeleteApiUserId500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	ingredientImages, err := env.Database.GetUserRecipeIngredientImages(
+		ctx, pgtype.Int8{
+			Int64: request.Id,
+			Valid: true,
+		})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe ingredient images", slog.Any("error", err))
+		return DeleteApiUserId500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	stepImages, err := env.Database.GetUserRecipeStepImages(
+		ctx, pgtype.Int8{
+			Int64: request.Id,
+			Valid: true,
+		})
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to get recipe step images", slog.Any("error", err))
+		return DeleteApiUserId500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Delete user
+	env.Logger.DebugContext(ctx, "deleting user")
+	rows, err := env.Database.DeleteUser(ctx, request.Id)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "failed to delete user", slog.Any("error", err))
+		return DeleteApiUserId500JSONResponse{
+			Status:  apiError.InternalServerError.StatusCode(),
+			Code:    apiError.InternalServerError.String(),
+			Message: "Internal Server Error",
+			ErrorId: requestID,
+		}, nil
+	}
+	if rows == 0 {
+		env.Logger.ErrorContext(ctx, "no rows deleted - user not found")
+		return DeleteApiUserId404JSONResponse{
+			Status:  apiError.UserNotFound.StatusCode(),
+			Code:    apiError.UserNotFound.String(),
+			Message: "User not found",
+			ErrorId: requestID,
+		}, nil
+	}
+
+	// Remove images
+	env.Logger.DebugContext(ctx, "removing all images")
+	for _, img := range slices.Concat(coverImages, ingredientImages, stepImages) {
+		if img.Valid {
+			if err := env.FileStore.DeleteURLPath(img.String); err != nil {
+				env.Logger.WarnContext(ctx, "failed to delete image - manual cleanup required",
+					slog.Any("error", err), slog.String("path", img.String))
+			}
+		}
+	}
+
+	return DeleteApiUserId204Response{}, nil
 }

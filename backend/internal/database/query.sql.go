@@ -378,6 +378,19 @@ func (q *Queries) DeleteRecipeStepsByIDs(ctx context.Context, arg DeleteRecipeSt
 	return err
 }
 
+const deleteUser = `-- name: DeleteUser :execrows
+DELETE FROM users
+WHERE id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteUser, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getAdminCount = `-- name: GetAdminCount :one
 SELECT
   count(*)
@@ -1052,6 +1065,98 @@ func (q *Queries) GetUserPasswordHash(ctx context.Context, id int64) (string, er
 	var password_hash string
 	err := row.Scan(&password_hash)
 	return password_hash, err
+}
+
+const getUserRecipeImages = `-- name: GetUserRecipeImages :many
+SELECT
+  image_url
+FROM
+  recipes
+WHERE
+  user_id = $1
+  AND image_url IS NOT NULL
+`
+
+func (q *Queries) GetUserRecipeImages(ctx context.Context, userID pgtype.Int8) ([]pgtype.Text, error) {
+	rows, err := q.db.Query(ctx, getUserRecipeImages, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.Text
+	for rows.Next() {
+		var image_url pgtype.Text
+		if err := rows.Scan(&image_url); err != nil {
+			return nil, err
+		}
+		items = append(items, image_url)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserRecipeIngredientImages = `-- name: GetUserRecipeIngredientImages :many
+SELECT
+  ri.image_url
+FROM
+  recipes r
+  JOIN recipe_ingredients ri ON r.id = ri.recipe_id
+WHERE
+  r.user_id = $1
+  AND ri.image_url IS NOT NULL
+`
+
+func (q *Queries) GetUserRecipeIngredientImages(ctx context.Context, userID pgtype.Int8) ([]pgtype.Text, error) {
+	rows, err := q.db.Query(ctx, getUserRecipeIngredientImages, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.Text
+	for rows.Next() {
+		var image_url pgtype.Text
+		if err := rows.Scan(&image_url); err != nil {
+			return nil, err
+		}
+		items = append(items, image_url)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserRecipeStepImages = `-- name: GetUserRecipeStepImages :many
+SELECT
+  rs.image_url
+FROM
+  recipes r
+  JOIN recipe_steps rs ON r.id = rs.recipe_id
+WHERE
+  r.user_id = $1
+  AND rs.image_url IS NOT NULL
+`
+
+func (q *Queries) GetUserRecipeStepImages(ctx context.Context, userID pgtype.Int8) ([]pgtype.Text, error) {
+	rows, err := q.db.Query(ctx, getUserRecipeStepImages, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.Text
+	for rows.Next() {
+		var image_url pgtype.Text
+		if err := rows.Scan(&image_url); err != nil {
+			return nil, err
+		}
+		items = append(items, image_url)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUserRefreshTokenHash = `-- name: GetUserRefreshTokenHash :one
