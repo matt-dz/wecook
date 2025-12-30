@@ -105,6 +105,11 @@ type InvitationCode struct {
 	UsedAt    pgtype.Timestamptz
 }
 
+type Preference struct {
+	ID                int32
+	AllowPublicSignup bool
+}
+
 type Recipe struct {
 	ID             int64
 	UserID         pgtype.Int8

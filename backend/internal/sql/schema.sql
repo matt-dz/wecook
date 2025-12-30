@@ -9,6 +9,11 @@ CREATE TYPE time_unit AS enum (
   'days'
 );
 
+CREATE TABLE preferences (
+  id int PRIMARY KEY,
+  allow_public_signup bool NOT NULL DEFAULT FALSE
+);
+
 CREATE TABLE users (
   id bigserial PRIMARY KEY,
   email text NOT NULL,

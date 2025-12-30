@@ -14,6 +14,9 @@ A self-hosted recipe manager for organizing and sharing your favorite recipes. C
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
 - [Quick Start with Docker](#quick-start-with-docker)
+- [Admin Dashboard](#admin-dashboard)
+  - [User Management](#user-management)
+  - [Application Preferences](#application-preferences)
 - [Configuration](#configuration)
   - [Backend Environment Variables](#backend-environment-variables)
   - [Database Environment Variables](#database-environment-variables)
@@ -148,6 +151,36 @@ The application will be available at `http://localhost:8080`
 - **API Documentation**: http://localhost:8080/docs/
 
 Login with the admin credentials you set in `.env.backend` (default: `admin@example.com` / `Change-m3!`)
+
+## Admin Dashboard
+
+The admin dashboard provides tools for managing users and configuring application settings. Access it by logging in with an admin account and navigating to `/admin`.
+
+### User Management
+
+<img width="1470" height="835" alt="Screenshot 2025-12-30 at 5 28 35 PM" src="https://github.com/user-attachments/assets/df913b7f-4179-4fc1-9830-e995f671e0e8" />
+
+As an admin, you have full control over user accounts:
+
+- **View All Users** - See a list of all registered users with their email addresses, names, and roles
+- **Invite Users** - Send invitation emails to new users
+  - When SMTP is configured, invitation emails are sent automatically with a signup link
+  - Invitations expire after a configurable period
+  - Without SMTP configuration, you can still generate invite codes to share manually
+- **Delete Users** (TODO) - Remove user accounts from the system
+  - Deleting a user removes their account and all associated data
+  - This action cannot be undone
+
+### Application Preferences
+
+<img width="1470" height="835" alt="Screenshot 2025-12-30 at 5 29 11 PM" src="https://github.com/user-attachments/assets/91c123ff-5184-45a9-a159-addc88ded354" />
+
+Control how WeCook operates for all users:
+
+- **Allow Public Signup**
+  - When enabled, anyone can create an account without an invitation code
+  - When disabled, new users must have a valid invitation code to sign up
+  - Useful for controlling access to your WeCook instance
 
 ## Configuration
 

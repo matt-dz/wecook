@@ -80,7 +80,7 @@ export type UserSignupRequest = {
 	first_name: string;
 	last_name: string;
 	password: string;
-	invite_code: string;
+	invite_code?: string;
 };
 
 export async function signupRequest(

@@ -190,3 +190,7 @@ func FileStore() (filestore.FileStore, error) {
 	}
 	return filestore.New(fileserverPath, urlPrefix, filestoreHost), nil
 }
+
+func Preferences(ctx context.Context, env *env.Env, id int32) error {
+	return env.Database.CreatePreferences(ctx, id)
+}

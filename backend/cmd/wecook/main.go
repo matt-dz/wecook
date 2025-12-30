@@ -26,9 +26,9 @@ func main() {
 
 	logger := log.New(nil)
 
-	conf := http.DefaultConfig()
-	conf.Logger = logger
-	http := http.New(conf)
+	httpConfig := http.DefaultConfig()
+	httpConfig.Logger = logger
+	http := http.New(httpConfig)
 
 	fs, err := setup.FileStore()
 	if err != nil {
@@ -48,7 +48,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	config, err := config.LoadConfig()
+	conf, err := config.LoadConfig()
 	if err != nil {
 		logger.Error("failed to load config", slog.Any("error", err))
 		os.Exit(1)
@@ -60,11 +60,18 @@ func main() {
 		Database:  db,
 		SMTP:      smtpSender,
 		HTTP:      http,
-		Config:    config,
+		Config:    conf,
 	}
 
+	logger.DebugContext(ctx, "setting up admin")
 	if err := setup.Admin(setupCtx, env); err != nil {
 		logger.Error("failed to setup admin", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	logger.DebugContext(ctx, "setting up preferences")
+	if err := setup.Preferences(setupCtx, env, config.PreferenceID); err != nil {
+		logger.Error("failed to setup preferences", slog.Any("error", err))
 		os.Exit(1)
 	}
 

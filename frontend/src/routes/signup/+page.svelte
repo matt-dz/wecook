@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { PageProps } from './$types';
 	import Button from '$lib/components/button/Button.svelte';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import fetch from '$lib/http';
@@ -12,15 +11,15 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import Error from '$lib/components/error/Error.svelte';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
+	import { page } from '$app/state';
 
+	const signupCode = page.url.searchParams.get('code');
 	let loading = $state(false);
 	let firstName: string = $state('');
 	let lastName: string = $state('');
 	let error: string = $state('');
 	let email: string = $state('');
 	let password: string = $state('');
-
-	let { data }: PageProps = $props();
 
 	const onSubmit = async (e: SubmitEvent) => {
 		e.preventDefault();
@@ -32,7 +31,7 @@
 				password,
 				first_name: firstName,
 				last_name: lastName,
-				invite_code: data.code
+				invite_code: signupCode ?? undefined
 			});
 			await invalidateAll();
 			goto(resolve('/home'));

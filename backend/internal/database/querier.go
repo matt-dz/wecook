@@ -24,6 +24,7 @@ type Querier interface {
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (int64, error)
 	CreateEmptyRecipeIngredient(ctx context.Context, recipeID int64) (RecipeIngredient, error)
 	CreateInviteCode(ctx context.Context, arg CreateInviteCodeParams) (int64, error)
+	CreatePreferences(ctx context.Context, id int32) error
 	CreateRecipe(ctx context.Context, arg CreateRecipeParams) (int64, error)
 	CreateRecipeIngredient(ctx context.Context, arg CreateRecipeIngredientParams) (int64, error)
 	CreateRecipeStep(ctx context.Context, arg CreateRecipeStepParams) (CreateRecipeStepRow, error)
@@ -36,7 +37,9 @@ type Querier interface {
 	DeleteRecipeStepImageURL(ctx context.Context, id int64) error
 	DeleteRecipeStepsByIDs(ctx context.Context, arg DeleteRecipeStepsByIDsParams) error
 	GetAdminCount(ctx context.Context) (int64, error)
+	GetAllowPublicSignupPreference(ctx context.Context, id int32) (bool, error)
 	GetInvitationCode(ctx context.Context, id int64) (string, error)
+	GetPreferences(ctx context.Context, id int32) (Preference, error)
 	GetPublicRecipes(ctx context.Context) ([]GetPublicRecipesRow, error)
 	GetPublishedRecipeAndOwner(ctx context.Context, id int64) (GetPublishedRecipeAndOwnerRow, error)
 	GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAndOwnerRow, error)
@@ -58,6 +61,7 @@ type Querier interface {
 	GetUserRole(ctx context.Context, id int64) (Role, error)
 	GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersRow, error)
 	RedeemInvitationCode(ctx context.Context, id int64) (int64, error)
+	UpdatePreferences(ctx context.Context, arg UpdatePreferencesParams) (Preference, error)
 	UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (UpdateRecipeRow, error)
 	UpdateRecipeCoverImage(ctx context.Context, arg UpdateRecipeCoverImageParams) error
 	UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) (RecipeIngredient, error)

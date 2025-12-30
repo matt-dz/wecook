@@ -18,6 +18,7 @@ import (
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/argon2id"
+	"github.com/matt-dz/wecook/internal/config"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/invite"
@@ -212,43 +213,11 @@ func (Server) PostApiSignup(ctx context.Context,
 	env := env.EnvFromCtx(ctx)
 	requestID := strconv.FormatUint(requestid.ExtractRequestID(ctx), 10)
 
-	// TODO: make invite-only configurable
-	if request.Body.InviteCode == nil {
-		env.Logger.ErrorContext(ctx, "invite code not provided")
-		return PostApiSignup400JSONResponse{
-			Status:  apiError.BadRequest.StatusCode(),
-			Code:    apiError.BadRequest.String(),
-			Message: "missing invite code",
-			ErrorId: requestID,
-		}, nil
-	}
-
-	// Decode invite
-	env.Logger.DebugContext(ctx, "decoding invite")
-	inviteid, code, err := invite.DecodeInvite(*request.Body.InviteCode)
+	// Check signup preference
+	env.Logger.DebugContext(ctx, "getting public signup preference")
+	allowPublicSignup, err := env.Database.GetAllowPublicSignupPreference(ctx, config.PreferenceID)
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to decode invite code", slog.Any("error", err))
-		return PostApiSignup422JSONResponse{
-			Status:  apiError.InvalidInviteCode.StatusCode(),
-			Code:    apiError.InvalidInviteCode.String(),
-			Message: "invalid invite code",
-			ErrorId: requestID,
-		}, nil
-	}
-
-	// Retrieve code from db
-	env.Logger.DebugContext(ctx, "getting invitation code")
-	encodedGroundHash, err := env.Database.GetInvitationCode(ctx, inviteid)
-	if errors.Is(err, pgx.ErrNoRows) {
-		env.Logger.ErrorContext(ctx, "invitation code does not exist", slog.Any("error", err))
-		return PostApiSignup422JSONResponse{
-			Status:  apiError.InvalidInviteCode.StatusCode(),
-			Code:    apiError.InvalidInviteCode.String(),
-			Message: "invalid invite code",
-			ErrorId: requestID,
-		}, nil
-	} else if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get invitation code", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "failed to get preference", slog.Any("error", err))
 		return PostApiSignup500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
@@ -256,36 +225,86 @@ func (Server) PostApiSignup(ctx context.Context,
 			ErrorId: requestID,
 		}, nil
 	}
+	env.Logger.DebugContext(ctx, "preference retrieved", slog.Bool("allowPublicSignup", allowPublicSignup))
 
-	// Decode ground hash
-	env.Logger.DebugContext(ctx, "decoding ground hash code")
-	p, salt, groundHash, err := argon2id.DecodeHash(encodedGroundHash)
-	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to decode hash", slog.Any("error", err))
-		return PostApiSignup500JSONResponse{
-			Status:  apiError.InternalServerError.StatusCode(),
-			Code:    apiError.InternalServerError.String(),
-			Message: "Internal Server Error",
-			ErrorId: requestID,
-		}, nil
+	// Validate signup code if public signup is disabled
+	var inviteid int64
+	if !allowPublicSignup {
+		if request.Body.InviteCode == nil {
+			env.Logger.ErrorContext(ctx, "invite code not provided")
+			return PostApiSignup400JSONResponse{
+				Status:  apiError.BadRequest.StatusCode(),
+				Code:    apiError.BadRequest.String(),
+				Message: "missing invite code",
+				ErrorId: requestID,
+			}, nil
+		}
+
+		// Decode invite
+		var code string
+		env.Logger.DebugContext(ctx, "decoding invite")
+		inviteid, code, err = invite.DecodeInvite(*request.Body.InviteCode)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to decode invite code", slog.Any("error", err))
+			return PostApiSignup422JSONResponse{
+				Status:  apiError.InvalidInviteCode.StatusCode(),
+				Code:    apiError.InvalidInviteCode.String(),
+				Message: "invalid invite code",
+				ErrorId: requestID,
+			}, nil
+		}
+
+		// Retrieve code from db
+		env.Logger.DebugContext(ctx, "getting invitation code")
+		encodedGroundHash, err := env.Database.GetInvitationCode(ctx, inviteid)
+		if errors.Is(err, pgx.ErrNoRows) {
+			env.Logger.ErrorContext(ctx, "invitation code does not exist", slog.Any("error", err))
+			return PostApiSignup422JSONResponse{
+				Status:  apiError.InvalidInviteCode.StatusCode(),
+				Code:    apiError.InvalidInviteCode.String(),
+				Message: "invalid invite code",
+				ErrorId: requestID,
+			}, nil
+		} else if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to get invitation code", slog.Any("error", err))
+			return PostApiSignup500JSONResponse{
+				Status:  apiError.InternalServerError.StatusCode(),
+				Code:    apiError.InternalServerError.String(),
+				Message: "Internal Server Error",
+				ErrorId: requestID,
+			}, nil
+		}
+
+		// Decode ground hash
+		env.Logger.DebugContext(ctx, "decoding ground hash code")
+		p, salt, groundHash, err := argon2id.DecodeHash(encodedGroundHash)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to decode hash", slog.Any("error", err))
+			return PostApiSignup500JSONResponse{
+				Status:  apiError.InternalServerError.StatusCode(),
+				Code:    apiError.InternalServerError.String(),
+				Message: "Internal Server Error",
+				ErrorId: requestID,
+			}, nil
+		}
+
+		// Encode given hash
+		env.Logger.DebugContext(ctx, "encoding given hash")
+		givenCodeHash := argon2id.HashWithSalt(code, *p, salt)
+
+		// Compare hashes
+		env.Logger.DebugContext(ctx, "comparing hashes")
+		if subtle.ConstantTimeCompare(givenCodeHash, groundHash) == 0 {
+			env.Logger.ErrorContext(ctx, "codes do not match")
+			return PostApiSignup422JSONResponse{
+				Status:  apiError.InvalidInviteCode.StatusCode(),
+				Code:    apiError.InvalidInviteCode.String(),
+				Message: "invalid invite code",
+				ErrorId: requestID,
+			}, nil
+		}
+
 	}
-
-	// Encode given hash
-	env.Logger.DebugContext(ctx, "encoding given hash")
-	givenCodeHash := argon2id.HashWithSalt(code, *p, salt)
-
-	// Compare hashes
-	env.Logger.DebugContext(ctx, "comparing hashes")
-	if subtle.ConstantTimeCompare(givenCodeHash, groundHash) == 0 {
-		env.Logger.ErrorContext(ctx, "codes do not match")
-		return PostApiSignup422JSONResponse{
-			Status:  apiError.InvalidInviteCode.StatusCode(),
-			Code:    apiError.InvalidInviteCode.String(),
-			Message: "invalid invite code",
-			ErrorId: requestID,
-		}, nil
-	}
-
 	// Ensure password strength
 	env.Logger.DebugContext(ctx, "validating password")
 	if err := password.ValidatePassword(request.Body.Password); err != nil {
@@ -339,27 +358,29 @@ func (Server) PostApiSignup(ctx context.Context,
 	}
 
 	// Redeem invitation code
-	env.Logger.DebugContext(ctx, "redeem invite code")
-	rows, err := env.Database.RedeemInvitationCode(ctx, inviteid)
-	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to redeem invite code", slog.Any("error", err))
-		return PostApiSignup500JSONResponse{
-			Status:  apiError.InternalServerError.StatusCode(),
-			Code:    apiError.InternalServerError.String(),
-			Message: "Internal Server Error",
-			ErrorId: requestID,
-		}, nil
-	} else if rows == 0 {
-		// Rare edge case where code becomes invalid during signup.
-		// Good to process it otherwise the db would become inconsistent
-		// and the invite code would never have a valid used_at field.
-		env.Logger.ErrorContext(ctx, "failed to redeem invite code; it may have expired", slog.Any("error", err))
-		return PostApiSignup422JSONResponse{
-			Status:  apiError.InvalidInviteCode.StatusCode(),
-			Code:    apiError.InvalidInviteCode.String(),
-			Message: "invalid invite code",
-			ErrorId: requestID,
-		}, nil
+	if !allowPublicSignup {
+		env.Logger.DebugContext(ctx, "redeem invite code")
+		rows, err := env.Database.RedeemInvitationCode(ctx, inviteid)
+		if err != nil {
+			env.Logger.ErrorContext(ctx, "failed to redeem invite code", slog.Any("error", err))
+			return PostApiSignup500JSONResponse{
+				Status:  apiError.InternalServerError.StatusCode(),
+				Code:    apiError.InternalServerError.String(),
+				Message: "Internal Server Error",
+				ErrorId: requestID,
+			}, nil
+		} else if rows == 0 {
+			// Rare edge case where code becomes invalid during signup.
+			// Good to process it otherwise the db would become inconsistent
+			// and the invite code would never have a valid used_at field.
+			env.Logger.ErrorContext(ctx, "failed to redeem invite code; it may have expired", slog.Any("error", err))
+			return PostApiSignup422JSONResponse{
+				Status:  apiError.InvalidInviteCode.StatusCode(),
+				Code:    apiError.InvalidInviteCode.String(),
+				Message: "invalid invite code",
+				ErrorId: requestID,
+			}, nil
+		}
 	}
 
 	// Create tokens

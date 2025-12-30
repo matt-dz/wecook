@@ -601,3 +601,41 @@ SET
   used_at = now()
 WHERE
   id = $1;
+
+-- name: CreatePreferences :exec
+INSERT INTO preferences (id)
+  VALUES ($1)
+ON CONFLICT (id)
+  DO NOTHING;
+
+-- name: UpdatePreferences :one
+UPDATE
+  preferences
+SET
+  allow_public_signup = CASE WHEN sqlc.narg ('update_allow_public_signup')::boolean THEN
+    sqlc.narg ('allow_public_signup')
+  ELSE
+    allow_public_signup
+  END
+WHERE
+  id = $1
+RETURNING
+  id,
+  allow_public_signup;
+
+-- name: GetPreferences :one
+SELECT
+  id,
+  allow_public_signup
+FROM
+  preferences
+WHERE
+  id = $1;
+
+-- name: GetAllowPublicSignupPreference :one
+SELECT
+  allow_public_signup
+FROM
+  preferences
+WHERE
+  id = $1;
