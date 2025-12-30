@@ -3,7 +3,7 @@ import type { User } from '$lib/users';
 import { renderComponent } from '../ui/data-table';
 import DatatableActions from './table-actions.svelte';
 
-export const columns: ColumnDef<User>[] = [
+export const getColumns = (onUserDeleted: (userId: number) => void): ColumnDef<User>[] => [
 	{
 		accessorKey: 'role',
 		header: 'Role'
@@ -23,7 +23,11 @@ export const columns: ColumnDef<User>[] = [
 	{
 		id: 'actions',
 		cell: ({ row }) => {
-			return renderComponent(DatatableActions, { id: row.original.id.toString() });
+			return renderComponent(DatatableActions, {
+				id: row.original.id,
+				email: row.original.email,
+				onUserDeleted
+			});
 		}
 	}
 ];
