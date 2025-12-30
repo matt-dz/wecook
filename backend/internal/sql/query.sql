@@ -631,3 +631,11 @@ FROM
   preferences
 WHERE
   id = $1;
+
+-- name: GetAllowPublicSignupPreference :one
+SELECT
+  allow_public_signup
+FROM
+  preferences
+WHERE
+  id = $1;

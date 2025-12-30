@@ -394,6 +394,22 @@ func (q *Queries) GetAdminCount(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const getAllowPublicSignupPreference = `-- name: GetAllowPublicSignupPreference :one
+SELECT
+  allow_public_signup
+FROM
+  preferences
+WHERE
+  id = $1
+`
+
+func (q *Queries) GetAllowPublicSignupPreference(ctx context.Context, id int32) (bool, error) {
+	row := q.db.QueryRow(ctx, getAllowPublicSignupPreference, id)
+	var allow_public_signup bool
+	err := row.Scan(&allow_public_signup)
+	return allow_public_signup, err
+}
+
 const getInvitationCode = `-- name: GetInvitationCode :one
 SELECT
   code_hash

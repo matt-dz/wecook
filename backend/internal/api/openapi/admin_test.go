@@ -24,12 +24,12 @@ func TestGetApiPreferences(t *testing.T) {
 	server := NewServer()
 
 	tests := []struct {
-		name              string
-		setup             func()
-		wantStatus        int
-		wantCode          string
-		wantPublicSignup  bool
-		wantError         bool
+		name             string
+		setup            func()
+		wantStatus       int
+		wantCode         string
+		wantPublicSignup bool
+		wantError        bool
 	}{
 		{
 			name: "successful retrieval - allow public signup true",

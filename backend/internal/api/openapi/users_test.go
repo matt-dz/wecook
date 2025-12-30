@@ -889,7 +889,7 @@ func TestPostApiSignup(t *testing.T) {
 		wantError  bool
 	}{
 		{
-			name: "successful signup",
+			name: "successful signup with invite code (public signup disabled)",
 			request: PostApiSignupRequestObject{
 				Body: &SignupRequest{
 					Email:      openapi_types.Email("newuser@example.com"),
@@ -900,6 +900,10 @@ func TestPostApiSignup(t *testing.T) {
 				},
 			},
 			setup: func() {
+				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+
 				mockDB.EXPECT().
 					GetInvitationCode(gomock.Any(), int64(456)).
 					Return(validCodeHash, nil)
@@ -920,7 +924,7 @@ func TestPostApiSignup(t *testing.T) {
 			wantError:  false,
 		},
 		{
-			name: "missing invite code",
+			name: "successful signup without invite code (public signup enabled)",
 			request: PostApiSignupRequestObject{
 				Body: &SignupRequest{
 					Email:     openapi_types.Email("newuser@example.com"),
@@ -929,7 +933,56 @@ func TestPostApiSignup(t *testing.T) {
 					Password:  testPassword,
 				},
 			},
-			setup:      func() {},
+			setup: func() {
+				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(true, nil)
+
+				mockDB.EXPECT().
+					CreateUser(gomock.Any(), gomock.Any()).
+					Return(int64(123), nil)
+
+				mockDB.EXPECT().
+					UpdateUserRefreshTokenHash(gomock.Any(), gomock.Any()).
+					Return(nil)
+			},
+			wantStatus: 200,
+			wantError:  false,
+		},
+		{
+			name: "database error getting signup preference",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:     openapi_types.Email("newuser@example.com"),
+					FirstName: "John",
+					LastName:  "Doe",
+					Password:  testPassword,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, errors.New("database connection error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+			wantError:  false,
+		},
+		{
+			name: "missing invite code (public signup disabled)",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:     openapi_types.Email("newuser@example.com"),
+					FirstName: "John",
+					LastName:  "Doe",
+					Password:  testPassword,
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+			},
 			wantStatus: 400,
 			wantCode:   apiError.BadRequest.String(),
 			wantError:  false,
@@ -945,7 +998,11 @@ func TestPostApiSignup(t *testing.T) {
 					InviteCode: stringPtr("invalid-no-delimiter"),
 				},
 			},
-			setup:      func() {},
+			setup: func() {
+				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+			},
 			wantStatus: 422,
 			wantCode:   apiError.InvalidInviteCode.String(),
 			wantError:  false,
@@ -962,6 +1019,10 @@ func TestPostApiSignup(t *testing.T) {
 				},
 			},
 			setup: func() {
+				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+
 				mockDB.EXPECT().
 					GetInvitationCode(gomock.Any(), int64(456)).
 					Return("", pgx.ErrNoRows)
@@ -983,6 +1044,10 @@ func TestPostApiSignup(t *testing.T) {
 			},
 			setup: func() {
 				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+
+				mockDB.EXPECT().
 					GetInvitationCode(gomock.Any(), int64(456)).
 					Return("", errors.New("database connection error"))
 			},
@@ -1003,6 +1068,10 @@ func TestPostApiSignup(t *testing.T) {
 			},
 			setup: func() {
 				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+
+				mockDB.EXPECT().
 					GetInvitationCode(gomock.Any(), int64(456)).
 					Return(validCodeHash, nil)
 			},
@@ -1011,7 +1080,7 @@ func TestPostApiSignup(t *testing.T) {
 			wantError:  false,
 		},
 		{
-			name: "weak password",
+			name: "weak password (public signup disabled)",
 			request: PostApiSignupRequestObject{
 				Body: &SignupRequest{
 					Email:      openapi_types.Email("newuser@example.com"),
@@ -1023,8 +1092,31 @@ func TestPostApiSignup(t *testing.T) {
 			},
 			setup: func() {
 				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+
+				mockDB.EXPECT().
 					GetInvitationCode(gomock.Any(), int64(456)).
 					Return(validCodeHash, nil)
+			},
+			wantStatus: 422,
+			wantCode:   apiError.InvalidPassword.String(),
+			wantError:  false,
+		},
+		{
+			name: "weak password (public signup enabled)",
+			request: PostApiSignupRequestObject{
+				Body: &SignupRequest{
+					Email:     openapi_types.Email("newuser@example.com"),
+					FirstName: "John",
+					LastName:  "Doe",
+					Password:  "weak",
+				},
+			},
+			setup: func() {
+				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(true, nil)
 			},
 			wantStatus: 422,
 			wantCode:   apiError.InvalidPassword.String(),
@@ -1042,6 +1134,10 @@ func TestPostApiSignup(t *testing.T) {
 				},
 			},
 			setup: func() {
+				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+
 				mockDB.EXPECT().
 					GetInvitationCode(gomock.Any(), int64(456)).
 					Return(validCodeHash, nil)
@@ -1070,6 +1166,10 @@ func TestPostApiSignup(t *testing.T) {
 			},
 			setup: func() {
 				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+
+				mockDB.EXPECT().
 					GetInvitationCode(gomock.Any(), int64(456)).
 					Return(validCodeHash, nil)
 
@@ -1093,6 +1193,10 @@ func TestPostApiSignup(t *testing.T) {
 				},
 			},
 			setup: func() {
+				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+
 				mockDB.EXPECT().
 					GetInvitationCode(gomock.Any(), int64(456)).
 					Return(validCodeHash, nil)
@@ -1122,6 +1226,10 @@ func TestPostApiSignup(t *testing.T) {
 			},
 			setup: func() {
 				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+
+				mockDB.EXPECT().
 					GetInvitationCode(gomock.Any(), int64(456)).
 					Return(validCodeHash, nil)
 
@@ -1149,6 +1257,10 @@ func TestPostApiSignup(t *testing.T) {
 				},
 			},
 			setup: func() {
+				mockDB.EXPECT().
+					GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+					Return(false, nil)
+
 				mockDB.EXPECT().
 					GetInvitationCode(gomock.Any(), int64(456)).
 					Return(validCodeHash, nil)
@@ -1251,6 +1363,10 @@ func TestPostApiSignup_ParameterValidation(t *testing.T) {
 	}
 
 	testPassword := "ValidP@ssw0rd123!"
+
+	mockDB.EXPECT().
+		GetAllowPublicSignupPreference(gomock.Any(), int32(config.PreferenceID)).
+		Return(false, nil)
 
 	mockDB.EXPECT().
 		GetInvitationCode(gomock.Any(), int64(456)).

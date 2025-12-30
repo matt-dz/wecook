@@ -419,6 +419,21 @@ func (mr *MockQuerierMockRecorder) GetAdminCount(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAdminCount", reflect.TypeOf((*MockQuerier)(nil).GetAdminCount), ctx)
 }
 
+// GetAllowPublicSignupPreference mocks base method.
+func (m *MockQuerier) GetAllowPublicSignupPreference(ctx context.Context, id int32) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllowPublicSignupPreference", ctx, id)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllowPublicSignupPreference indicates an expected call of GetAllowPublicSignupPreference.
+func (mr *MockQuerierMockRecorder) GetAllowPublicSignupPreference(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllowPublicSignupPreference", reflect.TypeOf((*MockQuerier)(nil).GetAllowPublicSignupPreference), ctx, id)
+}
+
 // GetInvitationCode mocks base method.
 func (m *MockQuerier) GetInvitationCode(ctx context.Context, id int64) (string, error) {
 	m.ctrl.T.Helper()

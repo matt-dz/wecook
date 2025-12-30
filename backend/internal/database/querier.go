@@ -37,6 +37,7 @@ type Querier interface {
 	DeleteRecipeStepImageURL(ctx context.Context, id int64) error
 	DeleteRecipeStepsByIDs(ctx context.Context, arg DeleteRecipeStepsByIDsParams) error
 	GetAdminCount(ctx context.Context) (int64, error)
+	GetAllowPublicSignupPreference(ctx context.Context, id int32) (bool, error)
 	GetInvitationCode(ctx context.Context, id int64) (string, error)
 	GetPreferences(ctx context.Context, id int32) (Preference, error)
 	GetPublicRecipes(ctx context.Context) ([]GetPublicRecipesRow, error)
