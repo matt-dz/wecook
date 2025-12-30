@@ -639,3 +639,36 @@ FROM
   preferences
 WHERE
   id = $1;
+
+-- name: GetUserRecipeImages :many
+SELECT
+  image_url
+FROM
+  recipes
+WHERE
+  user_id = $1
+  AND image_url IS NOT NULL;
+
+-- name: GetUserRecipeIngredientImages :many
+SELECT
+  ri.image_url
+FROM
+  recipes r
+  JOIN recipe_ingredients ri ON r.id = ri.recipe_id
+WHERE
+  r.user_id = $1
+  AND ri.image_url IS NOT NULL;
+
+-- name: GetUserRecipeStepImages :many
+SELECT
+  rs.image_url
+FROM
+  recipes r
+  JOIN recipe_steps rs ON r.id = rs.recipe_id
+WHERE
+  r.user_id = $1
+  AND rs.image_url IS NOT NULL;
+
+-- name: DeleteUser :execrows
+DELETE FROM users
+WHERE id = $1;

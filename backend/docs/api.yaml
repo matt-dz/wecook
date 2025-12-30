@@ -238,14 +238,67 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized — missing or invalid access token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "404":
           description: User Not Found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/user/{id}:
+    delete:
+      summary: Delete user
+      tags:
+        - User
+        - Admin
+      description: Delete the user with the given ID.
+      security:
+        - AccessTokenAdminBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: user ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - $ref: "#/components/parameters/CsrfTokenHeader"
+      responses:
+        "204":
+          description: OK
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "401":
           description: Unauthorized — missing or invalid access token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User Not Found
           content:
             application/json:
               schema:
