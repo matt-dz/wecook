@@ -167,7 +167,7 @@ As an admin, you have full control over user accounts:
   - When SMTP is configured, invitation emails are sent automatically with a signup link
   - Invitations expire after a configurable period
   - Without SMTP configuration, you can still generate invite codes to share manually
-- **Delete Users** (TODO) - Remove user accounts from the system
+- **Delete Users** - Remove user accounts from the system
   - Deleting a user removes their account and all associated data
   - This action cannot be undone
 
