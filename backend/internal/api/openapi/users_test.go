@@ -20,6 +20,7 @@ import (
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/email"
 	"github.com/matt-dz/wecook/internal/env"
+	"github.com/matt-dz/wecook/internal/filestore"
 	"github.com/matt-dz/wecook/internal/log"
 )
 
@@ -1685,5 +1686,297 @@ func TestPatchApiUserPassword_ParameterValidation(t *testing.T) {
 	_, ok := resp.(PatchApiUserPassword204Response)
 	if !ok {
 		t.Fatalf("expected PatchApiUserPassword204Response, got %T", resp)
+	}
+}
+
+func TestDeleteApiUserId(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := database.NewMockQuerier(ctrl)
+	mockFileStore := filestore.NewMockFileStoreInterface(ctrl)
+	server := NewServer()
+
+	tests := []struct {
+		name       string
+		userId     int64
+		setup      func()
+		wantStatus int
+		wantCode   string
+	}{
+		{
+			name:   "successful deletion with no images",
+			userId: 123,
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRecipeImages(gomock.Any(), pgtype.Int8{Int64: 123, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeIngredientImages(gomock.Any(), pgtype.Int8{Int64: 123, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeStepImages(gomock.Any(), pgtype.Int8{Int64: 123, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					DeleteUser(gomock.Any(), int64(123)).
+					Return(int64(1), nil)
+			},
+			wantStatus: 204,
+		},
+		{
+			name:   "successful deletion with multiple images",
+			userId: 456,
+			setup: func() {
+				coverImages := []pgtype.Text{
+					{String: "/files/cover1.jpg", Valid: true},
+					{String: "/files/cover2.jpg", Valid: true},
+				}
+				ingredientImages := []pgtype.Text{
+					{String: "/files/ingredient1.jpg", Valid: true},
+				}
+				stepImages := []pgtype.Text{
+					{String: "/files/step1.jpg", Valid: true},
+					{String: "/files/step2.jpg", Valid: true},
+				}
+
+				mockDB.EXPECT().
+					GetUserRecipeImages(gomock.Any(), pgtype.Int8{Int64: 456, Valid: true}).
+					Return(coverImages, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeIngredientImages(gomock.Any(), pgtype.Int8{Int64: 456, Valid: true}).
+					Return(ingredientImages, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeStepImages(gomock.Any(), pgtype.Int8{Int64: 456, Valid: true}).
+					Return(stepImages, nil)
+
+				mockDB.EXPECT().
+					DeleteUser(gomock.Any(), int64(456)).
+					Return(int64(1), nil)
+
+				// Expect deletion of all 5 images
+				mockFileStore.EXPECT().
+					DeleteURLPath("/files/cover1.jpg").
+					Return(nil)
+				mockFileStore.EXPECT().
+					DeleteURLPath("/files/cover2.jpg").
+					Return(nil)
+				mockFileStore.EXPECT().
+					DeleteURLPath("/files/ingredient1.jpg").
+					Return(nil)
+				mockFileStore.EXPECT().
+					DeleteURLPath("/files/step1.jpg").
+					Return(nil)
+				mockFileStore.EXPECT().
+					DeleteURLPath("/files/step2.jpg").
+					Return(nil)
+			},
+			wantStatus: 204,
+		},
+		{
+			name:   "successful deletion with some invalid image paths",
+			userId: 789,
+			setup: func() {
+				coverImages := []pgtype.Text{
+					{String: "/files/cover1.jpg", Valid: true},
+					{String: "", Valid: false}, // Invalid entry
+				}
+
+				mockDB.EXPECT().
+					GetUserRecipeImages(gomock.Any(), pgtype.Int8{Int64: 789, Valid: true}).
+					Return(coverImages, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeIngredientImages(gomock.Any(), pgtype.Int8{Int64: 789, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeStepImages(gomock.Any(), pgtype.Int8{Int64: 789, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					DeleteUser(gomock.Any(), int64(789)).
+					Return(int64(1), nil)
+
+				// Only valid image should be deleted
+				mockFileStore.EXPECT().
+					DeleteURLPath("/files/cover1.jpg").
+					Return(nil)
+			},
+			wantStatus: 204,
+		},
+		{
+			name:   "successful deletion when image file deletion fails (logged as warning)",
+			userId: 999,
+			setup: func() {
+				coverImages := []pgtype.Text{
+					{String: "/files/cover1.jpg", Valid: true},
+				}
+
+				mockDB.EXPECT().
+					GetUserRecipeImages(gomock.Any(), pgtype.Int8{Int64: 999, Valid: true}).
+					Return(coverImages, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeIngredientImages(gomock.Any(), pgtype.Int8{Int64: 999, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeStepImages(gomock.Any(), pgtype.Int8{Int64: 999, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					DeleteUser(gomock.Any(), int64(999)).
+					Return(int64(1), nil)
+
+				// Image deletion fails but operation should still succeed
+				mockFileStore.EXPECT().
+					DeleteURLPath("/files/cover1.jpg").
+					Return(errors.New("file not found"))
+			},
+			wantStatus: 204,
+		},
+		{
+			name:   "user not found",
+			userId: 404,
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRecipeImages(gomock.Any(), pgtype.Int8{Int64: 404, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeIngredientImages(gomock.Any(), pgtype.Int8{Int64: 404, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeStepImages(gomock.Any(), pgtype.Int8{Int64: 404, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					DeleteUser(gomock.Any(), int64(404)).
+					Return(int64(0), nil) // No rows deleted
+			},
+			wantStatus: 404,
+			wantCode:   apiError.UserNotFound.String(),
+		},
+		{
+			name:   "database error getting cover images",
+			userId: 500,
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRecipeImages(gomock.Any(), pgtype.Int8{Int64: 500, Valid: true}).
+					Return(nil, errors.New("database connection error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+		},
+		{
+			name:   "database error getting ingredient images",
+			userId: 501,
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRecipeImages(gomock.Any(), pgtype.Int8{Int64: 501, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeIngredientImages(gomock.Any(), pgtype.Int8{Int64: 501, Valid: true}).
+					Return(nil, errors.New("database connection error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+		},
+		{
+			name:   "database error getting step images",
+			userId: 502,
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRecipeImages(gomock.Any(), pgtype.Int8{Int64: 502, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeIngredientImages(gomock.Any(), pgtype.Int8{Int64: 502, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeStepImages(gomock.Any(), pgtype.Int8{Int64: 502, Valid: true}).
+					Return(nil, errors.New("database connection error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+		},
+		{
+			name:   "database error deleting user",
+			userId: 503,
+			setup: func() {
+				mockDB.EXPECT().
+					GetUserRecipeImages(gomock.Any(), pgtype.Int8{Int64: 503, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeIngredientImages(gomock.Any(), pgtype.Int8{Int64: 503, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					GetUserRecipeStepImages(gomock.Any(), pgtype.Int8{Int64: 503, Valid: true}).
+					Return([]pgtype.Text{}, nil)
+
+				mockDB.EXPECT().
+					DeleteUser(gomock.Any(), int64(503)).
+					Return(int64(0), errors.New("database connection error"))
+			},
+			wantStatus: 500,
+			wantCode:   apiError.InternalServerError.String(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+
+			e := env.New(nil)
+			e.Logger = log.NullLogger()
+			e.Database = mockDB
+			e.FileStore = mockFileStore
+
+			ctx := context.Background()
+			ctx = env.WithCtx(ctx, e)
+			ctx = requestid.InjectRequestID(ctx, 12345)
+
+			request := DeleteApiUserIdRequestObject{
+				Id: tt.userId,
+			}
+
+			resp, err := server.DeleteApiUserId(ctx, request)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			switch v := resp.(type) {
+			case DeleteApiUserId204Response:
+				if tt.wantStatus != 204 {
+					t.Errorf("expected status %d, got 204", tt.wantStatus)
+				}
+			case DeleteApiUserId404JSONResponse:
+				if tt.wantStatus != 404 {
+					t.Errorf("expected status %d, got 404", tt.wantStatus)
+				}
+				if tt.wantCode != "" && v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			case DeleteApiUserId500JSONResponse:
+				if tt.wantStatus != 500 {
+					t.Errorf("expected status %d, got 500", tt.wantStatus)
+				}
+				if tt.wantCode != "" && v.Code != tt.wantCode {
+					t.Errorf("expected code %s, got %s", tt.wantCode, v.Code)
+				}
+			default:
+				t.Errorf("unexpected response type: %T", v)
+			}
+		})
 	}
 }
