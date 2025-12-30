@@ -19,7 +19,6 @@ linters:
     - asciicheck
     - bodyclose
     - unused
-    - dupword
     - embeddedstructfieldcheck
     - errchkjson
     - errname

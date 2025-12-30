@@ -1,0 +1,31 @@
+env: "DEV"
+host_origin: "http://localhost:8080"
+
+app_secret:
+  path: "/data/secret"
+  version: "1"
+
+database:
+  user: wecook
+  password: secure-password
+  port: 5432
+  database: wecook
+
+fileserver:
+  volume: "/data/files"
+  url_prefix: "/files"
+
+admin:
+  first_name: John
+  last_name: Doe
+  email: admin@example.com
+  password: Change-m3!
+
+smtp:
+  host: smtp.example.com
+  port: 587
+  username: user@example.com
+  password: your-smtp-password
+  from: noreply@example.com
+  tls_mode: auto
+  tls_mode_skip_verify: false

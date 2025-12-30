@@ -3,26 +3,17 @@ package setup
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/mail"
 	"os"
 	"path/filepath"
 	"strconv"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/argon2id"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/email"
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/filestore"
-	"github.com/matt-dz/wecook/internal/password"
-)
-
-const (
-	appSecretPath = "/data/secret"
-	secretPerms   = 0o600
 )
 
 // SMTP creates a new SMTP sender from environment variables.
@@ -152,28 +143,13 @@ func Admin(ctx context.Context, env *env.Env) error {
 	}
 
 	// Get admin info
-	adminEmail, adminPassword := env.Get("ADMIN_EMAIL"), env.Get("ADMIN_PASSWORD")
+	adminEmail, adminPassword := env.Config.Admin.Email, string(env.Config.Admin.Password)
 	if adminEmail == "" || adminPassword == "" {
 		env.Logger.Info("ADMIN_EMAIL and ADMIN_PASSWORD not setup, skipping admin setup")
 		return nil
 	}
-	adminFirstName := env.Get("ADMIN_FIRST_NAME")
-	if adminFirstName == "" {
-		return NewEnvironmentVariableMissingError("ADMIN_FIRST_NAME")
-	}
-	adminLastName := env.Get("ADMIN_LAST_NAME")
-	if adminLastName == "" {
-		return NewEnvironmentVariableMissingError("ADMIN_LAST_NAME")
-	}
 
-	// Validate email and password
-	if _, err := mail.ParseAddress(adminEmail); err != nil {
-		return fmt.Errorf("parsing admin email: %w", err)
-	}
-	if err := password.ValidatePassword(adminPassword); err != nil {
-		return fmt.Errorf("validating admin password: %w", err)
-	}
-
+	// Hash password
 	hashedPassword, err := argon2id.EncodeHash(adminPassword, argon2id.DefaultParams)
 	if err != nil {
 		return fmt.Errorf("hashing password: %w", err)
@@ -181,8 +157,8 @@ func Admin(ctx context.Context, env *env.Env) error {
 
 	// Create admin
 	_, err = env.Database.CreateAdmin(ctx, database.CreateAdminParams{
-		FirstName:    adminFirstName,
-		LastName:     adminLastName,
+		FirstName:    env.Config.Admin.FirstName,
+		LastName:     env.Config.Admin.LastName,
 		PasswordHash: hashedPassword,
 		Email:        adminEmail,
 	})
@@ -213,51 +189,4 @@ func FileStore() (filestore.FileStore, error) {
 		return fs, NewEnvironmentVariableMissingError("HOST_ORIGIN")
 	}
 	return filestore.New(fileserverPath, urlPrefix, filestoreHost), nil
-}
-
-func AppSecret(env *env.Env) error {
-	var secretPath string
-	if env.Get("APP_SECRET_PATH") != "" {
-		secretPath = env.Get("APP_SECRET_PATH")
-	} else {
-		secretPath = appSecretPath
-	}
-
-	if env.Get("APP_SECRET") != "" {
-		return nil
-	}
-
-	var secret string
-	if f1, err := os.Lstat(secretPath); err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("checking secret path: %w", err)
-		}
-
-		file, err := os.OpenFile(secretPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, secretPerms)
-		if err != nil {
-			return fmt.Errorf("creating secret file: %w", err)
-		}
-		defer func() { _ = file.Close() }()
-
-		secret, err = token.NewAppSecret()
-		if err != nil {
-			return fmt.Errorf("generating new app secret: %w", err)
-		}
-
-		if _, err := file.WriteString(secret); err != nil {
-			return fmt.Errorf("writing secret file: %w", err)
-		}
-	} else {
-		if f1.IsDir() {
-			return fmt.Errorf("expected file, got directory at %q", secretPath)
-		}
-		data, err := os.ReadFile(secretPath)
-		if err != nil {
-			return fmt.Errorf("reading file: %w", err)
-		}
-		secret = string(data)
-	}
-
-	env.Set("APP_SECRET", secret)
-	return nil
 }

@@ -12,6 +12,7 @@ import (
 	apiError "github.com/matt-dz/wecook/internal/api/error"
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/api/token"
+	"github.com/matt-dz/wecook/internal/config"
 	"github.com/matt-dz/wecook/internal/env"
 	mJwt "github.com/matt-dz/wecook/internal/jwt"
 	"github.com/matt-dz/wecook/internal/log"
@@ -19,7 +20,7 @@ import (
 )
 
 func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
-	appSecret := "test-secret-32-bytes-long-12345"
+	appSecret := config.AppSecretValue("test-secret-32-bytes-long-12345")
 	userID := int64(123)
 
 	// Helper function to create a valid access token
@@ -29,10 +30,9 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 			UserID: fmt.Sprintf("%d", userID),
 			Role:   userRole,
 		}
-		e := env.New(map[string]string{
-			"APP_SECRET":         appSecret,
-			"APP_SECRET_VERSION": "1",
-		})
+		e := env.New(nil)
+		e.Config.AppSecret.Value = &appSecret
+		e.Config.AppSecret.Version = "1"
 		accessToken, err := token.NewAccessToken(params, e)
 		if err != nil {
 			t.Fatalf("failed to create access token: %v", err)
@@ -334,10 +334,9 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 
 			// Setup context with environment
 			ctx := context.Background()
-			e := env.New(map[string]string{
-				"APP_SECRET":         appSecret,
-				"APP_SECRET_VERSION": "1",
-			})
+			e := env.New(nil)
+			e.Config.AppSecret.Value = &appSecret
+			e.Config.AppSecret.Version = "1"
 			e.Logger = log.NullLogger()
 			ctx = env.WithCtx(ctx, e)
 			ctx = requestid.InjectRequestID(ctx, 12345)
@@ -381,7 +380,7 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 }
 
 func TestOAPIAuthFunc_ContextInjection(t *testing.T) {
-	appSecret := "test-secret-32-bytes-long-12345"
+	appSecret := config.AppSecretValue("test-secret-32-bytes-long-12345")
 	userID := int64(456)
 
 	// Create a valid access token
@@ -389,10 +388,9 @@ func TestOAPIAuthFunc_ContextInjection(t *testing.T) {
 		UserID: fmt.Sprintf("%d", userID),
 		Role:   role.RoleUser,
 	}
-	e := env.New(map[string]string{
-		"APP_SECRET":         appSecret,
-		"APP_SECRET_VERSION": "1",
-	})
+	e := env.New(nil)
+	e.Config.AppSecret.Value = &appSecret
+	e.Config.AppSecret.Version = "1"
 	accessToken, err := token.NewAccessToken(params, e)
 	if err != nil {
 		t.Fatalf("failed to create access token: %v", err)

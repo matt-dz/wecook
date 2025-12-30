@@ -14,6 +14,7 @@ import (
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/argon2id"
+	"github.com/matt-dz/wecook/internal/config"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/env"
 	mJwt "github.com/matt-dz/wecook/internal/jwt"
@@ -176,9 +177,9 @@ func TestPostApiLogin(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
-			e := env.New(map[string]string{
-				"APP_SECRET": "test-secret-key-for-jwt-signing",
-			})
+			e := env.New(nil)
+			secret := config.AppSecretValue("test-secret-key-for-jwt-signing")
+			e.Config.AppSecret.Value = &secret
 			e.Logger = log.NullLogger()
 			e.Database = mockDB
 			ctx = env.WithCtx(ctx, e)
@@ -265,11 +266,9 @@ func TestPostApiLogin_AdminRole(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = requestid.InjectRequestID(ctx, 12345)
-	e := env.New(
-		map[string]string{
-			"APP_SECRET": "test-secret-key-for-jwt-signing",
-		},
-	)
+	e := env.New(nil)
+	secret := config.AppSecretValue("test-secret-key-for-jwt-signing")
+	e.Config.AppSecret.Value = &secret
 	e.Logger = log.NullLogger()
 	e.Database = mockDB
 	ctx = env.WithCtx(ctx, e)
@@ -594,11 +593,9 @@ func TestPostApiAuthRefresh(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
-			e := env.New(
-				map[string]string{
-					"APP_SECRET": "test-secret-key-for-jwt-signing",
-				},
-			)
+			e := env.New(nil)
+			secret := config.AppSecretValue("test-secret-key-for-jwt-signing")
+			e.Config.AppSecret.Value = &secret
 			e.Logger = log.NullLogger()
 			e.Database = mockDB
 			ctx = env.WithCtx(ctx, e)
@@ -648,6 +645,7 @@ func TestPostApiAuthRefresh(t *testing.T) {
 }
 
 func TestGetApiAuthVerify(t *testing.T) {
+	appSecret := config.AppSecretValue("test-secret-key-for-jwt-signing")
 	server := NewServer()
 
 	tests := []struct {
@@ -665,11 +663,9 @@ func TestGetApiAuthVerify(t *testing.T) {
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
-				ctx = env.WithCtx(ctx, env.New(
-					map[string]string{
-						"APP_SECRET": "test-secret-key-for-jwt-signing",
-					},
-				))
+				e := env.New(nil)
+				e.Config.AppSecret.Value = &appSecret
+				ctx = env.WithCtx(ctx, e)
 
 				accessToken, err := token.NewAccessToken(mJwt.JWTParams{
 					Role:   role.RoleUser,
@@ -697,11 +693,9 @@ func TestGetApiAuthVerify(t *testing.T) {
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
-				ctx = env.WithCtx(ctx, env.New(
-					map[string]string{
-						"APP_SECRET": "test-secret-key-for-jwt-signing",
-					},
-				))
+				e := env.New(nil)
+				e.Config.AppSecret.Value = &appSecret
+				ctx = env.WithCtx(ctx, e)
 
 				accessToken, err := token.NewAccessToken(mJwt.JWTParams{
 					Role:   role.RoleUser,
@@ -729,11 +723,9 @@ func TestGetApiAuthVerify(t *testing.T) {
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
-				ctx = env.WithCtx(ctx, env.New(
-					map[string]string{
-						"APP_SECRET": "test-secret-key-for-jwt-signing",
-					},
-				))
+				e := env.New(nil)
+				e.Config.AppSecret.Value = &appSecret
+				ctx = env.WithCtx(ctx, e)
 
 				accessToken, err := token.NewAccessToken(mJwt.JWTParams{
 					Role:   role.RoleAdmin,
@@ -761,11 +753,9 @@ func TestGetApiAuthVerify(t *testing.T) {
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
-				ctx = env.WithCtx(ctx, env.New(
-					map[string]string{
-						"APP_SECRET": "test-secret-key-for-jwt-signing",
-					},
-				))
+				e := env.New(nil)
+				e.Config.AppSecret.Value = &appSecret
+				ctx = env.WithCtx(ctx, e)
 
 				accessToken, err := token.NewAccessToken(mJwt.JWTParams{
 					Role:   role.RoleAdmin,
@@ -793,11 +783,9 @@ func TestGetApiAuthVerify(t *testing.T) {
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
-				ctx = env.WithCtx(ctx, env.New(
-					map[string]string{
-						"APP_SECRET": "test-secret-key-for-jwt-signing",
-					},
-				))
+				e := env.New(nil)
+				e.Config.AppSecret.Value = &appSecret
+				ctx = env.WithCtx(ctx, e)
 
 				accessToken, err := token.NewAccessToken(mJwt.JWTParams{
 					Role:   role.RoleUser,
@@ -825,11 +813,9 @@ func TestGetApiAuthVerify(t *testing.T) {
 			setup: func() context.Context {
 				ctx := context.Background()
 				ctx = requestid.InjectRequestID(ctx, 12345)
-				ctx = env.WithCtx(ctx, env.New(
-					map[string]string{
-						"APP_SECRET": "test-secret-key-for-jwt-signing",
-					},
-				))
+				e := env.New(nil)
+				e.Config.AppSecret.Value = &appSecret
+				ctx = env.WithCtx(ctx, e)
 				return ctx
 			},
 			wantStatus: 500,

@@ -16,6 +16,7 @@ import (
 	"github.com/matt-dz/wecook/internal/api/requestid"
 	"github.com/matt-dz/wecook/internal/api/token"
 	"github.com/matt-dz/wecook/internal/argon2id"
+	"github.com/matt-dz/wecook/internal/config"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/email"
 	"github.com/matt-dz/wecook/internal/env"
@@ -830,12 +831,11 @@ func TestPostApiUserInvite(t *testing.T) {
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
 			ctx = tt.setup(ctx)
-			e := env.New(map[string]string{
-				"HOST_ORIGIN": "http://localhost:5173",
-			})
+			e := env.New(nil)
 			e.Logger = log.NullLogger()
 			e.Database = mockDB
 			e.SMTP = mockSMTP
+			e.Config.HostOrigin = "http://localhost:5173"
 			ctx = env.WithCtx(ctx, e)
 
 			resp, err := server.PostApiUserInvite(ctx, tt.request)
@@ -1177,10 +1177,10 @@ func TestPostApiSignup(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = requestid.InjectRequestID(ctx, 12345)
-			e := env.New(map[string]string{
-				"APP_SECRET": "test-secret-key-for-jwt-signing-at-least-32-characters-long",
-				"ENV":        "PROD",
-			})
+			appSecret := config.AppSecretValue("test-secret-key-for-jwt-signing-at-least-32-characters-long")
+			e := env.New(nil)
+			e.Config.AppSecret.Value = &appSecret
+			e.Config.Env = config.EnvProd
 			e.Logger = log.NullLogger()
 			e.Database = mockDB
 			ctx = env.WithCtx(ctx, e)
@@ -1295,10 +1295,10 @@ func TestPostApiSignup_ParameterValidation(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = requestid.InjectRequestID(ctx, 12345)
-	e := env.New(map[string]string{
-		"APP_SECRET": "test-secret-key-for-jwt-signing-at-least-32-characters-long",
-		"ENV":        "PROD",
-	})
+	secret := config.AppSecretValue("test-secret-key-for-jwt-signing-at-least-32-characters-long")
+	e := env.New(nil)
+	e.Config.AppSecret.Value = &secret
+	e.Config.Env = config.EnvProd
 	e.Logger = log.NullLogger()
 	e.Database = mockDB
 	ctx = env.WithCtx(ctx, e)

@@ -78,11 +78,7 @@ func NewRefreshToken(userid int64) (string, error) {
 }
 
 func NewAccessToken(params mJwt.JWTParams, env *env.Env) (string, error) {
-	secret := env.Get("APP_SECRET")
-	if secret == "" {
-		return "", errors.New("environment variable APP_SECRET not defined")
-	}
-	token, err := mJwt.GenerateJWT(params, []byte(secret), "1")
+	token, err := mJwt.GenerateJWT(params, []byte(*env.Config.AppSecret.Value), "1")
 	if err != nil {
 		return "", fmt.Errorf("generating access token: %w", err)
 	}
