@@ -1074,7 +1074,7 @@ FROM
   recipes
 WHERE
   user_id = $1
-  AND image_url <> NULL
+  AND image_url IS NOT NULL
 `
 
 func (q *Queries) GetUserRecipeImages(ctx context.Context, userID pgtype.Int8) ([]pgtype.Text, error) {
@@ -1105,7 +1105,7 @@ FROM
   JOIN recipe_ingredients ri ON r.id = ri.recipe_id
 WHERE
   r.user_id = $1
-  AND ri.image_url <> NULL
+  AND ri.image_url IS NOT NULL
 `
 
 func (q *Queries) GetUserRecipeIngredientImages(ctx context.Context, userID pgtype.Int8) ([]pgtype.Text, error) {
@@ -1136,7 +1136,7 @@ FROM
   JOIN recipe_steps rs ON r.id = rs.recipe_id
 WHERE
   r.user_id = $1
-  AND rs.image_url <> NULL
+  AND rs.image_url IS NOT NULL
 `
 
 func (q *Queries) GetUserRecipeStepImages(ctx context.Context, userID pgtype.Int8) ([]pgtype.Text, error) {

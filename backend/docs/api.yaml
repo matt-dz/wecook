@@ -315,6 +315,7 @@ paths:
       summary: Get users
       tags:
         - User
+        - Admin
       description: Get all users.
       security:
         - AccessTokenAdminBearer: []
