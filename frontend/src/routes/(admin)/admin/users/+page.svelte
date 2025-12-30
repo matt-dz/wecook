@@ -5,18 +5,26 @@
 	import { getColumns } from '$lib/components/users-table/columns';
 	import type { PageProps } from './$types';
 	import InviteUserDialog from '$lib/components/invite-user-dialog/Dialog.svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let { data }: PageProps = $props();
 	let users = $state(data.users.users);
+	let currentUserId = $state(data.currentUserId);
 
 	let inviteDialogOpen = $state(false);
 	let inviteEmail = $state('');
 
 	const handleUserDeleted = (userId: number) => {
 		users = users.filter((user) => user.id !== userId);
+
+		// If the deleted user is the current user, redirect to logout
+		if (userId === currentUserId) {
+			goto(resolve('/logout'));
+		}
 	};
 
-	const columns = getColumns(handleUserDeleted);
+	const columns = $derived(getColumns(handleUserDeleted, currentUserId, users.length));
 
 	$effect(() => {
 		if (!inviteDialogOpen) {

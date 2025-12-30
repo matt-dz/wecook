@@ -13,8 +13,16 @@
 	let {
 		id,
 		email,
-		onUserDeleted
-	}: { id: number; email: string; onUserDeleted: (userId: number) => void } = $props();
+		onUserDeleted,
+		isCurrentUser,
+		canDelete
+	}: {
+		id: number;
+		email: string;
+		onUserDeleted: (userId: number) => void;
+		isCurrentUser: boolean;
+		canDelete: boolean;
+	} = $props();
 
 	let deleteDialogOpen = $state(false);
 	let deleting = $state(false);
@@ -80,20 +88,41 @@
 				</DropdownMenu.Item>
 			</DropdownMenu.Group>
 			<DropdownMenu.Separator />
-			<AlertDialog.Trigger class="w-full">
+			{#if canDelete}
+				<AlertDialog.Trigger class="w-full">
+					<DropdownMenu.Item
+						class="font-inter text-red-500 data-highlighted:bg-red-100 data-highlighted:text-red-500"
+						>Delete User</DropdownMenu.Item
+					>
+				</AlertDialog.Trigger>
+			{:else}
 				<DropdownMenu.Item
-					class="font-inter text-red-500 data-highlighted:bg-red-100 data-highlighted:text-red-500"
-					>Delete User</DropdownMenu.Item
+					disabled
+					class="font-inter text-gray-400"
+					title="Cannot delete the only user in the system"
 				>
-			</AlertDialog.Trigger>
+					Delete User
+				</DropdownMenu.Item>
+			{/if}
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 	<AlertDialog.Content>
 		<AlertDialog.Title class="font-inter text-red-500">Delete User</AlertDialog.Title>
-		<AlertDialog.Description class="font-inter"
-			>This will delete the user with email <span class="font-bold">{email}</span> and all of their
-			recipes. This action <span class="font-bold">CANNOT</span> be undone.</AlertDialog.Description
-		>
+		<AlertDialog.Description class="font-inter">
+			{#if isCurrentUser}
+				<span class="font-bold text-red-600"
+					>⚠️ Warning: You are about to delete your own account!</span
+				>
+				<br /><br />
+				This will delete <span class="font-bold">your account</span> ({email}) and
+				<span class="font-bold">all of your recipes</span>. You will be immediately logged out and
+				will lose access to the admin dashboard. This action
+				<span class="font-bold">CANNOT</span> be undone.
+			{:else}
+				This will delete the user with email <span class="font-bold">{email}</span> and all of their
+				recipes. This action <span class="font-bold">CANNOT</span> be undone.
+			{/if}
+		</AlertDialog.Description>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel disabled={deleting} child={cancel} />
 			<AlertDialog.Action disabled={deleting} child={del} />
