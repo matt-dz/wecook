@@ -18,7 +18,7 @@ export async function getPreferences(
 }
 
 export const UpdatePreferencesRequestSchema = z.object({
-	allow_public_signups: z.boolean().optional()
+	allow_public_signup: z.boolean().optional()
 });
 
 export type UpdateReferencesRequest = z.infer<typeof UpdatePreferencesRequestSchema>;

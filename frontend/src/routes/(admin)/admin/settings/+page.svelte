@@ -18,7 +18,7 @@
 		try {
 			saving = true;
 			await updatePreferences(fetch, {
-				allow_public_signups: allowPublicSignup
+				allow_public_signup: allowPublicSignup
 			});
 			toast.success('Saved preferences successfully.');
 		} catch (e) {

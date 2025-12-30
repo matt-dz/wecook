@@ -12,15 +12,15 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import Error from '$lib/components/error/Error.svelte';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
+	import { page } from '$app/state';
 
+	const signupCode = page.url.searchParams.get('code');
 	let loading = $state(false);
 	let firstName: string = $state('');
 	let lastName: string = $state('');
 	let error: string = $state('');
 	let email: string = $state('');
 	let password: string = $state('');
-
-	let { data }: PageProps = $props();
 
 	const onSubmit = async (e: SubmitEvent) => {
 		e.preventDefault();
@@ -32,7 +32,7 @@
 				password,
 				first_name: firstName,
 				last_name: lastName,
-				invite_code: data.code
+				invite_code: signupCode ?? ''
 			});
 			await invalidateAll();
 			goto(resolve('/home'));
