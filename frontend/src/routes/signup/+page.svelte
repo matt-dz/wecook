@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { PageProps } from './$types';
 	import Button from '$lib/components/button/Button.svelte';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import fetch from '$lib/http';
@@ -32,7 +31,7 @@
 				password,
 				first_name: firstName,
 				last_name: lastName,
-				invite_code: signupCode ?? ''
+				invite_code: signupCode ?? undefined
 			});
 			await invalidateAll();
 			goto(resolve('/home'));
