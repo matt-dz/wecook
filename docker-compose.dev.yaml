@@ -20,6 +20,7 @@ services:
       - go-modules:/go/pkg/mod
       - files-data:/data/files
       - backend-data:/data
+      - ./wecook.yaml:/data/wecook.yaml:ro
     stdin_open: true
     tty: true
 

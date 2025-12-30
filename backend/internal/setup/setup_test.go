@@ -3,100 +3,32 @@ package setup
 import (
 	"context"
 	"errors"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"go.uber.org/mock/gomock"
 
+	"github.com/matt-dz/wecook/internal/config"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/log"
 )
 
-func TestAppSecret_EnvironmentVariableSet(t *testing.T) {
-	// Setup
-	const secret = "secret"
-	secretPath := filepath.Join(t.TempDir(), "secret")
-	t.Setenv("APP_SECRET_PATH", secretPath)
-	t.Setenv("APP_SECRET", secret)
-	env := env.New(nil)
-	if env.Get("APP_SECRET_PATH") != secretPath {
-		t.Fatalf("APP_SECRET_PATH = %q, want %q", env.Get("APP_SECRET_PATH"), secretPath)
-	}
-	if env.Get("APP_SECRET") != secret {
-		t.Fatalf("failed to set APP_SECRET = %q, want %q", env.Get("APP_SECRET"), secret)
-	}
-
-	err := AppSecret(env)
-	if err != nil {
-		t.Fatalf("AppSecret() received error: %v", err)
-	}
-
-	// Secret file should NOT exist
-	_, err = os.Lstat(secretPath)
-	if err == nil {
-		t.Errorf("secret should not be saved - written to %q", secretPath)
-	}
-
-	// Expect secret
-	if env.Get("APP_SECRET") != secret {
-		t.Errorf("APP_SECRET = %q, want %q", env.Get("APP_SECRET"), secret)
-	}
-}
-
-func TestAppSecret_NoEnvironmentVariable(t *testing.T) {
-	// Setup
-	const secretFileName = "secret"
-	secretPath := filepath.Join(t.TempDir(), secretFileName)
-	t.Setenv("APP_SECRET_PATH", secretPath)
-	env := env.New(nil)
-	if env.Get("APP_SECRET_PATH") != secretPath {
-		t.Fatalf("APP_SECRET_PATH = %q, want %q", env.Get("APP_SECRET_PATH"), secretPath)
-	}
-
-	err := AppSecret(env)
-	if err != nil {
-		t.Fatalf("received error: %v", err)
-	}
-
-	// Secret file should exist
-	f, err := os.Lstat(secretPath)
-	if err != nil {
-		t.Fatalf("secret file not written")
-	}
-	if f.Name() != secretFileName {
-		t.Fatalf("secret file name = %q, want %q", f.Name(), secretFileName)
-	}
-
-	data, err := os.ReadFile(secretPath)
-	if err != nil {
-		t.Fatalf("unexpected error when reading secret file: %v", err)
-	}
-	if len(data) == 0 {
-		t.Errorf("secret file is empty")
-	}
-	if env.Get("APP_SECRET") == "" {
-		t.Errorf("APP_SECRET is empty")
-	}
-}
-
 func TestAdmin(t *testing.T) {
-	validPassword := "SecureP@ssw0rd123!"
+	validPassword := config.AdminPassword("SecureP@ssw0rd123!")
 
 	tests := []struct {
 		name          string
-		setup         func(*env.Env, *database.MockQuerier)
+		setup         func(*config.Config, *database.MockQuerier)
 		wantError     bool
 		wantErrorType error
 	}{
 		{
 			name: "admin already exists - skip setup",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "admin@example.com")
-				e.Set("ADMIN_PASSWORD", validPassword)
-				e.Set("ADMIN_FIRST_NAME", "Admin")
-				e.Set("ADMIN_LAST_NAME", "User")
+			setup: func(c *config.Config, mockDB *database.MockQuerier) {
+				c.Admin.Email = "admin@example.com"
+				c.Admin.Password = validPassword
+				c.Admin.FirstName = "Admin"
+				c.Admin.LastName = "User"
 
 				mockDB.EXPECT().
 					GetAdminCount(gomock.Any()).
@@ -106,10 +38,10 @@ func TestAdmin(t *testing.T) {
 		},
 		{
 			name: "ADMIN_EMAIL not set - skip setup",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_PASSWORD", validPassword)
-				e.Set("ADMIN_FIRST_NAME", "Admin")
-				e.Set("ADMIN_LAST_NAME", "User")
+			setup: func(c *config.Config, mockDB *database.MockQuerier) {
+				c.Admin.Password = validPassword
+				c.Admin.FirstName = "Admin"
+				c.Admin.LastName = "User"
 
 				mockDB.EXPECT().
 					GetAdminCount(gomock.Any()).
@@ -119,10 +51,10 @@ func TestAdmin(t *testing.T) {
 		},
 		{
 			name: "ADMIN_PASSWORD not set - skip setup",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "admin@example.com")
-				e.Set("ADMIN_FIRST_NAME", "Admin")
-				e.Set("ADMIN_LAST_NAME", "User")
+			setup: func(c *config.Config, mockDB *database.MockQuerier) {
+				c.Admin.Email = "admin@example.com"
+				c.Admin.FirstName = "Admin"
+				c.Admin.LastName = "User"
 
 				mockDB.EXPECT().
 					GetAdminCount(gomock.Any()).
@@ -131,96 +63,12 @@ func TestAdmin(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name: "ADMIN_FIRST_NAME missing - error",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "admin@example.com")
-				e.Set("ADMIN_PASSWORD", validPassword)
-				e.Set("ADMIN_LAST_NAME", "User")
-
-				mockDB.EXPECT().
-					GetAdminCount(gomock.Any()).
-					Return(int64(0), nil)
-			},
-			wantError:     true,
-			wantErrorType: &EnvironmentVariableMissingError{},
-		},
-		{
-			name: "ADMIN_LAST_NAME missing - error",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "admin@example.com")
-				e.Set("ADMIN_PASSWORD", validPassword)
-				e.Set("ADMIN_FIRST_NAME", "Admin")
-
-				mockDB.EXPECT().
-					GetAdminCount(gomock.Any()).
-					Return(int64(0), nil)
-			},
-			wantError:     true,
-			wantErrorType: &EnvironmentVariableMissingError{},
-		},
-		{
-			name: "invalid email format - error",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "invalid-email")
-				e.Set("ADMIN_PASSWORD", validPassword)
-				e.Set("ADMIN_FIRST_NAME", "Admin")
-				e.Set("ADMIN_LAST_NAME", "User")
-
-				mockDB.EXPECT().
-					GetAdminCount(gomock.Any()).
-					Return(int64(0), nil)
-			},
-			wantError: true,
-		},
-		{
-			name: "weak password - too short",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "admin@example.com")
-				e.Set("ADMIN_PASSWORD", "Short1!")
-				e.Set("ADMIN_FIRST_NAME", "Admin")
-				e.Set("ADMIN_LAST_NAME", "User")
-
-				mockDB.EXPECT().
-					GetAdminCount(gomock.Any()).
-					Return(int64(0), nil)
-			},
-			wantError: true,
-		},
-		{
-			name: "weak password - no uppercase",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "admin@example.com")
-				e.Set("ADMIN_PASSWORD", "password123!")
-				e.Set("ADMIN_FIRST_NAME", "Admin")
-				e.Set("ADMIN_LAST_NAME", "User")
-
-				mockDB.EXPECT().
-					GetAdminCount(gomock.Any()).
-					Return(int64(0), nil)
-			},
-			wantError: true,
-		},
-		{
-			name: "weak password - no special character",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "admin@example.com")
-				e.Set("ADMIN_PASSWORD", "Password1234")
-				e.Set("ADMIN_FIRST_NAME", "Admin")
-				e.Set("ADMIN_LAST_NAME", "User")
-
-				mockDB.EXPECT().
-					GetAdminCount(gomock.Any()).
-					Return(int64(0), nil)
-			},
-			wantError: true,
-		},
-		{
 			name: "database error on GetAdminCount - error",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "admin@example.com")
-				e.Set("ADMIN_PASSWORD", validPassword)
-				e.Set("ADMIN_FIRST_NAME", "Admin")
-				e.Set("ADMIN_LAST_NAME", "User")
+			setup: func(c *config.Config, mockDB *database.MockQuerier) {
+				c.Admin.Email = "admin@example.com"
+				c.Admin.Password = validPassword
+				c.Admin.FirstName = "Admin"
+				c.Admin.LastName = "User"
 
 				mockDB.EXPECT().
 					GetAdminCount(gomock.Any()).
@@ -230,11 +78,11 @@ func TestAdmin(t *testing.T) {
 		},
 		{
 			name: "database error on CreateAdmin - error",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "admin@example.com")
-				e.Set("ADMIN_PASSWORD", validPassword)
-				e.Set("ADMIN_FIRST_NAME", "Admin")
-				e.Set("ADMIN_LAST_NAME", "User")
+			setup: func(c *config.Config, mockDB *database.MockQuerier) {
+				c.Admin.Email = "admin@example.com"
+				c.Admin.Password = validPassword
+				c.Admin.FirstName = "Admin"
+				c.Admin.LastName = "User"
 
 				mockDB.EXPECT().
 					GetAdminCount(gomock.Any()).
@@ -248,11 +96,11 @@ func TestAdmin(t *testing.T) {
 		},
 		{
 			name: "successful admin creation",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "admin@example.com")
-				e.Set("ADMIN_PASSWORD", validPassword)
-				e.Set("ADMIN_FIRST_NAME", "John")
-				e.Set("ADMIN_LAST_NAME", "Doe")
+			setup: func(c *config.Config, mockDB *database.MockQuerier) {
+				c.Admin.Email = "admin@example.com"
+				c.Admin.Password = validPassword
+				c.Admin.FirstName = "John"
+				c.Admin.LastName = "Doe"
 
 				mockDB.EXPECT().
 					GetAdminCount(gomock.Any()).
@@ -282,11 +130,11 @@ func TestAdmin(t *testing.T) {
 		},
 		{
 			name: "successful admin creation with email normalization",
-			setup: func(e *env.Env, mockDB *database.MockQuerier) {
-				e.Set("ADMIN_EMAIL", "  ADMIN@EXAMPLE.COM  ")
-				e.Set("ADMIN_PASSWORD", validPassword)
-				e.Set("ADMIN_FIRST_NAME", "Jane")
-				e.Set("ADMIN_LAST_NAME", "Smith")
+			setup: func(c *config.Config, mockDB *database.MockQuerier) {
+				c.Admin.Email = "  ADMIN@EXAMPLE.COM  "
+				c.Admin.Password = validPassword
+				c.Admin.FirstName = "Jane"
+				c.Admin.LastName = "Smith"
 
 				mockDB.EXPECT().
 					GetAdminCount(gomock.Any()).
@@ -315,7 +163,7 @@ func TestAdmin(t *testing.T) {
 			e.Logger = log.NullLogger()
 			e.Database = mockDB
 
-			tt.setup(e, mockDB)
+			tt.setup(&e.Config, mockDB)
 
 			ctx := context.Background()
 			err := Admin(ctx, e)

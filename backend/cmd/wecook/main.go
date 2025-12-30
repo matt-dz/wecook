@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/matt-dz/wecook/internal/api"
+	"github.com/matt-dz/wecook/internal/config"
 	"github.com/matt-dz/wecook/internal/env"
 	"github.com/matt-dz/wecook/internal/http"
 	"github.com/matt-dz/wecook/internal/log"
@@ -47,21 +48,23 @@ func main() {
 		os.Exit(1)
 	}
 
+	config, err := config.LoadConfig()
+	if err != nil {
+		logger.Error("failed to load config", slog.Any("error", err))
+		os.Exit(1)
+	}
+
 	env := &env.Env{
 		Logger:    logger,
 		FileStore: fs,
 		Database:  db,
 		SMTP:      smtpSender,
 		HTTP:      http,
+		Config:    config,
 	}
 
 	if err := setup.Admin(setupCtx, env); err != nil {
 		logger.Error("failed to setup admin", slog.Any("error", err))
-		os.Exit(1)
-	}
-
-	if err := setup.AppSecret(env); err != nil {
-		logger.Error("failed to setup app secret", slog.Any("error", err))
 		os.Exit(1)
 	}
 

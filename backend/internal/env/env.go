@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/matt-dz/wecook/internal/config"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/email"
 	"github.com/matt-dz/wecook/internal/filestore"
@@ -23,6 +24,7 @@ type Env struct {
 	HTTP      http.HTTPDoer
 	SMTP      email.Sender
 	FileStore filestore.FileStoreInterface
+	Config    config.Config
 	vars      map[string]string
 }
 
@@ -41,7 +43,7 @@ func (e *Env) Set(key string, value string) {
 }
 
 func (e *Env) IsProd() bool {
-	return e.Get("ENV") == "PROD"
+	return e.Config.Env == config.EnvProd
 }
 
 func New(vars map[string]string) *Env {

@@ -328,19 +328,48 @@ for _, tt := range tests {
 }
 ```
 
-## Environment Variables
+## Configuration
+
+The backend supports two configuration methods:
+
+### YAML Configuration (Recommended)
+
+The preferred configuration method is using a YAML file mounted to `/data/wecook.yaml`. If this file exists, it will be used for all configuration.
+
+See the [wecook.yaml](../wecook.yaml) file in the repository root for a complete, commented example configuration.
+
+**Example Docker mount:**
+```yaml
+services:
+  wecook-backend:
+    volumes:
+      - ./wecook.yaml:/data/wecook.yaml:ro
+```
+
+The YAML configuration supports all the same settings as environment variables, with the benefit of:
+- Single configuration file
+- Inline documentation via comments
+- Type validation at startup
+- Easier version control
+
+### Environment Variables (Alternative)
+
+If no YAML file is present at `/data/wecook.yaml`, the application will load configuration from environment variables.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `APP_SECRET` | JWT signing secret (auto-generated if empty) | - |
 | `APP_SECRET_PATH` | Path to store generated secret | `/data/secret` |
-| `HOST_ORIGIN` | Application host URL | - |
+| `APP_SECRET_VERSION` | Version identifier for secret rotation | `1` |
+| `ENV` | Environment mode (`PROD` or `DEV`) | `DEV` |
+| `HOST_ORIGIN` | Application host URL | `http://localhost:8080` |
 | `DATABASE_USER` | PostgreSQL username | - |
 | `DATABASE_PASSWORD` | PostgreSQL password | - |
 | `DATABASE_HOST` | PostgreSQL host | `localhost` |
 | `DATABASE_PORT` | PostgreSQL port | `5432` |
 | `DATABASE` | Database name | - |
 | `FILESERVER_VOLUME` | Path for uploaded files | `/data/files` |
+| `FILESERVER_URL_PREFIX` | URL prefix for files | `/files` |
 | `ADMIN_FIRST_NAME` | Initial admin first name | - |
 | `ADMIN_LAST_NAME` | Initial admin last name | - |
 | `ADMIN_EMAIL` | Initial admin email | - |
@@ -353,7 +382,10 @@ for _, tt := range tests {
 | `SMTP_TLS_MODE` | TLS mode (`auto`, `starttls`, `implicit`, `none`) | `auto` |
 | `SMTP_TLS_SKIP_VERIFY` | Skip TLS certificate verification (development only) | `false` |
 
-With `SMTP_TLS_MODE=auto`, port `587` uses `STARTTLS` after `EHLO`, port `465` uses implicit TLS, and other ports send without TLS.
+**Notes:**
+- With `SMTP_TLS_MODE=auto`: port 587 uses STARTTLS, port 465 uses implicit TLS, other ports send without TLS
+- Admin credentials are only used on first startup when no admin exists
+- If both YAML and environment variables are present, YAML takes precedence
 
 ## API Documentation
 

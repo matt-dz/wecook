@@ -80,9 +80,36 @@ wget -O .env.frontend https://raw.githubusercontent.com/matt-dz/wecook/refs/head
 wget -O .env.database https://raw.githubusercontent.com/matt-dz/wecook/refs/heads/main/.env.database.example
 ```
 
-### 2. Configure Environment Variables
+### 2. Configure the Application
 
-**Note**: The application will run with default values. You only need to configure variables for production use.
+WeCook supports two configuration methods:
+1. **YAML Configuration File** (recommended)
+2. **Environment Variables** (alternative method)
+
+**Note**: The application will run with default values. You only need to configure for production use.
+
+#### Option A: YAML Configuration (Recommended)
+
+Create a `wecook.yaml` file and mount it to `/data/wecook.yaml` in the container.
+
+Download the example configuration:
+```bash
+wget https://raw.githubusercontent.com/matt-dz/wecook/refs/heads/main/wecook.yaml
+```
+
+Edit `wecook.yaml` with your settings. All settings are documented with comments in the file.
+
+Mount the file in your `docker-compose.yaml`:
+```yaml
+services:
+  wecook-backend:
+    volumes:
+      - ./wecook.yaml:/data/wecook.yaml:ro
+```
+
+See the [YAML Configuration Reference](#yaml-configuration-reference) section below for all available options.
+
+#### Option B: Environment Variables
 
 #### Required for Production
 
@@ -123,6 +150,33 @@ The application will be available at `http://localhost:8080`
 Login with the admin credentials you set in `.env.backend` (default: `admin@example.com` / `Change-m3!`)
 
 ## Configuration
+
+WeCook can be configured using either a YAML configuration file (recommended) or environment variables. If a YAML file is present at `/data/wecook.yaml`, it will be used. Otherwise, the application will load configuration from environment variables.
+
+### YAML Configuration Reference
+
+Mount your `wecook.yaml` file to `/data/wecook.yaml` in the container. See the example [wecook.yaml](wecook.yaml) file in the repository for a complete, commented configuration template.
+
+**Example minimal configuration:**
+```yaml
+env: PROD
+host_origin: https://your-domain.com
+
+database:
+  host: postgres
+  port: 5432
+  database: wecook
+  user: wecook
+  password: your-secure-password
+
+admin:
+  first_name: Admin
+  last_name: User
+  email: admin@your-domain.com
+  password: Your-Secure-Password1!
+```
+
+For complete documentation of all configuration options, see [wecook.yaml](wecook.yaml).
 
 ### Backend Environment Variables
 

@@ -204,23 +204,7 @@ func OAPIAuthFunc(ctx context.Context, input *openapi3filter.AuthenticationInput
 		accessToken = cookie.Value
 	}
 
-	secret := env.Get("APP_SECRET")
-	if secret == "" {
-		env.Logger.ErrorContext(ctx, "APP_SECRET not set")
-		return &apiError.Error{
-			Code:    apiError.InternalServerError,
-			Status:  apiError.InternalServerError.StatusCode(),
-			Message: "internal server error",
-			ErrorID: requestID,
-		}
-	}
-	secretVersion := env.Get("APP_SECRET_VERSION")
-	if secretVersion == "" {
-		env.Logger.DebugContext(ctx, "APP_SECRET_VERSION not set, using default version")
-		secretVersion = wcJwt.DefaultKID
-	}
-
-	accessJwt, err := wcJwt.ValidateJWT(accessToken, secretVersion, []byte(secret))
+	accessJwt, err := wcJwt.ValidateJWT(accessToken, env.Config.AppSecret.Version, []byte(*env.Config.AppSecret.Value))
 	if errors.Is(err, jwt.ErrTokenExpired) {
 		env.Logger.ErrorContext(ctx, "jwt expired", slog.Any("error", err))
 		return &apiError.Error{
