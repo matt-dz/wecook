@@ -171,7 +171,6 @@ As an admin, you have full control over user accounts:
 - **View All Users** - See a list of all registered users with their email addresses, names, and roles
 - **Invite Users** - Send invitation emails to new users
   - When SMTP is configured, invitation emails are sent automatically with a signup link
-  - Without SMTP configuration, you can still generate invite codes to share manually
 - **Delete Users** - Remove user accounts from the system
   - Deleting a user removes their account and all associated data
   - This action cannot be undone
