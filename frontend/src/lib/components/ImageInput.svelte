@@ -29,7 +29,7 @@
 		const file = target.files?.[0];
 
 		if (file) {
-			if (!validateImageSize(file, 1)) {
+			if (!validateImageSize(file)) {
 				toast.error('Image too large. Maximum size is 20 MB.');
 				// Clear the file input
 				target.value = '';
