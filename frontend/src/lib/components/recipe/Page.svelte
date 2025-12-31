@@ -30,7 +30,7 @@
 						{recipe.owner.first_name}
 						{recipe.owner.last_name}
 					</h2>
-					<h3 class="text-lg text-gray-500">
+					<h3 class="text-base text-gray-500">
 						{#if recipe.recipe.prep_time_amount && recipe.recipe.prep_time_unit}
 							Prep Time: {formatDuration(
 								recipe.recipe.prep_time_amount,
@@ -38,7 +38,7 @@
 							)}
 						{/if}
 					</h3>
-					<h3 class="text-lg text-gray-500">
+					<h3 class="text-base text-gray-500">
 						{#if recipe.recipe.cook_time_amount && recipe.recipe.cook_time_unit}
 							Cook Time: {formatDuration(
 								recipe.recipe.cook_time_amount,

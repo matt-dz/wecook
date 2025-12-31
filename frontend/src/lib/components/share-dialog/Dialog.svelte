@@ -33,13 +33,13 @@
 					Share this recipe so others can view and cook it.
 				</AlertDialog.Description>
 			</AlertDialog.Header>
-			<div class="flex items-center rounded-lg">
+			<div class="flex w-full items-center overflow-hidden rounded-lg">
 				<button
-					class="cursor-pointer rounded-l-lg border border-r-0 border-solid border-gray-500 bg-blue-300 px-2 py-1 hover:bg-blue-200"
+					class="shrink-0 cursor-pointer rounded-l-lg border border-r-0 border-solid border-gray-500 bg-blue-300 px-2 py-1 hover:bg-blue-200"
 					onclick={copyUrl}>copy</button
 				>
-				<div class="w-full rounded-r-lg border border-solid border-gray-500 bg-gray-100 px-2 py-1">
-					<p>{url()}</p>
+				<div class="min-w-0 flex-1 overflow-hidden rounded-r-lg border border-solid border-gray-500 bg-gray-100 px-2 py-1">
+					<p class="overflow-hidden text-ellipsis whitespace-nowrap">{url()}</p>
 				</div>
 			</div>
 		</AlertDialog.Content>
