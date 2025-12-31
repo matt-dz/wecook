@@ -2193,17 +2193,17 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					CheckIngredientOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
 			},
-			wantStatus: 400,
-			wantCode:   apiError.BadRequest.String(),
+			wantStatus: 422,
+			wantCode:   apiError.UnsupportedImageFormat.String(),
 			wantError:  false,
 			validate: func(t *testing.T, resp PostApiRecipesRecipeIDIngredientsIngredientIDImageResponseObject) {
-				v, ok := resp.(PostApiRecipesRecipeIDIngredientsIngredientIDImage400JSONResponse)
+				v, ok := resp.(PostApiRecipesRecipeIDIngredientsIngredientIDImage422JSONResponse)
 				if !ok {
-					t.Errorf("expected 400 response, got %T", resp)
+					t.Errorf("expected 422 response, got %T", resp)
 					return
 				}
-				if v.Code != apiError.BadRequest.String() {
-					t.Errorf("expected code %s, got %s", apiError.BadRequest.String(), v.Code)
+				if v.Code != apiError.UnsupportedImageFormat.String() {
+					t.Errorf("expected code %s, got %s", apiError.UnsupportedImageFormat.String(), v.Code)
 				}
 			},
 		},
@@ -3756,17 +3756,17 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					CheckStepOwnership(gomock.Any(), gomock.Any()).
 					Return(true, nil)
 			},
-			wantStatus: 400,
-			wantCode:   apiError.BadRequest.String(),
+			wantStatus: 422,
+			wantCode:   apiError.UnsupportedImageFormat.String(),
 			wantError:  false,
 			validate: func(t *testing.T, resp PostApiRecipesRecipeIDStepsStepIDImageResponseObject) {
-				v, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage400JSONResponse)
+				v, ok := resp.(PostApiRecipesRecipeIDStepsStepIDImage422JSONResponse)
 				if !ok {
-					t.Errorf("expected 400 response, got %T", resp)
+					t.Errorf("expected 422 response, got %T", resp)
 					return
 				}
-				if v.Code != apiError.BadRequest.String() {
-					t.Errorf("expected code %s, got %s", apiError.BadRequest.String(), v.Code)
+				if v.Code != apiError.UnsupportedImageFormat.String() {
+					t.Errorf("expected code %s, got %s", apiError.UnsupportedImageFormat.String(), v.Code)
 				}
 			},
 		},

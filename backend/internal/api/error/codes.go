@@ -26,6 +26,7 @@ const (
 	UserNotFound            ErrorCode = "user_not_found"
 	InvalidInviteCode       ErrorCode = "invalid_invite_code"
 	InvalidPassword         ErrorCode = "invalid_password"
+	UnsupportedImageFormat  ErrorCode = "unsupported_image_format"
 )
 
 var errorCodeToStatusCode = map[ErrorCode]int{
@@ -50,6 +51,7 @@ var errorCodeToStatusCode = map[ErrorCode]int{
 	UserNotFound:            http.StatusNotFound,
 	InvalidInviteCode:       http.StatusUnprocessableEntity,
 	InvalidPassword:         http.StatusUnprocessableEntity,
+	UnsupportedImageFormat:  http.StatusUnprocessableEntity,
 }
 
 func (ec ErrorCode) StatusCode() int {

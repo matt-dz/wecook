@@ -4,6 +4,7 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 
 	import ImagePreview from '$lib/components/image/ImagePreview.svelte';
+	import ImageInput from '$lib/components/ImageInput.svelte';
 	import type { Step } from '$lib/recipes';
 
 	interface Props {
@@ -14,7 +15,7 @@
 		onImageDeletion?: (stepID: number) => void;
 	}
 
-	let fileInput: HTMLInputElement;
+	let fileInput: HTMLInputElement | undefined = $state();
 	const openFilePicker = () => {
 		fileInput?.click();
 	};
@@ -80,11 +81,5 @@
 		</div>
 	{/if}
 
-	<input
-		type="file"
-		accept="image/*"
-		bind:this={fileInput}
-		onchange={handleFileSelect}
-		class="hidden"
-	/>
+	<ImageInput bind:ref={fileInput} onchange={handleFileSelect} class="hidden" />
 </div>
