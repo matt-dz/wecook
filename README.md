@@ -2,14 +2,14 @@
 
 A self-hosted recipe manager for organizing and sharing your favorite recipes. Checkout the demo website [wecook.deguzman.cloud](https://wecook.deguzman.cloud).
 
-<img width="1466" height="832" alt="Screenshot 2025-12-28 at 3 47 20 PM" src="https://github.com/user-attachments/assets/a0f1eb94-ad8e-46ad-b56e-c9c939101b9d" />
 
-<img width="1464" height="833" alt="Screenshot 2025-12-28 at 3 48 59 PM" src="https://github.com/user-attachments/assets/be497486-20b1-40df-bbaa-59749eb89c25" />
+<img width="1470" height="831" alt="Screenshot 2025-12-31 at 12 47 02 PM" src="https://github.com/user-attachments/assets/1b8ebadf-03d8-44cd-a5a6-9b4bdfaf4dac" />
 
-<img width="1466" height="831" alt="Screenshot 2025-12-28 at 3 49 40 PM" src="https://github.com/user-attachments/assets/abb688c7-e7a0-4046-a5e5-673b1dc9c1f0" />
+<img width="1470" height="831" alt="Screenshot 2025-12-31 at 12 47 20 PM" src="https://github.com/user-attachments/assets/3001ffd5-a111-4682-ae7b-6d694b6ee9d8" />
 
 ## Table of Contents
 
+- [Why](#why)
 - [Features](#features)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
@@ -24,9 +24,14 @@ A self-hosted recipe manager for organizing and sharing your favorite recipes. C
 - [Kubernetes Deployment](#kubernetes-deployment)
 - [License](#license)
 
+## Why
+
+There already exists many self-hosted recipe managers. However, I thought their UIs looked dated and I was bored so I built my own!
+
 ## Features
 
 - **Recipe Management** - Create, edit, and organize recipes with ingredients, steps, and images
+<img width="1470" height="831" alt="Screenshot 2025-12-31 at 12 47 49 PM" src="https://github.com/user-attachments/assets/5fe65fdf-2d83-4520-8848-381db6d4fa1c" />
 - **Recipe Publishing** - Share recipes publicly or keep them private
 - **RESTful API** - OpenAPI-documented REST API for all operations
 
