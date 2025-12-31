@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 
@@ -65,6 +67,135 @@ func (a *AppSecretValue) Validate() error {
 	return nil
 }
 
+func splitFieldList(param string) []string {
+	// "A,B,C" or "A B C"
+	param = strings.ReplaceAll(param, " ", ",")
+	parts := strings.Split(param, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// allOrNothing implements a cross-field validator for go-playground/validator.
+//
+// It enforces an “all-or-nothing” rule across a set of fields specified in the
+// validation tag parameters. The validator succeeds only if either:
+//
+//  1. All listed fields have zero values, or
+//  2. All listed fields have non-zero values.
+//
+// Any mixed state—where at least one field is zero-valued and at least one field
+// is non-zero—causes validation to fail.
+//
+// The validator must be attached to a placeholder field and inspects the parent
+// struct to perform validation. Field names are provided as a comma- or
+// space-separated list via the tag parameter (e.g. `validate:"allornothing=A,B,C"`).
+//
+// Pointer and interface fields are handled as follows:
+//   - A nil pointer or interface is treated as a zero value.
+//   - A non-nil pointer or interface is dereferenced until a concrete value is
+//     reached, and that value is evaluated using reflect.Value.IsZero.
+//
+// If the parent value is nil, the parent is not a struct, a referenced field
+// does not exist, or no field names are provided, the validation fails to signal
+// misconfiguration.
+//
+// This validator is intended for enforcing atomic field groups in API inputs
+// (e.g. ensuring related fields are either all provided or all omitted).
+func allOrNothing(fl validator.FieldLevel) bool {
+	parent := fl.Parent()
+	if parent.Kind() == reflect.Pointer {
+		if parent.IsNil() {
+			return true // nothing to validate
+		}
+		parent = parent.Elem()
+	}
+	if parent.Kind() != reflect.Struct {
+		return false
+	}
+
+	names := splitFieldList(fl.Param())
+	if len(names) == 0 {
+		return false
+	}
+
+	hasZero := false
+	hasNonZero := false
+
+	for _, name := range names {
+		f := parent.FieldByName(name)
+		if !f.IsValid() {
+			return false // field name typo / not found
+		}
+
+		// Treat pointers/interfaces as zero if nil, otherwise unwrap
+		for (f.Kind() == reflect.Pointer || f.Kind() == reflect.Interface) && !f.IsNil() {
+			f = f.Elem()
+		}
+
+		if f.IsZero() {
+			hasZero = true
+		} else {
+			hasNonZero = true
+		}
+
+		// Mixed state detected → invalid
+		if hasZero && hasNonZero {
+			return false
+		}
+	}
+
+	return true
+}
+
+func registerAllOrNothing(v *validator.Validate) {
+	_ = v.RegisterValidation("allOrNothing", allOrNothing)
+}
+
+func formatValidationError(err error) error {
+	validationErrs, ok := err.(validator.ValidationErrors) //nolint:errorlint
+	if !ok {
+		return err
+	}
+
+	for _, e := range validationErrs {
+		if e.Tag() == "allOrNothing" {
+			// Extract the struct name from the namespace
+			// e.g., "Config.SMTP.Validate" -> "SMTP"
+			namespace := e.Namespace()
+			parts := strings.Split(namespace, ".")
+			var structName string
+			//nolint:mnd
+			if len(parts) >= 2 {
+				structName = parts[len(parts)-2]
+			}
+
+			var fields string
+			switch structName {
+			case "SMTP":
+				fields = "From, Password, Host, Username, and Port"
+			case "Database":
+				fields = "Port, Host, Database, User, and Password"
+			case "Admin":
+				fields = "FirstName, LastName, Email, and Password"
+			default:
+				fields = "all related fields"
+			}
+
+			return fmt.Errorf(
+				"%s configuration is incomplete: either all fields must be set (%s) or all must be empty",
+				structName, fields)
+		}
+	}
+
+	return err
+}
+
 type AppSecret struct {
 	Value   *AppSecretValue `yaml:"value" validate:"omitempty,validateFn"`
 	Path    string          `yaml:"path" validate:"omitempty,filepath"`
@@ -77,10 +208,12 @@ type Database struct {
 	Database string `yaml:"database"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
+
+	Validate struct{} `yaml:"-" validate:"allOrNothing=Port Host Database User Password"`
 }
 
 type Fileserver struct {
-	Volume    string `yaml:"volume" validate:"omitempty"`
+	Volume    string `yaml:"volume"`
 	URLPrefix string `yaml:"url_prefix"`
 }
 
@@ -92,6 +225,8 @@ type SMTP struct {
 	Host          string  `yaml:"host" validate:"omitempty,hostname_rfc1123"`
 	Password      string  `yaml:"password"`
 	From          string  `yaml:"from" validate:"omitempty,email"`
+
+	Validate struct{} `yaml:"-" validate:"allOrNothing=From Password Host Username Port"`
 }
 
 type Admin struct {
@@ -99,6 +234,8 @@ type Admin struct {
 	LastName  string        `yaml:"last_name" validate:"required_with_all=Email Password"`
 	Email     string        `yaml:"email" validate:"omitempty,email"`
 	Password  AdminPassword `yaml:"password" validate:"omitempty,validateFn"`
+
+	Validate struct{} `yaml:"-" validate:"allOrNothing=FirstName LastName Email Password"`
 }
 
 type Config struct {
@@ -189,11 +326,16 @@ func loadConfigFromEnv() (Config, error) {
 	// SMTP
 	smtpTLSMode := TLSMode(loadWithDefault("SMTP_TLS_MODE", string(TLSModeAuto)))
 	smtpTLSSkipVerify := loadWithDefault("SMTP_TLS_SKIP_VERIFY", "false")
-	smtpPort := loadWithDefault("SMTP_PORT", "587")
 	smtpPassword := loadWithDefault("SMTP_PASSWORD", "")
 	smtpFrom := loadWithDefault("SMTP_FROM", "")
 	smtpUsername := loadWithDefault("SMTP_USERNAME", "")
 	smtpHost := loadWithDefault("SMTP_HOST", "")
+
+	// Only set SMTP_PORT default if SMTP is being configured
+	smtpPort := loadWithDefault("SMTP_PORT", "")
+	if smtpPort == "" && (smtpFrom != "" || smtpPassword != "" || smtpHost != "" || smtpUsername != "") {
+		smtpPort = "587"
+	}
 
 	// Admin
 	adminFirstName := loadWithDefault("ADMIN_FIRST_NAME", "")
@@ -249,10 +391,12 @@ func loadConfigFromEnv() (Config, error) {
 	} else {
 		conf.SMTP.TLSSkipVerify = b
 	}
-	if port, err := strconv.ParseUint(smtpPort, 10, 16); err != nil {
-		return conf, fmt.Errorf("invalid SMTP_PORT (%q): %w", smtpPort, err)
-	} else {
-		conf.SMTP.Port = uint16(port)
+	if smtpPort != "" {
+		if port, err := strconv.ParseUint(smtpPort, 10, 16); err != nil {
+			return conf, fmt.Errorf("invalid SMTP_PORT (%q): %w", smtpPort, err)
+		} else {
+			conf.SMTP.Port = uint16(port)
+		}
 	}
 
 	// Load Admin
@@ -264,8 +408,9 @@ func loadConfigFromEnv() (Config, error) {
 	}
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
+	registerAllOrNothing(validate)
 	if err := validate.Struct(conf); err != nil {
-		return conf, err
+		return conf, formatValidationError(err)
 	}
 
 	if err := loadAppSecret(&conf); err != nil {
@@ -313,7 +458,9 @@ func loadConfigFromFile(path string) (Config, error) {
 	if config.Fileserver.URLPrefix == "" {
 		config.Fileserver.URLPrefix = "/files"
 	}
-	if config.SMTP.Port == 0 {
+	// Only set SMTP.Port default if SMTP is being configured
+	if config.SMTP.Port == 0 && (config.SMTP.From != "" || config.SMTP.Password != "" ||
+		config.SMTP.Host != "" || config.SMTP.Username != "") {
 		config.SMTP.Port = 587
 	}
 	if config.SMTP.TLSMode == "" {
@@ -322,8 +469,9 @@ func loadConfigFromFile(path string) (Config, error) {
 
 	// Validate config
 	validate := validator.New(validator.WithRequiredStructEnabled())
+	registerAllOrNothing(validate)
 	if err := validate.Struct(config); err != nil {
-		return Config{}, err
+		return Config{}, formatValidationError(err)
 	}
 
 	if err := loadAppSecret(&config); err != nil {

@@ -44,7 +44,7 @@ app_secret:
 database:
   # PostgreSQL hostname (required)
   # In Docker Compose, use the service name (e.g., "postgres" or "wecook-db")
-  host: localhost
+  host: wecook-database
 
   # PostgreSQL port (default: 5432)
   port: 5432
@@ -76,39 +76,39 @@ fileserver:
 # =============================================================================
 # Required only if you want to send user invitation emails
 # Leave fields empty to disable email functionality
-smtp:
-  # SMTP server hostname
-  # Examples: smtp.gmail.com, smtp.sendgrid.net, smtp.mailgun.org
-  host: ""
+# smtp:
+# SMTP server hostname
+# Examples: smtp.gmail.com, smtp.sendgrid.net, smtp.mailgun.org
+# host: ""
 
-  # SMTP server port (default: 587)
-  # Common ports:
-  # - 587: STARTTLS (recommended)
-  # - 465: Implicit TLS
-  # - 25: No TLS (not recommended)
-  port: 587
+# SMTP server port (default: 587)
+# Common ports:
+# - 587: STARTTLS (recommended)
+# - 465: Implicit TLS
+# - 25: No TLS (not recommended)
+# port: 587
 
-  # SMTP username for authentication
-  username: ""
+# SMTP username for authentication
+# username: ""
 
-  # SMTP password for authentication
-  password: ""
+# SMTP password for authentication
+# password: ""
 
-  # Email address to use as the sender
-  # Example: noreply@your-domain.com
-  from: ""
+# Email address to use as the sender
+# Example: noreply@your-domain.com
+# from: ""
 
-  # TLS mode: auto, starttls, implicit, or none
-  # - auto: Uses STARTTLS on port 587, implicit TLS on 465, no TLS otherwise
-  # - starttls: Always use STARTTLS (recommended for port 587)
-  # - implicit: Use implicit TLS (recommended for port 465)
-  # - none: No TLS (not recommended for production)
-  tls_mode: auto
+# TLS mode: auto, starttls, implicit, or none
+# - auto: Uses STARTTLS on port 587, implicit TLS on 465, no TLS otherwise
+# - starttls: Always use STARTTLS (recommended for port 587)
+# - implicit: Use implicit TLS (recommended for port 465)
+# - none: No TLS (not recommended for production)
+# tls_mode: auto
 
-  # Skip TLS certificate verification (DANGEROUS - development only)
-  # Set to true only for testing with self-signed certificates
-  # Never use in production
-  tls_skip_verify: false
+# Skip TLS certificate verification (DANGEROUS - development only)
+# Set to true only for testing with self-signed certificates
+# Never use in production
+# tls_skip_verify: false
 
 # =============================================================================
 # Admin User Setup
