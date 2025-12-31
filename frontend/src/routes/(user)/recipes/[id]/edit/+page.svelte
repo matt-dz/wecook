@@ -28,6 +28,7 @@
 	import UnpublishDialog from '$lib/components/unpublish-diaglog/Dialog.svelte';
 	import PublishDialog from '$lib/components/publish-dialog/Dialog.svelte';
 	import { Input } from '$lib/components/ui/input/index.js';
+	import ImageInput from '$lib/components/ImageInput.svelte';
 	import StepInput from '$lib/components/step/Input.svelte';
 	import IngredientInput from '$lib/components/ingredient/Input.svelte';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
@@ -55,7 +56,7 @@
 	let published = $state(data.recipe.recipe.published);
 	let recipeImageUrl = $state<string | undefined>(data.recipe.recipe.image_url);
 
-	let recipeFileInput: HTMLInputElement;
+	let recipeFileInput: HTMLInputElement | undefined = $state();
 	let saveState: 'saved' | 'saving' | 'failed' | 'loading' = $state('saved');
 	let deleteDialogOpen = $state(false);
 	let publishDialogOpen = $state(false);
@@ -526,13 +527,7 @@
 					Upload Image
 				</Button>
 			{/if}
-			<input
-				type="file"
-				accept="image/*"
-				bind:this={recipeFileInput}
-				onchange={handleRecipeFileSelect}
-				class="hidden"
-			/>
+			<ImageInput bind:ref={recipeFileInput} onchange={handleRecipeFileSelect} class="hidden" />
 		</div>
 
 		<div>

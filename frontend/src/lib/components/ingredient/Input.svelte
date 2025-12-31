@@ -2,6 +2,7 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import ImagePreview from '$lib/components/image/ImagePreview.svelte';
+	import ImageInput from '$lib/components/ImageInput.svelte';
 	import { type Ingredient } from '$lib/recipes';
 	import { EllipsisVertical } from '@lucide/svelte';
 
@@ -21,7 +22,7 @@
 		onImageDeletion
 	}: Props = $props();
 
-	let fileInput: HTMLInputElement;
+	let fileInput: HTMLInputElement | undefined = $state();
 
 	const handleFileSelect = (e: Event) => {
 		const target = e.target as HTMLInputElement;
@@ -83,11 +84,5 @@
 		</div>
 	{/if}
 
-	<input
-		type="file"
-		accept="image/*"
-		bind:this={fileInput}
-		onchange={handleFileSelect}
-		class="hidden"
-	/>
+	<ImageInput bind:ref={fileInput} onchange={handleFileSelect} class="hidden" />
 </div>
