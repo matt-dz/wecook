@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func TestLoadConfigFromEnv(t *testing.T) {
@@ -57,8 +59,9 @@ func TestLoadConfigFromEnv(t *testing.T) {
 				if c.Fileserver.URLPrefix != "/files" {
 					t.Errorf("expected Fileserver.URLPrefix %q, got %q", "/files", c.Fileserver.URLPrefix)
 				}
-				if c.SMTP.Port != 587 {
-					t.Errorf("expected SMTP.Port 587, got %d", c.SMTP.Port)
+				// SMTP is not configured, so Port should be 0 (no default when SMTP fields are empty)
+				if c.SMTP.Port != 0 {
+					t.Errorf("expected SMTP.Port 0, got %d", c.SMTP.Port)
 				}
 				if c.SMTP.TLSMode != TLSModeAuto {
 					t.Errorf("expected SMTP.TLSMode %q, got %q", TLSModeAuto, c.SMTP.TLSMode)
@@ -235,7 +238,7 @@ func TestLoadConfigFromEnv(t *testing.T) {
 			wantError: true, // Should fail validation
 		},
 		{
-			name: "admin validation - only email set (no password) - names not required",
+			name: "admin validation - only email set - allOrNothing fails",
 			setup: func(t *testing.T) {
 				t.Setenv("DATABASE_USER", "testuser")
 				t.Setenv("DATABASE_PASSWORD", "testpass")
@@ -243,18 +246,10 @@ func TestLoadConfigFromEnv(t *testing.T) {
 				t.Setenv("ADMIN_EMAIL", "admin@example.com")
 				// No ADMIN_PASSWORD, ADMIN_FIRST_NAME, ADMIN_LAST_NAME
 			},
-			wantError: false, // Should pass - names only required when both email and password are set
-			validate: func(t *testing.T, c *Config) {
-				if c.Admin.Email != "admin@example.com" {
-					t.Errorf("expected Admin.Email %q, got %q", "admin@example.com", c.Admin.Email)
-				}
-				if c.Admin.FirstName != "" {
-					t.Errorf("expected Admin.FirstName to be empty, got %q", c.Admin.FirstName)
-				}
-			},
+			wantError: true, // Should fail - allOrNothing requires all Admin fields set or all empty
 		},
 		{
-			name: "admin validation - only password set (no email) - names not required",
+			name: "admin validation - only password set - allOrNothing fails",
 			setup: func(t *testing.T) {
 				t.Setenv("DATABASE_USER", "testuser")
 				t.Setenv("DATABASE_PASSWORD", "testpass")
@@ -262,12 +257,7 @@ func TestLoadConfigFromEnv(t *testing.T) {
 				t.Setenv("ADMIN_PASSWORD", "SecureP@ss123!")
 				// No ADMIN_EMAIL, ADMIN_FIRST_NAME, ADMIN_LAST_NAME
 			},
-			wantError: false, // Should pass - names only required when both email and password are set
-			validate: func(t *testing.T, c *Config) {
-				if c.Admin.Email != "" {
-					t.Errorf("expected Admin.Email to be empty, got %q", c.Admin.Email)
-				}
-			},
+			wantError: true, // Should fail - allOrNothing requires all Admin fields set or all empty
 		},
 		{
 			name: "admin validation - all admin fields set correctly",
@@ -327,7 +317,7 @@ func TestLoadConfigFromEnv(t *testing.T) {
 func TestLoadConfigFromFile(t *testing.T) {
 	tests := []struct {
 		name      string
-		yaml      interface{} // Can be string or func(*testing.T) string
+		yaml      any // Can be string or func(*testing.T) string
 		wantError bool
 		validate  func(*testing.T, *Config)
 	}{
@@ -421,8 +411,9 @@ database:
 				if c.Fileserver.URLPrefix != "/files" {
 					t.Errorf("expected default Fileserver.URLPrefix %q, got %q", "/files", c.Fileserver.URLPrefix)
 				}
-				if c.SMTP.Port != 587 {
-					t.Errorf("expected default SMTP.Port 587, got %d", c.SMTP.Port)
+				// SMTP is not configured, so Port should be 0 (no default when SMTP fields are empty)
+				if c.SMTP.Port != 0 {
+					t.Errorf("expected default SMTP.Port 0, got %d", c.SMTP.Port)
 				}
 				if c.SMTP.TLSMode != TLSModeAuto {
 					t.Errorf("expected default SMTP.TLSMode %q, got %q", TLSModeAuto, c.SMTP.TLSMode)
@@ -524,7 +515,7 @@ admin:
 			wantError: true, // Should fail validation
 		},
 		{
-			name: "admin validation - only email set (no password) - names not required",
+			name: "admin validation - only email set - allOrNothing fails",
 			yaml: func(t *testing.T) string {
 				tempDir := t.TempDir()
 				return `
@@ -538,18 +529,10 @@ admin:
   email: admin@example.com
 `
 			},
-			wantError: false, // Should pass - names only required when both email and password are set
-			validate: func(t *testing.T, c *Config) {
-				if c.Admin.Email != "admin@example.com" {
-					t.Errorf("expected Admin.Email %q, got %q", "admin@example.com", c.Admin.Email)
-				}
-				if c.Admin.FirstName != "" {
-					t.Errorf("expected Admin.FirstName to be empty, got %q", c.Admin.FirstName)
-				}
-			},
+			wantError: true, // Should fail - allOrNothing requires all Admin fields set or all empty
 		},
 		{
-			name: "admin validation - only password set (no email) - names not required",
+			name: "admin validation - only password set - allOrNothing fails",
 			yaml: func(t *testing.T) string {
 				tempDir := t.TempDir()
 				return `
@@ -563,12 +546,7 @@ admin:
   password: SecureP@ss123!
 `
 			},
-			wantError: false, // Should pass - names only required when both email and password are set
-			validate: func(t *testing.T, c *Config) {
-				if c.Admin.Email != "" {
-					t.Errorf("expected Admin.Email to be empty, got %q", c.Admin.Email)
-				}
-			},
+			wantError: true, // Should fail - allOrNothing requires all Admin fields set or all empty
 		},
 		{
 			name: "admin validation - all admin fields set correctly",
@@ -648,6 +626,180 @@ func TestLoadConfigFromFile_FileNotFound(t *testing.T) {
 	_, err := loadConfigFromFile("/nonexistent/config.yaml")
 	if err == nil {
 		t.Error("expected error for nonexistent file, got nil")
+	}
+}
+
+func TestFormatValidationError(t *testing.T) {
+	tests := []struct {
+		name           string
+		setup          func(*testing.T)
+		expectedErrMsg string
+	}{
+		{
+			name: "SMTP incomplete configuration error message",
+			setup: func(t *testing.T) {
+				t.Setenv("DATABASE_USER", "testuser")
+				t.Setenv("DATABASE_PASSWORD", "testpass")
+				t.Setenv("DATABASE", "testdb")
+				t.Setenv("SMTP_HOST", "smtp.example.com")
+				// Missing other SMTP fields
+			},
+			expectedErrMsg: "SMTP configuration is incomplete: either all fields must be set (From, Password, Host, Username, and Port) or all must be empty", //nolint:lll
+		},
+		{
+			name: "Admin incomplete configuration error message",
+			setup: func(t *testing.T) {
+				t.Setenv("DATABASE_USER", "testuser")
+				t.Setenv("DATABASE_PASSWORD", "testpass")
+				t.Setenv("DATABASE", "testdb")
+				t.Setenv("ADMIN_EMAIL", "admin@example.com")
+				// Missing other Admin fields
+			},
+			expectedErrMsg: "Admin configuration is incomplete: either all fields must be set (FirstName, LastName, Email, and Password) or all must be empty", //nolint:lll
+		},
+		{
+			name: "Database incomplete configuration error message",
+			setup: func(t *testing.T) {
+				t.Setenv("DATABASE_HOST", "localhost")
+				// Missing other Database fields
+			},
+			expectedErrMsg: "Database configuration is incomplete: either all fields must be set (Port, Host, Database, User, and Password) or all must be empty", //nolint:lll
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(t)
+			_, err := loadConfigFromEnv()
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			if err.Error() != tt.expectedErrMsg {
+				t.Errorf("expected error message:\n%q\ngot:\n%q", tt.expectedErrMsg, err.Error())
+			}
+		})
+	}
+}
+
+func TestAllOrNothing(t *testing.T) {
+	type TestStruct struct {
+		FieldA   string
+		FieldB   int
+		FieldC   bool
+		Validate struct{} `validate:"allOrNothing=FieldA FieldB FieldC"`
+	}
+
+	type PointerTestStruct struct {
+		FieldA   *string
+		FieldB   *int
+		FieldC   *bool
+		Validate struct{} `validate:"allOrNothing=FieldA FieldB FieldC"`
+	}
+
+	tests := []struct {
+		name      string
+		input     any
+		wantError bool
+	}{
+		{
+			name: "all fields zero - valid",
+			input: TestStruct{
+				FieldA: "",
+				FieldB: 0,
+				FieldC: false,
+			},
+			wantError: false,
+		},
+		{
+			name: "all fields non-zero - valid",
+			input: TestStruct{
+				FieldA: "value",
+				FieldB: 42,
+				FieldC: true,
+			},
+			wantError: false,
+		},
+		{
+			name: "mixed - only FieldA set - invalid",
+			input: TestStruct{
+				FieldA: "value",
+				FieldB: 0,
+				FieldC: false,
+			},
+			wantError: true,
+		},
+		{
+			name: "mixed - only FieldB set - invalid",
+			input: TestStruct{
+				FieldA: "",
+				FieldB: 42,
+				FieldC: false,
+			},
+			wantError: true,
+		},
+		{
+			name: "mixed - two fields set - invalid",
+			input: TestStruct{
+				FieldA: "value",
+				FieldB: 42,
+				FieldC: false,
+			},
+			wantError: true,
+		},
+		{
+			name: "pointer fields - all nil - valid",
+			input: PointerTestStruct{
+				FieldA: nil,
+				FieldB: nil,
+				FieldC: nil,
+			},
+			wantError: false,
+		},
+		{
+			name: "pointer fields - all non-nil - valid",
+			input: func() PointerTestStruct {
+				a := "value"
+				b := 42
+				c := true
+				return PointerTestStruct{
+					FieldA: &a,
+					FieldB: &b,
+					FieldC: &c,
+				}
+			}(),
+			wantError: false,
+		},
+		{
+			name: "pointer fields - mixed - invalid",
+			input: func() PointerTestStruct {
+				a := "value"
+				return PointerTestStruct{
+					FieldA: &a,
+					FieldB: nil,
+					FieldC: nil,
+				}
+			}(),
+			wantError: true,
+		},
+	}
+
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	registerAllOrNothing(validate)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validate.Struct(tt.input)
+
+			if tt.wantError {
+				if err == nil {
+					t.Error("expected validation error, got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected validation error: %v", err)
+				}
+			}
+		})
 	}
 }
 

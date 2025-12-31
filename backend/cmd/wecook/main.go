@@ -30,27 +30,27 @@ func main() {
 	httpConfig.Logger = logger
 	http := http.New(httpConfig)
 
-	fs, err := setup.FileStore()
+	conf, err := config.LoadConfig()
+	if err != nil {
+		logger.Error("failed to load config", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	fs, err := setup.FileStore(conf)
 	if err != nil {
 		logger.Error("failed to setup file store", slog.Any("error", err))
 		os.Exit(1)
 	}
 
-	db, err := setup.Database(setupCtx)
+	db, err := setup.Database(setupCtx, conf)
 	if err != nil {
 		logger.Error("failed to setup database", slog.Any("error", err))
 		os.Exit(1)
 	}
 
-	smtpSender, err := setup.SMTP()
+	smtpSender, err := setup.SMTP(conf)
 	if err != nil {
 		logger.Error("failed to setup SMTP sender", slog.Any("error", err))
-		os.Exit(1)
-	}
-
-	conf, err := config.LoadConfig()
-	if err != nil {
-		logger.Error("failed to load config", slog.Any("error", err))
 		os.Exit(1)
 	}
 

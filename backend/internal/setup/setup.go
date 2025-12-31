@@ -4,12 +4,10 @@ package setup
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strconv"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/matt-dz/wecook/internal/argon2id"
+	"github.com/matt-dz/wecook/internal/config"
 	"github.com/matt-dz/wecook/internal/database"
 	"github.com/matt-dz/wecook/internal/email"
 	"github.com/matt-dz/wecook/internal/env"
@@ -21,100 +19,31 @@ import (
 // - Port 587: StartTLS is used.
 // - Port 465: Implicit TLS is used.
 // - Other ports: TLS is disabled.
-func SMTP() (*email.SMTPSender, error) {
-	host := os.Getenv("SMTP_HOST")
-	if host == "" {
-		return nil, NewEnvironmentVariableMissingError("SMTP_HOST")
+func SMTP(config config.Config) (*email.SMTPSender, error) {
+	emailConfig := email.Config{
+		Host:                config.SMTP.Host,
+		Port:                int(config.SMTP.Port),
+		Username:            config.SMTP.Username,
+		Password:            config.SMTP.Password,
+		From:                config.SMTP.From,
+		TLSMode:             email.TLSMode(config.SMTP.TLSMode),
+		SkipTLSVerification: config.SMTP.TLSSkipVerify,
 	}
 
-	portStr := os.Getenv("SMTP_PORT")
-	if portStr == "" {
-		return nil, NewEnvironmentVariableMissingError("SMTP_PORT")
-	}
-
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		return nil, fmt.Errorf("invalid SMTP_PORT value: %w", err)
-	}
-
-	username := os.Getenv("SMTP_USERNAME")
-	if username == "" {
-		return nil, NewEnvironmentVariableMissingError("SMTP_PORT")
-	}
-
-	password := os.Getenv("SMTP_PASSWORD")
-	if password == "" {
-		return nil, NewEnvironmentVariableMissingError("SMTP_PASSWORD")
-	}
-
-	from := os.Getenv("SMTP_FROM")
-	if from == "" {
-		return nil, NewEnvironmentVariableMissingError("SMTP_FROM")
-	}
-
-	tlsMode, err := email.ParseTLSMode(os.Getenv("SMTP_TLS_MODE"))
-	if err != nil {
-		return nil, err
-	}
-
-	skipVerify := false
-	if skipVerifyStr := os.Getenv("SMTP_TLS_SKIP_VERIFY"); skipVerifyStr != "" {
-		skipVerify, err = strconv.ParseBool(skipVerifyStr)
-		if err != nil {
-			return nil, fmt.Errorf("invalid SMTP_TLS_SKIP_VERIFY value: %w", err)
-		}
-	}
-
-	config := email.Config{
-		Host:                host,
-		Port:                port,
-		Username:            username,
-		Password:            password,
-		From:                from,
-		TLSMode:             tlsMode,
-		SkipTLSVerification: skipVerify,
-	}
-
-	return email.NewSMTPSender(config), nil
+	return email.NewSMTPSender(emailConfig), nil
 }
 
-func Database(ctx context.Context) (*database.Database, error) {
-	dbUser := os.Getenv("DATABASE_USER")
-	if dbUser == "" {
-		return nil, NewEnvironmentVariableMissingError("DATABASE_USER")
-	}
-	dbPassword := os.Getenv("DATABASE_PASSWORD")
-	if dbPassword == "" {
-		return nil, NewEnvironmentVariableMissingError("DATABASE_PASSWORD")
-	}
-	dbHost := os.Getenv("DATABASE_HOST")
-	if dbHost == "" {
-		return nil, NewEnvironmentVariableMissingError("DATABASE_HOST")
-	}
-	dbPort := os.Getenv("DATABASE_PORT")
-	if dbPort == "" {
-		return nil, NewEnvironmentVariableMissingError("DATABASE_PORT")
-	}
-	defaultDB := os.Getenv("DATABASE")
-	if defaultDB == "" {
-		return nil, NewEnvironmentVariableMissingError("DATABASE")
-	}
-
+func Database(ctx context.Context, config config.Config) (*database.Database, error) {
 	poolConfig, err := pgxpool.ParseConfig("")
 	if err != nil {
 		return nil, fmt.Errorf("configuring database pool: %w", err)
 	}
 
-	port, err := strconv.ParseUint(dbPort, 10, 16)
-	if err != nil {
-		return nil, fmt.Errorf("parsing DATABASE_PORT: %w", err)
-	}
-
-	poolConfig.ConnConfig.Host = dbHost
-	poolConfig.ConnConfig.Port = uint16(port)
-	poolConfig.ConnConfig.User = dbUser
-	poolConfig.ConnConfig.Password = dbPassword
-	poolConfig.ConnConfig.Database = defaultDB
+	poolConfig.ConnConfig.Host = config.Database.Host
+	poolConfig.ConnConfig.Port = config.Database.Port
+	poolConfig.ConnConfig.User = config.Database.User
+	poolConfig.ConnConfig.Password = config.Database.Password
+	poolConfig.ConnConfig.Database = config.Database.Database
 
 	// Creating DB connection
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
@@ -170,25 +99,8 @@ func Admin(ctx context.Context, env *env.Env) error {
 	return nil
 }
 
-func FileStore() (filestore.FileStore, error) {
-	var fs filestore.FileStore
-	fileserverVolume := os.Getenv("FILESERVER_VOLUME")
-	if fileserverVolume == "" {
-		return fs, NewEnvironmentVariableMissingError("FILESERVER_VOLUME")
-	}
-	fileserverPath, err := filepath.Abs(fileserverVolume)
-	if err != nil {
-		return fs, fmt.Errorf("creating fileserver path: %w", err)
-	}
-	urlPrefix := os.Getenv("FILESERVER_URL_PREFIX")
-	if urlPrefix == "" {
-		urlPrefix = filestore.DefaultURLPrefix
-	}
-	filestoreHost := os.Getenv("HOST_ORIGIN")
-	if filestoreHost == "" {
-		return fs, NewEnvironmentVariableMissingError("HOST_ORIGIN")
-	}
-	return filestore.New(fileserverPath, urlPrefix, filestoreHost), nil
+func FileStore(config config.Config) (filestore.FileStore, error) {
+	return filestore.New(config.Fileserver.Volume, config.Fileserver.URLPrefix, config.HostOrigin), nil
 }
 
 func Preferences(ctx context.Context, env *env.Env, id int32) error {
