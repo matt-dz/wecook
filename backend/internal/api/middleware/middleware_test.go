@@ -245,7 +245,7 @@ func TestOAPIAuthFunc_CSRFTokenValidation(t *testing.T) {
 				r.Header.Set(token.AuthorizationHeader, accessToken)
 			},
 			wantError:     true,
-			wantErrorCode: apiError.InvalidCredentials,
+			wantErrorCode: apiError.InvalidAccessToken,
 		},
 		{
 			name:               "no authentication required",

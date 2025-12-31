@@ -179,8 +179,8 @@ func OAPIAuthFunc(ctx context.Context, input *openapi3filter.AuthenticationInput
 		if err != nil {
 			env.Logger.ErrorContext(ctx, "failed to parse authorization header", slog.Any("error", err))
 			return &apiError.Error{
-				Code:    apiError.InvalidCredentials,
-				Status:  apiError.InvalidCredentials.StatusCode(),
+				Code:    apiError.InvalidAccessToken,
+				Status:  apiError.InvalidAccessToken.StatusCode(),
 				Message: "access token invalid or missing",
 				ErrorID: requestID,
 			}

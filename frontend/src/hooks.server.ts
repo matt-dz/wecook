@@ -17,6 +17,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		setCookie.parse(setCookieHeader).map(({ name, value, ...opts }) => {
 			event.cookies.set(name, value, {
 				...opts,
+				httpOnly: opts.httpOnly ?? false,
+				secure: opts.secure ?? false,
 				sameSite: opts.sameSite as boolean | 'lax' | 'strict' | 'none' | undefined,
 				path: opts.path ?? '/'
 			});
