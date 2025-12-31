@@ -689,7 +689,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Con
 	}
 
 	// Get current image
-	env.Logger.DebugContext(ctx, "getting current image url")
+	env.Logger.DebugContext(ctx, "getting current image key")
 	oldImage, err := env.Database.GetRecipeIngredientImageKey(ctx, request.IngredientID)
 	if err != nil {
 		return PostApiRecipesRecipeIDIngredientsIngredientIDImage500JSONResponse{
@@ -728,7 +728,7 @@ func (Server) PostApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Con
 		}, nil
 	}
 
-	// Update image url in database
+	// Update image key in database
 	env.Logger.DebugContext(ctx, "update image in database")
 	ingredient, err := env.Database.UpdateRecipeIngredient(ctx, database.UpdateRecipeIngredientParams{
 		ID: request.IngredientID,
@@ -810,10 +810,10 @@ func (Server) DeleteApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.C
 	}
 
 	// Get Image
-	env.Logger.DebugContext(ctx, "getting current image url")
+	env.Logger.DebugContext(ctx, "getting current image key")
 	oldImage, err := env.Database.GetRecipeIngredientImageKey(ctx, request.IngredientID)
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get current image url", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "failed to get current image key", slog.Any("error", err))
 		return DeleteApiRecipesRecipeIDIngredientsIngredientIDImage500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
@@ -1109,7 +1109,7 @@ func (Server) PostApiRecipesRecipeIDStepsStepIDImage(ctx context.Context,
 	}
 
 	// Get current image
-	env.Logger.DebugContext(ctx, "getting current image url")
+	env.Logger.DebugContext(ctx, "getting current image key")
 	oldImage, err := env.Database.GetRecipeStepImageKey(ctx, request.StepID)
 	if err != nil {
 		return PostApiRecipesRecipeIDStepsStepIDImage500JSONResponse{
@@ -1148,7 +1148,7 @@ func (Server) PostApiRecipesRecipeIDStepsStepIDImage(ctx context.Context,
 		}, nil
 	}
 
-	// Update image url in database
+	// Update image key in database
 	env.Logger.DebugContext(ctx, "update image in database")
 	step, err := env.Database.UpdateRecipeStep(ctx, database.UpdateRecipeStepParams{
 		ID: request.StepID,
@@ -1231,10 +1231,10 @@ func (Server) DeleteApiRecipesRecipeIDStepsStepIDImage(ctx context.Context,
 	}
 
 	// Get Image
-	env.Logger.DebugContext(ctx, "getting current image url")
+	env.Logger.DebugContext(ctx, "getting current image key")
 	oldImage, err := env.Database.GetRecipeStepImageKey(ctx, request.StepID)
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get image url", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "failed to get image key", slog.Any("error", err))
 		return DeleteApiRecipesRecipeIDStepsStepIDImage500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
@@ -1327,11 +1327,11 @@ func (Server) DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx context.Contex
 		}, nil
 	}
 
-	// Get Image URL
-	env.Logger.DebugContext(ctx, "getting image url")
-	imageurl, err := env.Database.GetRecipeIngredientImageKey(ctx, request.IngredientID)
+	// Get image key
+	env.Logger.DebugContext(ctx, "getting image key")
+	imageKey, err := env.Database.GetRecipeIngredientImageKey(ctx, request.IngredientID)
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get image url", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "failed to get image key", slog.Any("error", err))
 		return DeleteApiRecipesRecipeIDIngredientsIngredientID500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
@@ -1340,9 +1340,9 @@ func (Server) DeleteApiRecipesRecipeIDIngredientsIngredientID(ctx context.Contex
 		}, nil
 	}
 
-	if imageurl.Valid {
+	if imageKey.Valid {
 		env.Logger.DebugContext(ctx, "deleting image")
-		err = env.FileStore.DeleteKey(imageurl.String)
+		err = env.FileStore.DeleteKey(imageKey.String)
 		if errors.Is(err, fileserver.ErrNotExist) {
 			env.Logger.WarnContext(ctx, "image not found", slog.Any("error", err))
 		} else if err != nil {
@@ -1489,11 +1489,11 @@ func (Server) DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context,
 		}, nil
 	}
 
-	// Get imageurl
-	env.Logger.DebugContext(ctx, "getting image url")
+	// Get image key
+	env.Logger.DebugContext(ctx, "getting image key")
 	imageKey, err := env.Database.GetRecipeStepImageKey(ctx, request.StepID)
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get image url")
+		env.Logger.ErrorContext(ctx, "failed to get image key")
 		return DeleteApiRecipesRecipeIDStepsStepID500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
@@ -1503,7 +1503,7 @@ func (Server) DeleteApiRecipesRecipeIDStepsStepID(ctx context.Context,
 	}
 
 	if imageKey.Valid {
-		env.Logger.DebugContext(ctx, "deleting image url")
+		env.Logger.DebugContext(ctx, "deleting image")
 		err = env.FileStore.DeleteKey(imageKey.String)
 		if errors.Is(err, fileserver.ErrNotExist) {
 			env.Logger.WarnContext(ctx, "image not found", slog.Any("error", err))
@@ -1883,7 +1883,7 @@ func (Server) PostApiRecipesRecipeIDImage(ctx context.Context,
 	}
 
 	// Get current image
-	env.Logger.DebugContext(ctx, "getting current image url")
+	env.Logger.DebugContext(ctx, "getting current image key")
 	oldImage, err := env.Database.GetRecipeImageKey(ctx, request.RecipeID)
 	if err != nil {
 		return PostApiRecipesRecipeIDImage500JSONResponse{
@@ -1922,7 +1922,7 @@ func (Server) PostApiRecipesRecipeIDImage(ctx context.Context,
 		}, nil
 	}
 
-	// Update image url in database
+	// Update image key in database
 	env.Logger.DebugContext(ctx, "update image in database")
 	rec, err := env.Database.UpdateRecipe(ctx, database.UpdateRecipeParams{
 		ID: request.RecipeID,
@@ -2029,10 +2029,10 @@ func (Server) DeleteApiRecipesRecipeIDImage(ctx context.Context,
 	}
 
 	// Get current image
-	env.Logger.DebugContext(ctx, "getting current image url")
+	env.Logger.DebugContext(ctx, "getting current image key")
 	oldImage, err := env.Database.GetRecipeImageKey(ctx, request.RecipeID)
 	if err != nil {
-		env.Logger.ErrorContext(ctx, "failed to get current image url", slog.Any("error", err))
+		env.Logger.ErrorContext(ctx, "failed to get current image key", slog.Any("error", err))
 		return DeleteApiRecipesRecipeIDImage500JSONResponse{
 			Status:  apiError.InternalServerError.StatusCode(),
 			Code:    apiError.InternalServerError.String(),
