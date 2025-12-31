@@ -1760,19 +1760,19 @@ func TestDeleteApiUserId(t *testing.T) {
 
 				// Expect deletion of all 5 images
 				mockFileStore.EXPECT().
-					DeleteURLPath("/files/cover1.jpg").
+					DeleteKey("/files/cover1.jpg").
 					Return(nil)
 				mockFileStore.EXPECT().
-					DeleteURLPath("/files/cover2.jpg").
+					DeleteKey("/files/cover2.jpg").
 					Return(nil)
 				mockFileStore.EXPECT().
-					DeleteURLPath("/files/ingredient1.jpg").
+					DeleteKey("/files/ingredient1.jpg").
 					Return(nil)
 				mockFileStore.EXPECT().
-					DeleteURLPath("/files/step1.jpg").
+					DeleteKey("/files/step1.jpg").
 					Return(nil)
 				mockFileStore.EXPECT().
-					DeleteURLPath("/files/step2.jpg").
+					DeleteKey("/files/step2.jpg").
 					Return(nil)
 			},
 			wantStatus: 204,
@@ -1804,7 +1804,7 @@ func TestDeleteApiUserId(t *testing.T) {
 
 				// Only valid image should be deleted
 				mockFileStore.EXPECT().
-					DeleteURLPath("/files/cover1.jpg").
+					DeleteKey("/files/cover1.jpg").
 					Return(nil)
 			},
 			wantStatus: 204,
@@ -1835,7 +1835,7 @@ func TestDeleteApiUserId(t *testing.T) {
 
 				// Image deletion fails but operation should still succeed
 				mockFileStore.EXPECT().
-					DeleteURLPath("/files/cover1.jpg").
+					DeleteKey("/files/cover1.jpg").
 					Return(errors.New("file not found"))
 			},
 			wantStatus: 204,

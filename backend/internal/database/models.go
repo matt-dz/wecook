@@ -113,7 +113,7 @@ type Preference struct {
 type Recipe struct {
 	ID             int64
 	UserID         pgtype.Int8
-	ImageUrl       pgtype.Text
+	ImageKey       pgtype.Text
 	Title          string
 	Description    pgtype.Text
 	CreatedAt      pgtype.Timestamptz
@@ -130,7 +130,7 @@ type RecipeIngredient struct {
 	ID          int64
 	RecipeID    int64
 	Description pgtype.Text
-	ImageUrl    pgtype.Text
+	ImageKey    pgtype.Text
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 }
@@ -140,7 +140,7 @@ type RecipeStep struct {
 	RecipeID    int64
 	StepNumber  int32
 	Instruction pgtype.Text
-	ImageUrl    pgtype.Text
+	ImageKey    pgtype.Text
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 }

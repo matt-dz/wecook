@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/matt-dz/wecook/internal/fileserver"
@@ -12,7 +13,7 @@ import (
 func newTestFileStore(t *testing.T) (FileStore, string) {
 	t.Helper()
 	baseDir := t.TempDir()
-	return New(baseDir, DefaultURLPrefix, "http://localhost:8080"), baseDir
+	return New(baseDir, KeyPrefix, "http://localhost:8080"), baseDir
 }
 
 func TestNew(t *testing.T) {
@@ -22,8 +23,8 @@ func TestNew(t *testing.T) {
 
 	store := New(baseDir, urlPrefix, host)
 
-	if store.urlPathPrefix != urlPrefix {
-		t.Errorf("urlPathPrefix = %q, want %q", store.urlPathPrefix, urlPrefix)
+	if store.keyPrefix != urlPrefix {
+		t.Errorf("urlPathPrefix = %q, want %q", store.keyPrefix, urlPrefix)
 	}
 	if store.host != host {
 		t.Errorf("host = %q, want %q", store.host, host)
@@ -48,10 +49,9 @@ func TestNew_HostWithTrailingSlash(t *testing.T) {
 func TestWriteRecipeCoverImage(t *testing.T) {
 	store, baseDir := newTestFileStore(t)
 	data := []byte("test cover image data")
-	recipeID := int64(123)
 	suffix := ".jpg"
 
-	urlPath, n, err := store.WriteRecipeCoverImage(recipeID, suffix, data)
+	key, n, err := store.WriteRecipeCoverImage(suffix, data)
 	if err != nil {
 		t.Fatalf("WriteRecipeCoverImage() error = %v", err)
 	}
@@ -60,13 +60,18 @@ func TestWriteRecipeCoverImage(t *testing.T) {
 		t.Errorf("WriteRecipeCoverImage() n = %d, want %d", n, len(data))
 	}
 
-	expectedURLPath := "files/covers/123.jpg"
-	if urlPath != expectedURLPath {
-		t.Errorf("WriteRecipeCoverImage() urlPath = %q, want %q", urlPath, expectedURLPath)
+	// Verify key format: /files/covers/<random-id>.jpg
+	expectedPrefix := filepath.Join(KeyPrefix, coverDir)
+	if !strings.HasPrefix(key, expectedPrefix) {
+		t.Errorf("WriteRecipeCoverImage() key = %q, should start with %q", key, expectedPrefix)
+	}
+	if !strings.HasSuffix(key, suffix) {
+		t.Errorf("WriteRecipeCoverImage() key = %q, should end with %q", key, suffix)
 	}
 
 	// Verify file exists on disk
-	expectedFilePath := filepath.Join(baseDir, "covers", "123.jpg")
+	relPath := extractKeyPrefix(key, store.keyPrefix)
+	expectedFilePath := filepath.Join(baseDir, relPath)
 	content, err := os.ReadFile(expectedFilePath)
 	if err != nil {
 		t.Fatalf("failed to read written file: %v", err)
@@ -79,11 +84,9 @@ func TestWriteRecipeCoverImage(t *testing.T) {
 func TestWriteIngredientImage(t *testing.T) {
 	store, baseDir := newTestFileStore(t)
 	data := []byte("test ingredient image")
-	recipeID := int64(456)
-	ingredientID := int64(789)
 	suffix := ".png"
 
-	urlPath, n, err := store.WriteIngredientImage(recipeID, ingredientID, suffix, data)
+	key, n, err := store.WriteIngredientImage(suffix, data)
 	if err != nil {
 		t.Fatalf("WriteIngredientImage() error = %v", err)
 	}
@@ -92,13 +95,18 @@ func TestWriteIngredientImage(t *testing.T) {
 		t.Errorf("WriteIngredientImage() n = %d, want %d", n, len(data))
 	}
 
-	expectedURLPath := "files/ingredients/456/789.png"
-	if urlPath != expectedURLPath {
-		t.Errorf("WriteIngredientImage() urlPath = %q, want %q", urlPath, expectedURLPath)
+	// Verify key format: /files/ingredients/<random-id>.png
+	expectedPrefix := filepath.Join(KeyPrefix, ingredientsDir)
+	if !strings.HasPrefix(key, expectedPrefix) {
+		t.Errorf("WriteIngredientImage() key = %q, should start with %q", key, expectedPrefix)
+	}
+	if !strings.HasSuffix(key, suffix) {
+		t.Errorf("WriteIngredientImage() key = %q, should end with %q", key, suffix)
 	}
 
 	// Verify file exists on disk
-	expectedFilePath := filepath.Join(baseDir, "ingredients", "456", "789.png")
+	relPath := extractKeyPrefix(key, store.keyPrefix)
+	expectedFilePath := filepath.Join(baseDir, relPath)
 	content, err := os.ReadFile(expectedFilePath)
 	if err != nil {
 		t.Fatalf("failed to read written file: %v", err)
@@ -111,11 +119,9 @@ func TestWriteIngredientImage(t *testing.T) {
 func TestWriteStepImage(t *testing.T) {
 	store, baseDir := newTestFileStore(t)
 	data := []byte("test step image")
-	recipeID := int64(111)
-	stepID := int64(222)
 	suffix := ".webp"
 
-	urlPath, n, err := store.WriteStepImage(recipeID, stepID, suffix, data)
+	key, n, err := store.WriteStepImage(suffix, data)
 	if err != nil {
 		t.Fatalf("WriteStepImage() error = %v", err)
 	}
@@ -124,13 +130,18 @@ func TestWriteStepImage(t *testing.T) {
 		t.Errorf("WriteStepImage() n = %d, want %d", n, len(data))
 	}
 
-	expectedURLPath := "files/steps/111/222.webp"
-	if urlPath != expectedURLPath {
-		t.Errorf("WriteStepImage() urlPath = %q, want %q", urlPath, expectedURLPath)
+	// Verify key format: /files/steps/<random-id>.webp
+	expectedPrefix := filepath.Join(KeyPrefix, stepsDir)
+	if !strings.HasPrefix(key, expectedPrefix) {
+		t.Errorf("WriteStepImage() key = %q, should start with %q", key, expectedPrefix)
+	}
+	if !strings.HasSuffix(key, suffix) {
+		t.Errorf("WriteStepImage() key = %q, should end with %q", key, suffix)
 	}
 
 	// Verify file exists on disk
-	expectedFilePath := filepath.Join(baseDir, "steps", "111", "222.webp")
+	relPath := extractKeyPrefix(key, store.keyPrefix)
+	expectedFilePath := filepath.Join(baseDir, relPath)
 	content, err := os.ReadFile(expectedFilePath)
 	if err != nil {
 		t.Fatalf("failed to read written file: %v", err)
@@ -144,32 +155,26 @@ func TestFileURL(t *testing.T) {
 	tests := []struct {
 		name     string
 		host     string
-		urlPath  string
+		key      string
 		expected string
 	}{
 		{
-			name:     "simple path",
+			name:     "simple key",
 			host:     "http://localhost:8080",
-			urlPath:  "/files/covers/123.jpg",
-			expected: "http://localhost:8080/files/covers/123.jpg",
+			key:      "/files/covers/abc123.jpg",
+			expected: "http://localhost:8080/files/covers/abc123.jpg",
 		},
 		{
-			name:     "path without leading slash",
+			name:     "key without leading slash",
 			host:     "http://localhost:8080",
-			urlPath:  "files/covers/123.jpg",
-			expected: "http://localhost:8080/files/covers/123.jpg",
+			key:      "files/covers/abc123.jpg",
+			expected: "http://localhost:8080/files/covers/abc123.jpg",
 		},
 		{
 			name:     "production host",
 			host:     "https://api.example.com",
-			urlPath:  "/files/steps/1/2.png",
-			expected: "https://api.example.com/files/steps/1/2.png",
-		},
-		{
-			name:     "host with trailing slash",
-			host:     "http://localhost:8080/",
-			urlPath:  "/files/covers/123.jpg",
-			expected: "http://localhost:8080//files/covers/123.jpg",
+			key:      "/files/steps/xyz789.png",
+			expected: "https://api.example.com/files/steps/xyz789.png",
 		},
 	}
 
@@ -177,12 +182,12 @@ func TestFileURL(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			baseDir := t.TempDir()
 			store := FileStore{
-				host:          tt.host,
-				urlPathPrefix: DefaultURLPrefix,
-				fs:            fileserver.New(baseDir),
+				host:      tt.host,
+				keyPrefix: KeyPrefix,
+				fs:        fileserver.New(baseDir),
 			}
 
-			got := store.FileURL(tt.urlPath)
+			got := store.FileURL(tt.key)
 			if got != tt.expected {
 				t.Errorf("FileURL() = %q, want %q", got, tt.expected)
 			}
@@ -190,22 +195,26 @@ func TestFileURL(t *testing.T) {
 	}
 }
 
-func TestDeleteURLPath(t *testing.T) {
+func TestDeleteKey(t *testing.T) {
 	store, baseDir := newTestFileStore(t)
 
 	// First, write a file
-	filePath := filepath.Join(baseDir, "covers", "123.jpg")
-	if err := os.MkdirAll(filepath.Dir(filePath), 0o755); err != nil {
-		t.Fatalf("failed to create directories: %v", err)
-	}
-	if err := os.WriteFile(filePath, []byte("test data"), 0o644); err != nil {
+	data := []byte("test data")
+	key, _, err := store.WriteRecipeCoverImage(".jpg", data)
+	if err != nil {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
-	// Delete using URL path
-	err := store.DeleteURLPath("/files/covers/123.jpg")
+	// Verify file exists
+	filePath := filepath.Join(baseDir, extractKeyPrefix(key, store.keyPrefix))
+	if _, err := os.Stat(filePath); err != nil {
+		t.Fatalf("file should exist before delete: %v", err)
+	}
+
+	// Delete using key
+	err = store.DeleteKey(key)
 	if err != nil {
-		t.Fatalf("DeleteURLPath() error = %v", err)
+		t.Fatalf("DeleteKey() error = %v", err)
 	}
 
 	// Verify file is deleted
@@ -214,31 +223,31 @@ func TestDeleteURLPath(t *testing.T) {
 	}
 }
 
-func TestDeleteURLPath_NonExistent(t *testing.T) {
+func TestDeleteKey_NonExistent(t *testing.T) {
 	store, _ := newTestFileStore(t)
 
-	err := store.DeleteURLPath("/files/covers/nonexistent.jpg")
+	err := store.DeleteKey("/files/covers/nonexistent.jpg")
 	if !errors.Is(err, fileserver.ErrNotExist) {
-		t.Errorf("DeleteURLPath() error = %v, want ErrNotExist", err)
+		t.Errorf("DeleteKey() error = %v, want ErrNotExist", err)
 	}
 }
 
-func TestDeleteURLPath_VariousPrefixes(t *testing.T) {
+func TestDeleteKey_VariousPrefixes(t *testing.T) {
 	tests := []struct {
-		name    string
-		urlPath string
+		name string
+		key  string
 	}{
 		{
-			name:    "with leading slash",
-			urlPath: "/files/covers/123.jpg",
+			name: "with leading slash",
+			key:  "/files/covers/abc123.jpg",
 		},
 		{
-			name:    "without leading slash",
-			urlPath: "files/covers/123.jpg",
+			name: "without leading slash",
+			key:  "files/covers/abc123.jpg",
 		},
 		{
-			name:    "with trailing slash",
-			urlPath: "/files/covers/123.jpg/",
+			name: "with trailing slash",
+			key:  "/files/covers/abc123.jpg/",
 		},
 	}
 
@@ -247,7 +256,7 @@ func TestDeleteURLPath_VariousPrefixes(t *testing.T) {
 			store, baseDir := newTestFileStore(t)
 
 			// Create test file
-			filePath := filepath.Join(baseDir, "covers", "123.jpg")
+			filePath := filepath.Join(baseDir, "covers", "abc123.jpg")
 			if err := os.MkdirAll(filepath.Dir(filePath), 0o755); err != nil {
 				t.Fatalf("failed to create directories: %v", err)
 			}
@@ -256,9 +265,9 @@ func TestDeleteURLPath_VariousPrefixes(t *testing.T) {
 			}
 
 			// Delete
-			err := store.DeleteURLPath(tt.urlPath)
+			err := store.DeleteKey(tt.key)
 			if err != nil {
-				t.Fatalf("DeleteURLPath() error = %v", err)
+				t.Fatalf("DeleteKey() error = %v", err)
 			}
 
 			// Verify deletion
@@ -269,235 +278,108 @@ func TestDeleteURLPath_VariousPrefixes(t *testing.T) {
 	}
 }
 
-func TestCoverImagePath(t *testing.T) {
+func TestCoverImageKey(t *testing.T) {
 	tests := []struct {
 		name     string
-		recipeID int64
+		id       string
 		suffix   string
 		expected string
 	}{
 		{
 			name:     "jpg image",
-			recipeID: 123,
+			id:       "abc123",
 			suffix:   ".jpg",
-			expected: filepath.Join("covers", "123.jpg"),
+			expected: filepath.Join(KeyPrefix, "covers", "abc123.jpg"),
 		},
 		{
 			name:     "png image",
-			recipeID: 456,
+			id:       "xyz789",
 			suffix:   ".png",
-			expected: filepath.Join("covers", "456.png"),
+			expected: filepath.Join(KeyPrefix, "covers", "xyz789.png"),
 		},
 		{
 			name:     "no extension",
-			recipeID: 789,
+			id:       "test",
 			suffix:   "",
-			expected: filepath.Join("covers", "789"),
+			expected: filepath.Join(KeyPrefix, "covers", "test"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := coverImagePath(tt.recipeID, tt.suffix)
+			got := coverImageKey(tt.id, tt.suffix)
 			if got != tt.expected {
-				t.Errorf("coverImagePath() = %q, want %q", got, tt.expected)
+				t.Errorf("coverImageKey() = %q, want %q", got, tt.expected)
 			}
 		})
 	}
 }
 
-func TestStepsImagePath(t *testing.T) {
+func TestIngredientsImageKey(t *testing.T) {
 	tests := []struct {
 		name     string
-		recipeID int64
-		stepID   int64
+		id       string
 		suffix   string
 		expected string
 	}{
 		{
 			name:     "basic path",
-			recipeID: 100,
-			stepID:   1,
+			id:       "ing200",
 			suffix:   ".jpg",
-			expected: filepath.Join("steps", "100", "1.jpg"),
+			expected: filepath.Join(KeyPrefix, "ingredients", "ing200.jpg"),
 		},
 		{
-			name:     "nested recipe",
-			recipeID: 999,
-			stepID:   42,
-			suffix:   ".png",
-			expected: filepath.Join("steps", "999", "42.png"),
+			name:     "another path",
+			id:       "abc888",
+			suffix:   ".webp",
+			expected: filepath.Join(KeyPrefix, "ingredients", "abc888.webp"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := stepsImagePath(tt.recipeID, tt.stepID, tt.suffix)
+			got := ingredientsImageKey(tt.id, tt.suffix)
 			if got != tt.expected {
-				t.Errorf("stepsImagePath() = %q, want %q", got, tt.expected)
+				t.Errorf("ingredientsImageKey() = %q, want %q", got, tt.expected)
 			}
 		})
 	}
 }
 
-func TestIngredientsImagePath(t *testing.T) {
-	tests := []struct {
-		name         string
-		recipeID     int64
-		ingredientID int64
-		suffix       string
-		expected     string
-	}{
-		{
-			name:         "basic path",
-			recipeID:     200,
-			ingredientID: 10,
-			suffix:       ".jpg",
-			expected:     filepath.Join("ingredients", "200", "10.jpg"),
-		},
-		{
-			name:         "nested path",
-			recipeID:     888,
-			ingredientID: 77,
-			suffix:       ".webp",
-			expected:     filepath.Join("ingredients", "888", "77.webp"),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := ingredientsImagePath(tt.recipeID, tt.ingredientID, tt.suffix)
-			if got != tt.expected {
-				t.Errorf("ingredientsImagePath() = %q, want %q", got, tt.expected)
-			}
-		})
-	}
-}
-
-func TestAbsPathToURLPath(t *testing.T) {
+func TestExtractKeyPrefix(t *testing.T) {
 	tests := []struct {
 		name     string
-		fullpath string
-		baseDir  string
-		prefix   string
-		expected string
-	}{
-		{
-			name:     "unix path",
-			fullpath: "/data/images/covers/123.jpg",
-			baseDir:  "/data/images",
-			prefix:   "/files",
-			expected: "files/covers/123.jpg",
-		},
-		{
-			name:     "nested path",
-			fullpath: "/var/app/static/ingredients/456/789.png",
-			baseDir:  "/var/app/static",
-			prefix:   "/static",
-			expected: "static/ingredients/456/789.png",
-		},
-		{
-			name:     "prefix without slashes",
-			fullpath: "/tmp/files/steps/1/2.jpg",
-			baseDir:  "/tmp/files",
-			prefix:   "api",
-			expected: "api/steps/1/2.jpg",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Adjust paths for current OS
-			fullpath := filepath.FromSlash(tt.fullpath)
-			baseDir := filepath.FromSlash(tt.baseDir)
-			// Expected output should use forward slashes regardless of OS
-			expected := tt.expected
-
-			got := absPathToURLPath(fullpath, baseDir, tt.prefix)
-
-			// Normalize both to forward slashes for comparison
-			gotNormalized := filepath.ToSlash(got)
-			expectedNormalized := filepath.ToSlash(expected)
-
-			if gotNormalized != expectedNormalized {
-				t.Errorf("absPathToURLPath() = %q, want %q", gotNormalized, expectedNormalized)
-			}
-		})
-	}
-}
-
-func TestTrimBaseDir(t *testing.T) {
-	tests := []struct {
-		name     string
-		path     string
-		baseDir  string
-		expected string
-	}{
-		{
-			name:     "simple trim",
-			path:     "/data/images/covers/123.jpg",
-			baseDir:  "/data/images",
-			expected: "/covers/123.jpg",
-		},
-		{
-			name:     "with dots in path",
-			path:     "/data/./images/./file.jpg",
-			baseDir:  "/data/images",
-			expected: "/file.jpg",
-		},
-		{
-			name:     "already relative",
-			path:     "file.jpg",
-			baseDir:  ".",
-			expected: "file.jpg",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := trimBaseDir(tt.path, tt.baseDir)
-			// For this test, we'll just verify it doesn't panic and returns a string
-			if got == "" && tt.path != "" {
-				t.Errorf("trimBaseDir() returned empty string for non-empty path")
-			}
-		})
-	}
-}
-
-func TestTrimURLPathPrefix(t *testing.T) {
-	tests := []struct {
-		name     string
-		path     string
+		key      string
 		prefix   string
 		expected string
 	}{
 		{
 			name:     "trim leading prefix",
-			path:     "/files/covers/123.jpg",
+			key:      "/files/covers/123.jpg",
 			prefix:   "/files",
 			expected: "covers/123.jpg",
 		},
 		{
-			name:     "path without leading slash",
-			path:     "files/covers/123.jpg",
+			name:     "key without leading slash",
+			key:      "files/covers/123.jpg",
 			prefix:   "/files",
 			expected: "covers/123.jpg",
 		},
 		{
 			name:     "prefix without slashes",
-			path:     "/static/images/1.jpg",
+			key:      "/static/images/1.jpg",
 			prefix:   "static",
 			expected: "images/1.jpg",
 		},
 		{
-			name:     "trailing slash in path",
-			path:     "/files/covers/123.jpg/",
+			name:     "trailing slash in key",
+			key:      "/files/covers/123.jpg/",
 			prefix:   "/files",
 			expected: "covers/123.jpg",
 		},
 		{
 			name:     "both without slashes",
-			path:     "api/v1/resource",
+			key:      "api/v1/resource",
 			prefix:   "api",
 			expected: "v1/resource",
 		},
@@ -505,11 +387,34 @@ func TestTrimURLPathPrefix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := trimURLPathPrefix(tt.path, tt.prefix)
+			got := extractKeyPrefix(tt.key, tt.prefix)
 			if got != tt.expected {
-				t.Errorf("trimURLPathPrefix() = %q, want %q", got, tt.expected)
+				t.Errorf("extractKeyPrefix() = %q, want %q", got, tt.expected)
 			}
 		})
+	}
+}
+
+func TestGenerateKeyId(t *testing.T) {
+	// Test that generateKeyId produces unique IDs
+	seen := make(map[string]bool)
+	for range 100 {
+		id, err := generateKeyID()
+		if err != nil {
+			t.Fatalf("generateKeyId() error = %v", err)
+		}
+		if id == "" {
+			t.Error("generateKeyId() returned empty string")
+		}
+		if seen[id] {
+			t.Errorf("generateKeyId() produced duplicate ID: %q", id)
+		}
+		seen[id] = true
+
+		// Verify it's valid base64 URL encoding
+		if strings.ContainsAny(id, "+/=") {
+			t.Errorf("generateKeyId() = %q, should use URL-safe base64 encoding", id)
+		}
 	}
 }
 
@@ -518,20 +423,20 @@ func TestIntegration_WriteAndDelete(t *testing.T) {
 
 	// Write a cover image
 	coverData := []byte("cover image data")
-	urlPath, _, err := store.WriteRecipeCoverImage(123, ".jpg", coverData)
+	key, _, err := store.WriteRecipeCoverImage(".jpg", coverData)
 	if err != nil {
 		t.Fatalf("WriteRecipeCoverImage() error = %v", err)
 	}
 
 	// Verify file exists
-	filePath := filepath.Join(baseDir, "covers", "123.jpg")
+	filePath := filepath.Join(baseDir, extractKeyPrefix(key, store.keyPrefix))
 	if _, err := os.Stat(filePath); err != nil {
 		t.Fatalf("file should exist after write: %v", err)
 	}
 
-	// Delete using URL path
-	if err := store.DeleteURLPath(urlPath); err != nil {
-		t.Fatalf("DeleteURLPath() error = %v", err)
+	// Delete using key
+	if err := store.DeleteKey(key); err != nil {
+		t.Fatalf("DeleteKey() error = %v", err)
 	}
 
 	// Verify file is deleted
@@ -540,51 +445,49 @@ func TestIntegration_WriteAndDelete(t *testing.T) {
 	}
 }
 
-func TestIntegration_MultipleImagesInSameRecipe(t *testing.T) {
+func TestIntegration_MultipleImages(t *testing.T) {
 	store, _ := newTestFileStore(t)
 
-	recipeID := int64(999)
-
 	// Write cover
-	coverURL, _, err := store.WriteRecipeCoverImage(recipeID, ".jpg", []byte("cover"))
+	coverKey, _, err := store.WriteRecipeCoverImage(".jpg", []byte("cover"))
 	if err != nil {
 		t.Fatalf("WriteRecipeCoverImage() error = %v", err)
 	}
 
 	// Write multiple steps
-	step1URL, _, err := store.WriteStepImage(recipeID, 1, ".jpg", []byte("step1"))
+	step1Key, _, err := store.WriteStepImage(".jpg", []byte("step1"))
 	if err != nil {
 		t.Fatalf("WriteStepImage(1) error = %v", err)
 	}
-	step2URL, _, err := store.WriteStepImage(recipeID, 2, ".jpg", []byte("step2"))
+	step2Key, _, err := store.WriteStepImage(".jpg", []byte("step2"))
 	if err != nil {
 		t.Fatalf("WriteStepImage(2) error = %v", err)
 	}
 
 	// Write multiple ingredients
-	ing1URL, _, err := store.WriteIngredientImage(recipeID, 10, ".png", []byte("ing1"))
+	ing1Key, _, err := store.WriteIngredientImage(".png", []byte("ing1"))
 	if err != nil {
-		t.Fatalf("WriteIngredientImage(10) error = %v", err)
+		t.Fatalf("WriteIngredientImage(1) error = %v", err)
 	}
-	ing2URL, _, err := store.WriteIngredientImage(recipeID, 20, ".png", []byte("ing2"))
+	ing2Key, _, err := store.WriteIngredientImage(".png", []byte("ing2"))
 	if err != nil {
-		t.Fatalf("WriteIngredientImage(20) error = %v", err)
+		t.Fatalf("WriteIngredientImage(2) error = %v", err)
 	}
 
-	// Verify all URLs are different
-	urls := []string{coverURL, step1URL, step2URL, ing1URL, ing2URL}
+	// Verify all keys are different (they should have unique random IDs)
+	keys := []string{coverKey, step1Key, step2Key, ing1Key, ing2Key}
 	seen := make(map[string]bool)
-	for _, url := range urls {
-		if seen[url] {
-			t.Errorf("duplicate URL found: %q", url)
+	for _, key := range keys {
+		if seen[key] {
+			t.Errorf("duplicate key found: %q", key)
 		}
-		seen[url] = true
+		seen[key] = true
 	}
 
 	// Delete all and verify
-	for _, url := range urls {
-		if err := store.DeleteURLPath(url); err != nil {
-			t.Errorf("DeleteURLPath(%q) error = %v", url, err)
+	for _, key := range keys {
+		if err := store.DeleteKey(key); err != nil {
+			t.Errorf("DeleteKey(%q) error = %v", key, err)
 		}
 	}
 }

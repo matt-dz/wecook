@@ -636,7 +636,7 @@ func (Server) DeleteApiUserId(ctx context.Context,
 	env.Logger.DebugContext(ctx, "removing all images")
 	for _, img := range slices.Concat(coverImages, ingredientImages, stepImages) {
 		if img.Valid {
-			if err := env.FileStore.DeleteURLPath(img.String); err != nil {
+			if err := env.FileStore.DeleteKey(img.String); err != nil {
 				env.Logger.WarnContext(ctx, "failed to delete image - manual cleanup required",
 					slog.Any("error", err), slog.String("path", img.String))
 			}

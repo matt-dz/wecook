@@ -95,7 +95,7 @@ WHERE
   id = $1;
 
 -- name: CreateRecipeIngredient :one
-INSERT INTO recipe_ingredients (recipe_id, description, image_url)
+INSERT INTO recipe_ingredients (recipe_id, description, image_key)
   VALUES ($1, $2, $3)
 RETURNING
   id;
@@ -104,13 +104,13 @@ RETURNING
 INSERT INTO recipe_ingredients (recipe_id)
   VALUES ($1)
 RETURNING
-  id, recipe_id, description, image_url, created_at, updated_at;
+  id, recipe_id, description, image_key, created_at, updated_at;
 
 -- name: UpdateRecipeIngredientImage :exec
 UPDATE
   recipe_ingredients
 SET
-  image_url = $1
+  image_key = $1
 WHERE
   id = $2;
 
@@ -124,7 +124,7 @@ RETURNING
 UPDATE
   recipe_steps
 SET
-  image_url = $1
+  image_key = $1
 WHERE
   id = $2;
 
@@ -169,14 +169,14 @@ SELECT
 UPDATE
   recipes
 SET
-  image_url = $1
+  image_key = $1
 WHERE
   id = $2;
 
 -- name: GetRecipeAndOwner :one
 SELECT
   r.user_id,
-  r.image_url,
+  r.image_key,
   r.title,
   r.description,
   r.created_at,
@@ -200,7 +200,7 @@ WHERE
 -- name: GetPublishedRecipeAndOwner :one
 SELECT
   r.user_id,
-  r.image_url,
+  r.image_key,
   r.title,
   r.description,
   r.created_at,
@@ -237,7 +237,7 @@ SELECT
   id,
   recipe_id,
   description,
-  image_url,
+  image_key,
   created_at,
   updated_at
 FROM
@@ -250,7 +250,7 @@ ORDER BY
 -- name: GetRecipesByOwner :many
 SELECT
   r.user_id,
-  r.image_url,
+  r.image_key,
   r.title,
   r.description,
   r.created_at,
@@ -275,7 +275,7 @@ ORDER BY
 -- name: GetPublicRecipes :many
 SELECT
   r.user_id,
-  r.image_url,
+  r.image_key,
   r.title,
   r.description,
   r.created_at,
@@ -305,9 +305,9 @@ WHERE id = $1;
 DELETE FROM recipe_ingredients
 WHERE id = $1;
 
--- name: GetRecipeIngredientImageURL :one
+-- name: GetRecipeIngredientImageKey :one
 SELECT
-  image_url
+  image_key
 FROM
   recipe_ingredients
 WHERE
@@ -333,9 +333,9 @@ SELECT
     WHERE
       id = $1);
 
--- name: GetRecipeStepImageURL :one
+-- name: GetRecipeStepImageKey :one
 SELECT
-  image_url
+  image_key
 FROM
   recipe_steps
 WHERE
@@ -359,10 +359,10 @@ SET
   ELSE
     step_number
   END,
-  image_url = CASE WHEN sqlc.narg ('update_image_url')::boolean THEN
-    sqlc.narg ('image_url')
+  image_key = CASE WHEN sqlc.narg ('update_image_key')::boolean THEN
+    sqlc.narg ('image_key')
   ELSE
-    image_url
+    image_key
   END
 WHERE
   id = $1
@@ -370,7 +370,7 @@ RETURNING
   id,
   instruction,
   step_number,
-  image_url;
+  image_key;
 
 -- name: UpdateRecipeIngredient :one
 UPDATE
@@ -381,10 +381,10 @@ SET
   ELSE
     description
   END,
-  image_url = CASE WHEN sqlc.narg ('update_image_url')::boolean THEN
-    sqlc.narg ('image_url')
+  image_key = CASE WHEN sqlc.narg ('update_image_key')::boolean THEN
+    sqlc.narg ('image_key')
   ELSE
-    image_url
+    image_key
   END
 WHERE
   id = $1
@@ -392,7 +392,7 @@ RETURNING
   id,
   recipe_id,
   description,
-  image_url,
+  image_key,
   created_at,
   updated_at;
 
@@ -400,10 +400,10 @@ RETURNING
 UPDATE
   recipes
 SET
-  image_url = CASE WHEN sqlc.narg ('update_image_url')::boolean THEN
-    sqlc.narg ('image_url')
+  image_key = CASE WHEN sqlc.narg ('update_image_key')::boolean THEN
+    sqlc.narg ('image_key')
   ELSE
-    image_url
+    image_key
   END,
   title = CASE WHEN sqlc.narg ('update_title')::boolean THEN
     sqlc.narg ('title')
@@ -449,7 +449,7 @@ WHERE
   id = $1
 RETURNING
   id,
-  image_url,
+  image_key,
   title,
   description,
   published,
@@ -488,11 +488,11 @@ WHERE recipe_id = $1
   AND id = ANY (@ids::bigint[]);
 
 -- name: BulkInsertRecipeIngredients :copyfrom
-INSERT INTO recipe_ingredients (recipe_id, description, image_url)
+INSERT INTO recipe_ingredients (recipe_id, description, image_key)
   VALUES ($1, $2, $3);
 
 -- name: BulkInsertRecipeSteps :copyfrom
-INSERT INTO recipe_steps (recipe_id, instruction, image_url, step_number)
+INSERT INTO recipe_steps (recipe_id, instruction, image_key, step_number)
   VALUES ($1, $2, $3, $4);
 
 -- name: BulkUpdateRecipeIngredients :batchexec
@@ -500,7 +500,7 @@ UPDATE
   recipe_ingredients
 SET
   description = $2,
-  image_url = $3
+  image_key = $3
 WHERE
   id = $1;
 
@@ -509,7 +509,7 @@ UPDATE
   recipe_steps
 SET
   instruction = $2,
-  image_url = $3
+  image_key = $3
 WHERE
   id = $1;
 
@@ -517,7 +517,7 @@ WHERE
 UPDATE
   recipe_ingredients
 SET
-  image_url = $2
+  image_key = $2
 WHERE
   id = $1;
 
@@ -525,29 +525,29 @@ WHERE
 UPDATE
   recipe_steps
 SET
-  image_url = $2
+  image_key = $2
 WHERE
   id = $1;
 
--- name: DeleteRecipeStepImageURL :exec
+-- name: DeleteRecipeStepImageKey :exec
 UPDATE
   recipe_steps
 SET
-  image_url = NULL
+  image_key = NULL
 WHERE
   id = $1;
 
--- name: DeleteRecipeIngredientImageURL :exec
+-- name: DeleteRecipeIngredientImageKey :exec
 UPDATE
   recipe_ingredients
 SET
-  image_url = NULL
+  image_key = NULL
 WHERE
   id = $1;
 
--- name: GetRecipeImageURL :one
+-- name: GetRecipeImageKey :one
 SELECT
-  image_url
+  image_key
 FROM
   recipes
 WHERE
@@ -642,32 +642,32 @@ WHERE
 
 -- name: GetUserRecipeImages :many
 SELECT
-  image_url
+  image_key
 FROM
   recipes
 WHERE
   user_id = $1
-  AND image_url IS NOT NULL;
+  AND image_key IS NOT NULL;
 
 -- name: GetUserRecipeIngredientImages :many
 SELECT
-  ri.image_url
+  ri.image_key
 FROM
   recipes r
   JOIN recipe_ingredients ri ON r.id = ri.recipe_id
 WHERE
   r.user_id = $1
-  AND ri.image_url IS NOT NULL;
+  AND ri.image_key IS NOT NULL;
 
 -- name: GetUserRecipeStepImages :many
 SELECT
-  rs.image_url
+  rs.image_key
 FROM
   recipes r
   JOIN recipe_steps rs ON r.id = rs.recipe_id
 WHERE
   r.user_id = $1
-  AND rs.image_url IS NOT NULL;
+  AND rs.image_key IS NOT NULL;
 
 -- name: DeleteUser :execrows
 DELETE FROM users

@@ -39,38 +39,38 @@ func (m *MockFileStoreInterface) EXPECT() *MockFileStoreInterfaceMockRecorder {
 	return m.recorder
 }
 
-// DeleteURLPath mocks base method.
-func (m *MockFileStoreInterface) DeleteURLPath(urlpath string) error {
+// DeleteKey mocks base method.
+func (m *MockFileStoreInterface) DeleteKey(key string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteURLPath", urlpath)
+	ret := m.ctrl.Call(m, "DeleteKey", key)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteURLPath indicates an expected call of DeleteURLPath.
-func (mr *MockFileStoreInterfaceMockRecorder) DeleteURLPath(urlpath any) *gomock.Call {
+// DeleteKey indicates an expected call of DeleteKey.
+func (mr *MockFileStoreInterfaceMockRecorder) DeleteKey(key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteURLPath", reflect.TypeOf((*MockFileStoreInterface)(nil).DeleteURLPath), urlpath)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteKey", reflect.TypeOf((*MockFileStoreInterface)(nil).DeleteKey), key)
 }
 
 // FileURL mocks base method.
-func (m *MockFileStoreInterface) FileURL(host string) string {
+func (m *MockFileStoreInterface) FileURL(key string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FileURL", host)
+	ret := m.ctrl.Call(m, "FileURL", key)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // FileURL indicates an expected call of FileURL.
-func (mr *MockFileStoreInterfaceMockRecorder) FileURL(host any) *gomock.Call {
+func (mr *MockFileStoreInterfaceMockRecorder) FileURL(key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FileURL", reflect.TypeOf((*MockFileStoreInterface)(nil).FileURL), host)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FileURL", reflect.TypeOf((*MockFileStoreInterface)(nil).FileURL), key)
 }
 
 // WriteIngredientImage mocks base method.
-func (m *MockFileStoreInterface) WriteIngredientImage(recipeID, ingredientID int64, suffix string, data []byte) (string, int, error) {
+func (m *MockFileStoreInterface) WriteIngredientImage(suffix string, data []byte) (string, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WriteIngredientImage", recipeID, ingredientID, suffix, data)
+	ret := m.ctrl.Call(m, "WriteIngredientImage", suffix, data)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -78,15 +78,15 @@ func (m *MockFileStoreInterface) WriteIngredientImage(recipeID, ingredientID int
 }
 
 // WriteIngredientImage indicates an expected call of WriteIngredientImage.
-func (mr *MockFileStoreInterfaceMockRecorder) WriteIngredientImage(recipeID, ingredientID, suffix, data any) *gomock.Call {
+func (mr *MockFileStoreInterfaceMockRecorder) WriteIngredientImage(suffix, data any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteIngredientImage", reflect.TypeOf((*MockFileStoreInterface)(nil).WriteIngredientImage), recipeID, ingredientID, suffix, data)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteIngredientImage", reflect.TypeOf((*MockFileStoreInterface)(nil).WriteIngredientImage), suffix, data)
 }
 
 // WriteRecipeCoverImage mocks base method.
-func (m *MockFileStoreInterface) WriteRecipeCoverImage(recipeID int64, suffix string, data []byte) (string, int, error) {
+func (m *MockFileStoreInterface) WriteRecipeCoverImage(suffix string, data []byte) (string, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WriteRecipeCoverImage", recipeID, suffix, data)
+	ret := m.ctrl.Call(m, "WriteRecipeCoverImage", suffix, data)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -94,15 +94,15 @@ func (m *MockFileStoreInterface) WriteRecipeCoverImage(recipeID int64, suffix st
 }
 
 // WriteRecipeCoverImage indicates an expected call of WriteRecipeCoverImage.
-func (mr *MockFileStoreInterfaceMockRecorder) WriteRecipeCoverImage(recipeID, suffix, data any) *gomock.Call {
+func (mr *MockFileStoreInterfaceMockRecorder) WriteRecipeCoverImage(suffix, data any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteRecipeCoverImage", reflect.TypeOf((*MockFileStoreInterface)(nil).WriteRecipeCoverImage), recipeID, suffix, data)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteRecipeCoverImage", reflect.TypeOf((*MockFileStoreInterface)(nil).WriteRecipeCoverImage), suffix, data)
 }
 
 // WriteStepImage mocks base method.
-func (m *MockFileStoreInterface) WriteStepImage(recipeID, stepID int64, suffix string, data []byte) (string, int, error) {
+func (m *MockFileStoreInterface) WriteStepImage(suffix string, data []byte) (string, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WriteStepImage", recipeID, stepID, suffix, data)
+	ret := m.ctrl.Call(m, "WriteStepImage", suffix, data)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -110,7 +110,7 @@ func (m *MockFileStoreInterface) WriteStepImage(recipeID, stepID int64, suffix s
 }
 
 // WriteStepImage indicates an expected call of WriteStepImage.
-func (mr *MockFileStoreInterfaceMockRecorder) WriteStepImage(recipeID, stepID, suffix, data any) *gomock.Call {
+func (mr *MockFileStoreInterfaceMockRecorder) WriteStepImage(suffix, data any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteStepImage", reflect.TypeOf((*MockFileStoreInterface)(nil).WriteStepImage), recipeID, stepID, suffix, data)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteStepImage", reflect.TypeOf((*MockFileStoreInterface)(nil).WriteStepImage), suffix, data)
 }

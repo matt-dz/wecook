@@ -14,13 +14,13 @@ import (
 type BulkInsertRecipeIngredientsParams struct {
 	RecipeID    int64
 	Description pgtype.Text
-	ImageUrl    pgtype.Text
+	ImageKey    pgtype.Text
 }
 
 type BulkInsertRecipeStepsParams struct {
 	RecipeID    int64
 	Instruction pgtype.Text
-	ImageUrl    pgtype.Text
+	ImageKey    pgtype.Text
 	StepNumber  int32
 }
 
@@ -151,7 +151,7 @@ const createEmptyRecipeIngredient = `-- name: CreateEmptyRecipeIngredient :one
 INSERT INTO recipe_ingredients (recipe_id)
   VALUES ($1)
 RETURNING
-  id, recipe_id, description, image_url, created_at, updated_at
+  id, recipe_id, description, image_key, created_at, updated_at
 `
 
 func (q *Queries) CreateEmptyRecipeIngredient(ctx context.Context, recipeID int64) (RecipeIngredient, error) {
@@ -161,7 +161,7 @@ func (q *Queries) CreateEmptyRecipeIngredient(ctx context.Context, recipeID int6
 		&i.ID,
 		&i.RecipeID,
 		&i.Description,
-		&i.ImageUrl,
+		&i.ImageKey,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -219,7 +219,7 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (int
 }
 
 const createRecipeIngredient = `-- name: CreateRecipeIngredient :one
-INSERT INTO recipe_ingredients (recipe_id, description, image_url)
+INSERT INTO recipe_ingredients (recipe_id, description, image_key)
   VALUES ($1, $2, $3)
 RETURNING
   id
@@ -228,11 +228,11 @@ RETURNING
 type CreateRecipeIngredientParams struct {
 	RecipeID    int64
 	Description pgtype.Text
-	ImageUrl    pgtype.Text
+	ImageKey    pgtype.Text
 }
 
 func (q *Queries) CreateRecipeIngredient(ctx context.Context, arg CreateRecipeIngredientParams) (int64, error) {
-	row := q.db.QueryRow(ctx, createRecipeIngredient, arg.RecipeID, arg.Description, arg.ImageUrl)
+	row := q.db.QueryRow(ctx, createRecipeIngredient, arg.RecipeID, arg.Description, arg.ImageKey)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -308,17 +308,17 @@ func (q *Queries) DeleteRecipeIngredient(ctx context.Context, id int64) error {
 	return err
 }
 
-const deleteRecipeIngredientImageURL = `-- name: DeleteRecipeIngredientImageURL :exec
+const deleteRecipeIngredientImageKey = `-- name: DeleteRecipeIngredientImageKey :exec
 UPDATE
   recipe_ingredients
 SET
-  image_url = NULL
+  image_key = NULL
 WHERE
   id = $1
 `
 
-func (q *Queries) DeleteRecipeIngredientImageURL(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, deleteRecipeIngredientImageURL, id)
+func (q *Queries) DeleteRecipeIngredientImageKey(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteRecipeIngredientImageKey, id)
 	return err
 }
 
@@ -348,17 +348,17 @@ func (q *Queries) DeleteRecipeStep(ctx context.Context, id int64) error {
 	return err
 }
 
-const deleteRecipeStepImageURL = `-- name: DeleteRecipeStepImageURL :exec
+const deleteRecipeStepImageKey = `-- name: DeleteRecipeStepImageKey :exec
 UPDATE
   recipe_steps
 SET
-  image_url = NULL
+  image_key = NULL
 WHERE
   id = $1
 `
 
-func (q *Queries) DeleteRecipeStepImageURL(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, deleteRecipeStepImageURL, id)
+func (q *Queries) DeleteRecipeStepImageKey(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteRecipeStepImageKey, id)
 	return err
 }
 
@@ -459,7 +459,7 @@ func (q *Queries) GetPreferences(ctx context.Context, id int32) (Preference, err
 const getPublicRecipes = `-- name: GetPublicRecipes :many
 SELECT
   r.user_id,
-  r.image_url,
+  r.image_key,
   r.title,
   r.description,
   r.created_at,
@@ -484,7 +484,7 @@ ORDER BY
 
 type GetPublicRecipesRow struct {
 	UserID         pgtype.Int8
-	ImageUrl       pgtype.Text
+	ImageKey       pgtype.Text
 	Title          string
 	Description    pgtype.Text
 	CreatedAt      pgtype.Timestamptz
@@ -511,7 +511,7 @@ func (q *Queries) GetPublicRecipes(ctx context.Context) ([]GetPublicRecipesRow, 
 		var i GetPublicRecipesRow
 		if err := rows.Scan(
 			&i.UserID,
-			&i.ImageUrl,
+			&i.ImageKey,
 			&i.Title,
 			&i.Description,
 			&i.CreatedAt,
@@ -539,7 +539,7 @@ func (q *Queries) GetPublicRecipes(ctx context.Context) ([]GetPublicRecipesRow, 
 const getPublishedRecipeAndOwner = `-- name: GetPublishedRecipeAndOwner :one
 SELECT
   r.user_id,
-  r.image_url,
+  r.image_key,
   r.title,
   r.description,
   r.created_at,
@@ -564,7 +564,7 @@ WHERE
 
 type GetPublishedRecipeAndOwnerRow struct {
 	UserID         pgtype.Int8
-	ImageUrl       pgtype.Text
+	ImageKey       pgtype.Text
 	Title          string
 	Description    pgtype.Text
 	CreatedAt      pgtype.Timestamptz
@@ -586,7 +586,7 @@ func (q *Queries) GetPublishedRecipeAndOwner(ctx context.Context, id int64) (Get
 	var i GetPublishedRecipeAndOwnerRow
 	err := row.Scan(
 		&i.UserID,
-		&i.ImageUrl,
+		&i.ImageKey,
 		&i.Title,
 		&i.Description,
 		&i.CreatedAt,
@@ -608,7 +608,7 @@ func (q *Queries) GetPublishedRecipeAndOwner(ctx context.Context, id int64) (Get
 const getRecipeAndOwner = `-- name: GetRecipeAndOwner :one
 SELECT
   r.user_id,
-  r.image_url,
+  r.image_key,
   r.title,
   r.description,
   r.created_at,
@@ -632,7 +632,7 @@ WHERE
 
 type GetRecipeAndOwnerRow struct {
 	UserID         pgtype.Int8
-	ImageUrl       pgtype.Text
+	ImageKey       pgtype.Text
 	Title          string
 	Description    pgtype.Text
 	CreatedAt      pgtype.Timestamptz
@@ -654,7 +654,7 @@ func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAnd
 	var i GetRecipeAndOwnerRow
 	err := row.Scan(
 		&i.UserID,
-		&i.ImageUrl,
+		&i.ImageKey,
 		&i.Title,
 		&i.Description,
 		&i.CreatedAt,
@@ -673,20 +673,20 @@ func (q *Queries) GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAnd
 	return i, err
 }
 
-const getRecipeImageURL = `-- name: GetRecipeImageURL :one
+const getRecipeImageKey = `-- name: GetRecipeImageKey :one
 SELECT
-  image_url
+  image_key
 FROM
   recipes
 WHERE
   id = $1
 `
 
-func (q *Queries) GetRecipeImageURL(ctx context.Context, id int64) (pgtype.Text, error) {
-	row := q.db.QueryRow(ctx, getRecipeImageURL, id)
-	var image_url pgtype.Text
-	err := row.Scan(&image_url)
-	return image_url, err
+func (q *Queries) GetRecipeImageKey(ctx context.Context, id int64) (pgtype.Text, error) {
+	row := q.db.QueryRow(ctx, getRecipeImageKey, id)
+	var image_key pgtype.Text
+	err := row.Scan(&image_key)
+	return image_key, err
 }
 
 const getRecipeIngredientExistence = `-- name: GetRecipeIngredientExistence :one
@@ -736,20 +736,20 @@ func (q *Queries) GetRecipeIngredientIDs(ctx context.Context, recipeID int64) ([
 	return items, nil
 }
 
-const getRecipeIngredientImageURL = `-- name: GetRecipeIngredientImageURL :one
+const getRecipeIngredientImageKey = `-- name: GetRecipeIngredientImageKey :one
 SELECT
-  image_url
+  image_key
 FROM
   recipe_ingredients
 WHERE
   id = $1
 `
 
-func (q *Queries) GetRecipeIngredientImageURL(ctx context.Context, id int64) (pgtype.Text, error) {
-	row := q.db.QueryRow(ctx, getRecipeIngredientImageURL, id)
-	var image_url pgtype.Text
-	err := row.Scan(&image_url)
-	return image_url, err
+func (q *Queries) GetRecipeIngredientImageKey(ctx context.Context, id int64) (pgtype.Text, error) {
+	row := q.db.QueryRow(ctx, getRecipeIngredientImageKey, id)
+	var image_key pgtype.Text
+	err := row.Scan(&image_key)
+	return image_key, err
 }
 
 const getRecipeIngredients = `-- name: GetRecipeIngredients :many
@@ -757,7 +757,7 @@ SELECT
   id,
   recipe_id,
   description,
-  image_url,
+  image_key,
   created_at,
   updated_at
 FROM
@@ -781,7 +781,7 @@ func (q *Queries) GetRecipeIngredients(ctx context.Context, recipeID int64) ([]R
 			&i.ID,
 			&i.RecipeID,
 			&i.Description,
-			&i.ImageUrl,
+			&i.ImageKey,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -858,25 +858,25 @@ func (q *Queries) GetRecipeStepIDs(ctx context.Context, recipeID int64) ([]int64
 	return items, nil
 }
 
-const getRecipeStepImageURL = `-- name: GetRecipeStepImageURL :one
+const getRecipeStepImageKey = `-- name: GetRecipeStepImageKey :one
 SELECT
-  image_url
+  image_key
 FROM
   recipe_steps
 WHERE
   id = $1
 `
 
-func (q *Queries) GetRecipeStepImageURL(ctx context.Context, id int64) (pgtype.Text, error) {
-	row := q.db.QueryRow(ctx, getRecipeStepImageURL, id)
-	var image_url pgtype.Text
-	err := row.Scan(&image_url)
-	return image_url, err
+func (q *Queries) GetRecipeStepImageKey(ctx context.Context, id int64) (pgtype.Text, error) {
+	row := q.db.QueryRow(ctx, getRecipeStepImageKey, id)
+	var image_key pgtype.Text
+	err := row.Scan(&image_key)
+	return image_key, err
 }
 
 const getRecipeSteps = `-- name: GetRecipeSteps :many
 SELECT
-  id, recipe_id, step_number, instruction, image_url, created_at, updated_at
+  id, recipe_id, step_number, instruction, image_key, created_at, updated_at
 FROM
   recipe_steps
 WHERE
@@ -899,7 +899,7 @@ func (q *Queries) GetRecipeSteps(ctx context.Context, recipeID int64) ([]RecipeS
 			&i.RecipeID,
 			&i.StepNumber,
 			&i.Instruction,
-			&i.ImageUrl,
+			&i.ImageKey,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -916,7 +916,7 @@ func (q *Queries) GetRecipeSteps(ctx context.Context, recipeID int64) ([]RecipeS
 const getRecipesByOwner = `-- name: GetRecipesByOwner :many
 SELECT
   r.user_id,
-  r.image_url,
+  r.image_key,
   r.title,
   r.description,
   r.created_at,
@@ -941,7 +941,7 @@ ORDER BY
 
 type GetRecipesByOwnerRow struct {
 	UserID         pgtype.Int8
-	ImageUrl       pgtype.Text
+	ImageKey       pgtype.Text
 	Title          string
 	Description    pgtype.Text
 	CreatedAt      pgtype.Timestamptz
@@ -968,7 +968,7 @@ func (q *Queries) GetRecipesByOwner(ctx context.Context, id int64) ([]GetRecipes
 		var i GetRecipesByOwnerRow
 		if err := rows.Scan(
 			&i.UserID,
-			&i.ImageUrl,
+			&i.ImageKey,
 			&i.Title,
 			&i.Description,
 			&i.CreatedAt,
@@ -1069,12 +1069,12 @@ func (q *Queries) GetUserPasswordHash(ctx context.Context, id int64) (string, er
 
 const getUserRecipeImages = `-- name: GetUserRecipeImages :many
 SELECT
-  image_url
+  image_key
 FROM
   recipes
 WHERE
   user_id = $1
-  AND image_url IS NOT NULL
+  AND image_key IS NOT NULL
 `
 
 func (q *Queries) GetUserRecipeImages(ctx context.Context, userID pgtype.Int8) ([]pgtype.Text, error) {
@@ -1085,11 +1085,11 @@ func (q *Queries) GetUserRecipeImages(ctx context.Context, userID pgtype.Int8) (
 	defer rows.Close()
 	var items []pgtype.Text
 	for rows.Next() {
-		var image_url pgtype.Text
-		if err := rows.Scan(&image_url); err != nil {
+		var image_key pgtype.Text
+		if err := rows.Scan(&image_key); err != nil {
 			return nil, err
 		}
-		items = append(items, image_url)
+		items = append(items, image_key)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1099,13 +1099,13 @@ func (q *Queries) GetUserRecipeImages(ctx context.Context, userID pgtype.Int8) (
 
 const getUserRecipeIngredientImages = `-- name: GetUserRecipeIngredientImages :many
 SELECT
-  ri.image_url
+  ri.image_key
 FROM
   recipes r
   JOIN recipe_ingredients ri ON r.id = ri.recipe_id
 WHERE
   r.user_id = $1
-  AND ri.image_url IS NOT NULL
+  AND ri.image_key IS NOT NULL
 `
 
 func (q *Queries) GetUserRecipeIngredientImages(ctx context.Context, userID pgtype.Int8) ([]pgtype.Text, error) {
@@ -1116,11 +1116,11 @@ func (q *Queries) GetUserRecipeIngredientImages(ctx context.Context, userID pgty
 	defer rows.Close()
 	var items []pgtype.Text
 	for rows.Next() {
-		var image_url pgtype.Text
-		if err := rows.Scan(&image_url); err != nil {
+		var image_key pgtype.Text
+		if err := rows.Scan(&image_key); err != nil {
 			return nil, err
 		}
-		items = append(items, image_url)
+		items = append(items, image_key)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1130,13 +1130,13 @@ func (q *Queries) GetUserRecipeIngredientImages(ctx context.Context, userID pgty
 
 const getUserRecipeStepImages = `-- name: GetUserRecipeStepImages :many
 SELECT
-  rs.image_url
+  rs.image_key
 FROM
   recipes r
   JOIN recipe_steps rs ON r.id = rs.recipe_id
 WHERE
   r.user_id = $1
-  AND rs.image_url IS NOT NULL
+  AND rs.image_key IS NOT NULL
 `
 
 func (q *Queries) GetUserRecipeStepImages(ctx context.Context, userID pgtype.Int8) ([]pgtype.Text, error) {
@@ -1147,11 +1147,11 @@ func (q *Queries) GetUserRecipeStepImages(ctx context.Context, userID pgtype.Int
 	defer rows.Close()
 	var items []pgtype.Text
 	for rows.Next() {
-		var image_url pgtype.Text
-		if err := rows.Scan(&image_url); err != nil {
+		var image_key pgtype.Text
+		if err := rows.Scan(&image_key); err != nil {
 			return nil, err
 		}
-		items = append(items, image_url)
+		items = append(items, image_key)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1302,10 +1302,10 @@ const updateRecipe = `-- name: UpdateRecipe :one
 UPDATE
   recipes
 SET
-  image_url = CASE WHEN $2::boolean THEN
+  image_key = CASE WHEN $2::boolean THEN
     $3
   ELSE
-    image_url
+    image_key
   END,
   title = CASE WHEN $4::boolean THEN
     $5
@@ -1351,7 +1351,7 @@ WHERE
   id = $1
 RETURNING
   id,
-  image_url,
+  image_key,
   title,
   description,
   published,
@@ -1366,8 +1366,8 @@ RETURNING
 
 type UpdateRecipeParams struct {
 	ID                   int64
-	UpdateImageUrl       pgtype.Bool
-	ImageUrl             pgtype.Text
+	UpdateImageKey       pgtype.Bool
+	ImageKey             pgtype.Text
 	UpdateTitle          pgtype.Bool
 	Title                pgtype.Text
 	UpdateDescription    pgtype.Bool
@@ -1388,7 +1388,7 @@ type UpdateRecipeParams struct {
 
 type UpdateRecipeRow struct {
 	ID             int64
-	ImageUrl       pgtype.Text
+	ImageKey       pgtype.Text
 	Title          string
 	Description    pgtype.Text
 	Published      bool
@@ -1404,8 +1404,8 @@ type UpdateRecipeRow struct {
 func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (UpdateRecipeRow, error) {
 	row := q.db.QueryRow(ctx, updateRecipe,
 		arg.ID,
-		arg.UpdateImageUrl,
-		arg.ImageUrl,
+		arg.UpdateImageKey,
+		arg.ImageKey,
 		arg.UpdateTitle,
 		arg.Title,
 		arg.UpdateDescription,
@@ -1426,7 +1426,7 @@ func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Upd
 	var i UpdateRecipeRow
 	err := row.Scan(
 		&i.ID,
-		&i.ImageUrl,
+		&i.ImageKey,
 		&i.Title,
 		&i.Description,
 		&i.Published,
@@ -1445,18 +1445,18 @@ const updateRecipeCoverImage = `-- name: UpdateRecipeCoverImage :exec
 UPDATE
   recipes
 SET
-  image_url = $1
+  image_key = $1
 WHERE
   id = $2
 `
 
 type UpdateRecipeCoverImageParams struct {
-	ImageUrl pgtype.Text
+	ImageKey pgtype.Text
 	ID       int64
 }
 
 func (q *Queries) UpdateRecipeCoverImage(ctx context.Context, arg UpdateRecipeCoverImageParams) error {
-	_, err := q.db.Exec(ctx, updateRecipeCoverImage, arg.ImageUrl, arg.ID)
+	_, err := q.db.Exec(ctx, updateRecipeCoverImage, arg.ImageKey, arg.ID)
 	return err
 }
 
@@ -1469,10 +1469,10 @@ SET
   ELSE
     description
   END,
-  image_url = CASE WHEN $4::boolean THEN
+  image_key = CASE WHEN $4::boolean THEN
     $5
   ELSE
-    image_url
+    image_key
   END
 WHERE
   id = $1
@@ -1480,7 +1480,7 @@ RETURNING
   id,
   recipe_id,
   description,
-  image_url,
+  image_key,
   created_at,
   updated_at
 `
@@ -1489,8 +1489,8 @@ type UpdateRecipeIngredientParams struct {
 	ID                int64
 	UpdateDescription pgtype.Bool
 	Description       pgtype.Text
-	UpdateImageUrl    pgtype.Bool
-	ImageUrl          pgtype.Text
+	UpdateImageKey    pgtype.Bool
+	ImageKey          pgtype.Text
 }
 
 func (q *Queries) UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIngredientParams) (RecipeIngredient, error) {
@@ -1498,15 +1498,15 @@ func (q *Queries) UpdateRecipeIngredient(ctx context.Context, arg UpdateRecipeIn
 		arg.ID,
 		arg.UpdateDescription,
 		arg.Description,
-		arg.UpdateImageUrl,
-		arg.ImageUrl,
+		arg.UpdateImageKey,
+		arg.ImageKey,
 	)
 	var i RecipeIngredient
 	err := row.Scan(
 		&i.ID,
 		&i.RecipeID,
 		&i.Description,
-		&i.ImageUrl,
+		&i.ImageKey,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -1517,18 +1517,18 @@ const updateRecipeIngredientImage = `-- name: UpdateRecipeIngredientImage :exec
 UPDATE
   recipe_ingredients
 SET
-  image_url = $1
+  image_key = $1
 WHERE
   id = $2
 `
 
 type UpdateRecipeIngredientImageParams struct {
-	ImageUrl pgtype.Text
+	ImageKey pgtype.Text
 	ID       int64
 }
 
 func (q *Queries) UpdateRecipeIngredientImage(ctx context.Context, arg UpdateRecipeIngredientImageParams) error {
-	_, err := q.db.Exec(ctx, updateRecipeIngredientImage, arg.ImageUrl, arg.ID)
+	_, err := q.db.Exec(ctx, updateRecipeIngredientImage, arg.ImageKey, arg.ID)
 	return err
 }
 
@@ -1546,10 +1546,10 @@ SET
   ELSE
     step_number
   END,
-  image_url = CASE WHEN $6::boolean THEN
+  image_key = CASE WHEN $6::boolean THEN
     $7
   ELSE
-    image_url
+    image_key
   END
 WHERE
   id = $1
@@ -1557,7 +1557,7 @@ RETURNING
   id,
   instruction,
   step_number,
-  image_url
+  image_key
 `
 
 type UpdateRecipeStepParams struct {
@@ -1566,15 +1566,15 @@ type UpdateRecipeStepParams struct {
 	Instruction       pgtype.Text
 	UpdateStepNumber  pgtype.Bool
 	StepNumber        pgtype.Int4
-	UpdateImageUrl    pgtype.Bool
-	ImageUrl          pgtype.Text
+	UpdateImageKey    pgtype.Bool
+	ImageKey          pgtype.Text
 }
 
 type UpdateRecipeStepRow struct {
 	ID          int64
 	Instruction pgtype.Text
 	StepNumber  int32
-	ImageUrl    pgtype.Text
+	ImageKey    pgtype.Text
 }
 
 func (q *Queries) UpdateRecipeStep(ctx context.Context, arg UpdateRecipeStepParams) (UpdateRecipeStepRow, error) {
@@ -1584,15 +1584,15 @@ func (q *Queries) UpdateRecipeStep(ctx context.Context, arg UpdateRecipeStepPara
 		arg.Instruction,
 		arg.UpdateStepNumber,
 		arg.StepNumber,
-		arg.UpdateImageUrl,
-		arg.ImageUrl,
+		arg.UpdateImageKey,
+		arg.ImageKey,
 	)
 	var i UpdateRecipeStepRow
 	err := row.Scan(
 		&i.ID,
 		&i.Instruction,
 		&i.StepNumber,
-		&i.ImageUrl,
+		&i.ImageKey,
 	)
 	return i, err
 }
@@ -1601,18 +1601,18 @@ const updateRecipeStepImage = `-- name: UpdateRecipeStepImage :exec
 UPDATE
   recipe_steps
 SET
-  image_url = $1
+  image_key = $1
 WHERE
   id = $2
 `
 
 type UpdateRecipeStepImageParams struct {
-	ImageUrl pgtype.Text
+	ImageKey pgtype.Text
 	ID       int64
 }
 
 func (q *Queries) UpdateRecipeStepImage(ctx context.Context, arg UpdateRecipeStepImageParams) error {
-	_, err := q.db.Exec(ctx, updateRecipeStepImage, arg.ImageUrl, arg.ID)
+	_, err := q.db.Exec(ctx, updateRecipeStepImage, arg.ImageKey, arg.ID)
 	return err
 }
 

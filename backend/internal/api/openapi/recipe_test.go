@@ -238,7 +238,7 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 						UserID:         pgtype.Int8{Int64: 456, Valid: true},
 						Title:          "Test Recipe",
 						Description:    pgtype.Text{String: "A delicious test recipe", Valid: true},
-						ImageUrl:       pgtype.Text{String: "recipe.jpg", Valid: true},
+						ImageKey:       pgtype.Text{String: "recipe.jpg", Valid: true},
 						Published:      true,
 						CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
 						UpdatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
@@ -260,14 +260,14 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 							RecipeID:    123,
 							StepNumber:  1,
 							Instruction: pgtype.Text{String: "Mix ingredients", Valid: true},
-							ImageUrl:    pgtype.Text{String: "step1.jpg", Valid: true},
+							ImageKey:    pgtype.Text{String: "step1.jpg", Valid: true},
 						},
 						{
 							ID:          2,
 							RecipeID:    123,
 							StepNumber:  2,
 							Instruction: pgtype.Text{String: "Bake for 30 minutes", Valid: true},
-							ImageUrl:    pgtype.Text{String: "", Valid: false},
+							ImageKey:    pgtype.Text{String: "", Valid: false},
 						},
 					}, nil)
 
@@ -278,13 +278,13 @@ func TestGetApiRecipesRecipeID(t *testing.T) {
 							ID:          1,
 							RecipeID:    123,
 							Description: pgtype.Text{String: "2 cups Flour", Valid: true},
-							ImageUrl:    pgtype.Text{String: "flour.jpg", Valid: true},
+							ImageKey:    pgtype.Text{String: "flour.jpg", Valid: true},
 						},
 						{
 							ID:          2,
 							RecipeID:    123,
 							Description: pgtype.Text{String: "1 cup Sugar", Valid: true},
-							ImageUrl:    pgtype.Text{String: "", Valid: false},
+							ImageKey:    pgtype.Text{String: "", Valid: false},
 						},
 					}, nil)
 
@@ -661,7 +661,7 @@ func TestGetApiRecipes(t *testing.T) {
 					Return([]database.GetRecipesByOwnerRow{
 						{
 							UserID:         pgtype.Int8{Int64: 456, Valid: true},
-							ImageUrl:       pgtype.Text{String: "recipe1.jpg", Valid: true},
+							ImageKey:       pgtype.Text{String: "recipe1.jpg", Valid: true},
 							Title:          "Recipe 1",
 							Description:    pgtype.Text{String: "First recipe", Valid: true},
 							CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
@@ -678,7 +678,7 @@ func TestGetApiRecipes(t *testing.T) {
 						},
 						{
 							UserID:         pgtype.Int8{Int64: 456, Valid: true},
-							ImageUrl:       pgtype.Text{String: "", Valid: false},
+							ImageKey:       pgtype.Text{String: "", Valid: false},
 							Title:          "Recipe 2",
 							Description:    pgtype.Text{String: "", Valid: false},
 							CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
@@ -883,7 +883,7 @@ func TestGetApiRecipesPublic(t *testing.T) {
 					Return([]database.GetPublicRecipesRow{
 						{
 							UserID:         pgtype.Int8{Int64: 456, Valid: true},
-							ImageUrl:       pgtype.Text{String: "recipe1.jpg", Valid: true},
+							ImageKey:       pgtype.Text{String: "recipe1.jpg", Valid: true},
 							Title:          "Recipe 1",
 							Description:    pgtype.Text{String: "First recipe", Valid: true},
 							CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
@@ -900,7 +900,7 @@ func TestGetApiRecipesPublic(t *testing.T) {
 						},
 						{
 							UserID:         pgtype.Int8{Int64: 456, Valid: true},
-							ImageUrl:       pgtype.Text{String: "", Valid: false},
+							ImageKey:       pgtype.Text{String: "", Valid: false},
 							Title:          "Recipe 2",
 							Description:    pgtype.Text{String: "", Valid: false},
 							CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
@@ -1109,7 +1109,7 @@ func TestDeleteApiRecipesRecipeID(t *testing.T) {
 				mockDB.EXPECT().
 					GetRecipeAndOwner(gomock.Any(), int64(123)).
 					Return(database.GetRecipeAndOwnerRow{
-						ImageUrl: pgtype.Text{String: "files/covers/123.jpg", Valid: true},
+						ImageKey: pgtype.Text{String: "files/covers/123.jpg", Valid: true},
 					}, nil)
 
 				mockDB.EXPECT().
@@ -1118,12 +1118,12 @@ func TestDeleteApiRecipesRecipeID(t *testing.T) {
 						{
 							ID:       1,
 							RecipeID: 123,
-							ImageUrl: pgtype.Text{String: "files/steps/123/1.jpg", Valid: true},
+							ImageKey: pgtype.Text{String: "files/steps/123/1.jpg", Valid: true},
 						},
 						{
 							ID:       2,
 							RecipeID: 123,
-							ImageUrl: pgtype.Text{String: "files/steps/123/2.jpg", Valid: true},
+							ImageKey: pgtype.Text{String: "files/steps/123/2.jpg", Valid: true},
 						},
 					}, nil)
 
@@ -1133,15 +1133,15 @@ func TestDeleteApiRecipesRecipeID(t *testing.T) {
 						{
 							ID:       1,
 							RecipeID: 123,
-							ImageUrl: pgtype.Text{String: "files/ingredients/123/1.jpg", Valid: true},
+							ImageKey: pgtype.Text{String: "files/ingredients/123/1.jpg", Valid: true},
 						},
 					}, nil)
 
 				// Expect Delete calls for all images
-				mockFS.EXPECT().DeleteURLPath("files/covers/123.jpg").Return(nil)
-				mockFS.EXPECT().DeleteURLPath("files/steps/123/1.jpg").Return(nil)
-				mockFS.EXPECT().DeleteURLPath("files/steps/123/2.jpg").Return(nil)
-				mockFS.EXPECT().DeleteURLPath("files/ingredients/123/1.jpg").Return(nil)
+				mockFS.EXPECT().DeleteKey("files/covers/123.jpg").Return(nil)
+				mockFS.EXPECT().DeleteKey("files/steps/123/1.jpg").Return(nil)
+				mockFS.EXPECT().DeleteKey("files/steps/123/2.jpg").Return(nil)
+				mockFS.EXPECT().DeleteKey("files/ingredients/123/1.jpg").Return(nil)
 
 				mockDB.EXPECT().
 					DeleteRecipe(gomock.Any(), int64(123)).
@@ -1980,11 +1980,11 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 
 				mockFS.EXPECT().
-					WriteIngredientImage(int64(123), int64(456), ".png", validPNGImage).
+					WriteIngredientImage(".png", validPNGImage).
 					Return("files/ingredients/123/456.png", len(validPNGImage), nil)
 
 				mockFS.EXPECT().
@@ -1994,18 +1994,18 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
 						ID: 456,
-						UpdateImageUrl: pgtype.Bool{
+						UpdateImageKey: pgtype.Bool{
 							Bool:  true,
 							Valid: true,
 						},
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/ingredients/123/456.png",
 							Valid:  true,
 						},
 					}).
 					Return(database.RecipeIngredient{
 						ID: 456,
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/ingredients/123/456.png",
 							Valid:  true,
 						},
@@ -2045,18 +2045,18 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/ingredients/123/456-old.png",
 						Valid:  true,
 					}, nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/ingredients/123/456-old.png").
+					DeleteKey("files/ingredients/123/456-old.png").
 					Return(nil)
 
 				mockFS.EXPECT().
-					WriteIngredientImage(int64(123), int64(456), ".jpg", validJPEGImage).
+					WriteIngredientImage(".jpg", validJPEGImage).
 					Return("files/ingredients/123/456.jpg", len(validJPEGImage), nil)
 
 				mockFS.EXPECT().
@@ -2066,18 +2066,18 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
 						ID: 456,
-						UpdateImageUrl: pgtype.Bool{
+						UpdateImageKey: pgtype.Bool{
 							Bool:  true,
 							Valid: true,
 						},
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/ingredients/123/456.jpg",
 							Valid:  true,
 						},
 					}).
 					Return(database.RecipeIngredient{
 						ID: 456,
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/ingredients/123/456.jpg",
 							Valid:  true,
 						},
@@ -2222,7 +2222,7 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{}, errors.New("database error"))
 			},
 			wantStatus: 500,
@@ -2250,14 +2250,14 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/ingredients/123/456-old.png",
 						Valid:  true,
 					}, nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/ingredients/123/456-old.png").
+					DeleteKey("files/ingredients/123/456-old.png").
 					Return(errors.New("file system error"))
 			},
 			wantStatus: 500,
@@ -2285,11 +2285,11 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 
 				mockFS.EXPECT().
-					WriteIngredientImage(int64(123), int64(456), ".png", validPNGImage).
+					WriteIngredientImage(".png", validPNGImage).
 					Return("", 0, errors.New("file write error"))
 			},
 			wantStatus: 500,
@@ -2317,21 +2317,21 @@ func TestPostApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 
 				mockFS.EXPECT().
-					WriteIngredientImage(int64(123), int64(456), ".png", validPNGImage).
+					WriteIngredientImage(".png", validPNGImage).
 					Return("files/ingredients/123/456.png", len(validPNGImage), nil)
 
 				mockDB.EXPECT().
 					UpdateRecipeIngredient(gomock.Any(), database.UpdateRecipeIngredientParams{
 						ID: 456,
-						UpdateImageUrl: pgtype.Bool{
+						UpdateImageKey: pgtype.Bool{
 							Bool:  true,
 							Valid: true,
 						},
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/ingredients/123/456.png",
 							Valid:  true,
 						},
@@ -2441,18 +2441,18 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/ingredients/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockDB.EXPECT().
-					DeleteRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					DeleteRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/ingredients/123/456.png").
+					DeleteKey("files/ingredients/123/456.png").
 					Return(nil)
 			},
 			wantStatus: 204,
@@ -2555,7 +2555,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{}, errors.New("database error"))
 			},
 			wantStatus: 500,
@@ -2582,7 +2582,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 			},
 			wantStatus: 404,
@@ -2616,14 +2616,14 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/ingredients/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockDB.EXPECT().
-					DeleteRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					DeleteRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(errors.New("database error"))
 			},
 			wantStatus: 500,
@@ -2650,18 +2650,18 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/ingredients/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockDB.EXPECT().
-					DeleteRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					DeleteRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/ingredients/123/456.png").
+					DeleteKey("files/ingredients/123/456.png").
 					Return(errors.New("file system error"))
 			},
 			wantStatus: 500,
@@ -3170,7 +3170,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 							Valid:  true,
 						},
 						StepNumber: 2,
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/steps/123/456.png",
 							Valid:  true,
 						},
@@ -3389,7 +3389,7 @@ func TestPatchApiRecipesRecipeIDStepsStepID(t *testing.T) {
 						ID:          456,
 						Instruction: pgtype.Text{Valid: false},
 						StepNumber:  1,
-						ImageUrl:    pgtype.Text{Valid: false},
+						ImageKey:    pgtype.Text{Valid: false},
 					}, nil)
 			},
 			wantStatus: 200,
@@ -3540,11 +3540,11 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 
 				mockFS.EXPECT().
-					WriteStepImage(int64(123), int64(456), ".png", validPNGImage).
+					WriteStepImage(".png", validPNGImage).
 					Return("files/steps/123/456.png", len(validPNGImage), nil)
 
 				mockFS.EXPECT().
@@ -3554,18 +3554,18 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
 						ID: 456,
-						UpdateImageUrl: pgtype.Bool{
+						UpdateImageKey: pgtype.Bool{
 							Bool:  true,
 							Valid: true,
 						},
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/steps/123/456.png",
 							Valid:  true,
 						},
 					}).
 					Return(database.UpdateRecipeStepRow{
 						ID: 456,
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/steps/123/456.png",
 							Valid:  true,
 						},
@@ -3603,18 +3603,18 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/steps/123/456-old.png",
 						Valid:  true,
 					}, nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/steps/123/456-old.png").
+					DeleteKey("files/steps/123/456-old.png").
 					Return(nil)
 
 				mockFS.EXPECT().
-					WriteStepImage(int64(123), int64(456), ".jpg", validJPEGImage).
+					WriteStepImage(".jpg", validJPEGImage).
 					Return("files/steps/123/456.jpg", len(validJPEGImage), nil)
 
 				mockFS.EXPECT().
@@ -3624,18 +3624,18 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 				mockDB.EXPECT().
 					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
 						ID: 456,
-						UpdateImageUrl: pgtype.Bool{
+						UpdateImageKey: pgtype.Bool{
 							Bool:  true,
 							Valid: true,
 						},
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/steps/123/456.jpg",
 							Valid:  true,
 						},
 					}).
 					Return(database.UpdateRecipeStepRow{
 						ID: 456,
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/steps/123/456.jpg",
 							Valid:  true,
 						},
@@ -3785,7 +3785,7 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{}, errors.New("database error"))
 			},
 			wantStatus: 500,
@@ -3813,14 +3813,14 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/steps/123/456-old.png",
 						Valid:  true,
 					}, nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/steps/123/456-old.png").
+					DeleteKey("files/steps/123/456-old.png").
 					Return(errors.New("file system error"))
 			},
 			wantStatus: 500,
@@ -3848,11 +3848,11 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 
 				mockFS.EXPECT().
-					WriteStepImage(int64(123), int64(456), ".png", validPNGImage).
+					WriteStepImage(".png", validPNGImage).
 					Return("", 0, errors.New("file write error"))
 			},
 			wantStatus: 500,
@@ -3880,21 +3880,21 @@ func TestPostApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 
 				mockFS.EXPECT().
-					WriteStepImage(int64(123), int64(456), ".png", validPNGImage).
+					WriteStepImage(".png", validPNGImage).
 					Return("files/steps/123/456.png", len(validPNGImage), nil)
 
 				mockDB.EXPECT().
 					UpdateRecipeStep(gomock.Any(), database.UpdateRecipeStepParams{
 						ID: 456,
-						UpdateImageUrl: pgtype.Bool{
+						UpdateImageKey: pgtype.Bool{
 							Bool:  true,
 							Valid: true,
 						},
-						ImageUrl: pgtype.Text{
+						ImageKey: pgtype.Text{
 							String: "files/steps/123/456.png",
 							Valid:  true,
 						},
@@ -4004,18 +4004,18 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/steps/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockDB.EXPECT().
-					DeleteRecipeStepImageURL(gomock.Any(), int64(456)).
+					DeleteRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/steps/123/456.png").
+					DeleteKey("files/steps/123/456.png").
 					Return(nil)
 			},
 			wantStatus: 204,
@@ -4118,7 +4118,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{}, errors.New("database error"))
 			},
 			wantStatus: 500,
@@ -4145,7 +4145,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 			},
 			wantStatus: 404,
@@ -4179,14 +4179,14 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/steps/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockDB.EXPECT().
-					DeleteRecipeStepImageURL(gomock.Any(), int64(456)).
+					DeleteRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(errors.New("database error"))
 			},
 			wantStatus: 500,
@@ -4213,18 +4213,18 @@ func TestDeleteApiRecipesRecipeIDStepsStepIDImage(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/steps/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockDB.EXPECT().
-					DeleteRecipeStepImageURL(gomock.Any(), int64(456)).
+					DeleteRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/steps/123/456.png").
+					DeleteKey("files/steps/123/456.png").
 					Return(errors.New("file system error"))
 			},
 			wantStatus: 500,
@@ -4309,7 +4309,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 
 				mockDB.EXPECT().
@@ -4346,14 +4346,14 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/ingredients/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/ingredients/123/456.png").
+					DeleteKey("files/ingredients/123/456.png").
 					Return(nil)
 
 				mockDB.EXPECT().
@@ -4390,14 +4390,14 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/ingredients/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/ingredients/123/456.png").
+					DeleteKey("files/ingredients/123/456.png").
 					Return(fileserver.ErrNotExist)
 
 				mockDB.EXPECT().
@@ -4504,7 +4504,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{}, errors.New("database error"))
 			},
 			wantStatus: 500,
@@ -4531,14 +4531,14 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/ingredients/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/ingredients/123/456.png").
+					DeleteKey("files/ingredients/123/456.png").
 					Return(errors.New("file system error"))
 			},
 			wantStatus: 500,
@@ -4565,7 +4565,7 @@ func TestDeleteApiRecipesRecipeIDIngredientsIngredientID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeIngredientImageURL(gomock.Any(), int64(456)).
+					GetRecipeIngredientImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 
 				mockDB.EXPECT().
@@ -4654,7 +4654,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 
 				mockDB.EXPECT().
@@ -4691,14 +4691,14 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/steps/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/steps/123/456.png").
+					DeleteKey("files/steps/123/456.png").
 					Return(nil)
 
 				mockDB.EXPECT().
@@ -4735,14 +4735,14 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/steps/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/steps/123/456.png").
+					DeleteKey("files/steps/123/456.png").
 					Return(fileserver.ErrNotExist)
 
 				mockDB.EXPECT().
@@ -4849,7 +4849,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{}, errors.New("database error"))
 			},
 			wantStatus: 500,
@@ -4876,14 +4876,14 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{
 						String: "files/steps/123/456.png",
 						Valid:  true,
 					}, nil)
 
 				mockFS.EXPECT().
-					DeleteURLPath("files/steps/123/456.png").
+					DeleteKey("files/steps/123/456.png").
 					Return(errors.New("file system error"))
 			},
 			wantStatus: 500,
@@ -4910,7 +4910,7 @@ func TestDeleteApiRecipesRecipeIDStepsStepID(t *testing.T) {
 					Return(true, nil)
 
 				mockDB.EXPECT().
-					GetRecipeStepImageURL(gomock.Any(), int64(456)).
+					GetRecipeStepImageKey(gomock.Any(), int64(456)).
 					Return(pgtype.Text{Valid: false}, nil)
 
 				mockDB.EXPECT().
@@ -5026,7 +5026,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 						Published:      true,
 						CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
 						UpdatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
-						ImageUrl:       pgtype.Text{String: "recipe.jpg", Valid: true},
+						ImageKey:       pgtype.Text{String: "recipe.jpg", Valid: true},
 					}, nil)
 			},
 			wantStatus: 200,
@@ -5331,7 +5331,7 @@ func TestPatchApiRecipesRecipeID(t *testing.T) {
 						Published:      false,
 						CreatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
 						UpdatedAt:      pgtype.Timestamptz{Time: now, Valid: true},
-						ImageUrl:       pgtype.Text{Valid: false},
+						ImageKey:       pgtype.Text{Valid: false},
 					}, nil)
 			},
 			wantStatus: 200,
