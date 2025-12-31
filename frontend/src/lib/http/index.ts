@@ -4,6 +4,27 @@ import { CSRF_HEADER, CSRF_TOKEN_COOKIE_NAME, refreshSession } from '$lib/auth';
 
 const retryCodes = [408, 413, 429, 500, 502, 503, 504];
 
+/**
+ * Injects CSRF token into request headers for state-changing requests.
+ * Only works in browser context.
+ */
+function injectCSRFToken(request: Request) {
+	if (
+		typeof window !== 'undefined' &&
+		['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method.toUpperCase())
+	) {
+		document.cookie.split(';').map((c) => {
+			c = c.trim();
+			const splitIdx = c.indexOf('=');
+			const key = c.slice(0, splitIdx);
+			const val = c.slice(splitIdx + 1);
+			if (key === CSRF_TOKEN_COOKIE_NAME) {
+				request.headers.set(CSRF_HEADER, val);
+			}
+		});
+	}
+}
+
 const baseOptions: Options = {
 	timeout: 15 * 1000,
 	retry: {
@@ -22,24 +43,7 @@ const baseOptions: Options = {
 	hooks: {
 		beforeRequest: [
 			(request) => {
-				// Inject csrf token in request only for state changing requests.
-				// This only works on the browser for now.
-				// Should be fine, we only make GET requests during ssr
-				// so csrf tokens aren't necessary yet.
-				if (
-					typeof window !== 'undefined' &&
-					['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method.toUpperCase())
-				) {
-					document.cookie.split(';').map((c) => {
-						c = c.trim();
-						const splitIdx = c.indexOf('=');
-						const key = c.slice(0, splitIdx);
-						const value = c.slice(splitIdx + 1);
-						if (key === CSRF_TOKEN_COOKIE_NAME) {
-							request.headers.append(CSRF_HEADER, value);
-						}
-					});
-				}
+				injectCSRFToken(request);
 			}
 		]
 	}
@@ -75,7 +79,11 @@ const fetch = ky.create({
 					throw e;
 				}
 
-				return ky.retry();
+				// Inject the new CSRF token for the retry
+				injectCSRFToken(request);
+
+				// Retry the original request with the new access token and CSRF token
+				return ky(request);
 			}
 		]
 	}
