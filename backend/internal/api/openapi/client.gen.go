@@ -3262,6 +3262,7 @@ type PostApiRecipesRecipeIDImageResponse struct {
 	JSON200      *Recipe
 	JSON400      *Error
 	JSON404      *Error
+	JSON422      *Error
 	JSON500      *Error
 }
 
@@ -3384,6 +3385,7 @@ type PostApiRecipesRecipeIDIngredientsIngredientIDImageResponse struct {
 	JSON200      *UpdateIngredientResponse
 	JSON400      *Error
 	JSON404      *Error
+	JSON422      *Error
 	JSON500      *Error
 }
 
@@ -3532,6 +3534,7 @@ type PostApiRecipesRecipeIDStepsStepIDImageResponse struct {
 	JSON200      *UpdateStepResponse
 	JSON400      *Error
 	JSON404      *Error
+	JSON422      *Error
 	JSON500      *Error
 }
 
@@ -4722,6 +4725,13 @@ func ParsePostApiRecipesRecipeIDImageResponse(rsp *http.Response) (*PostApiRecip
 		}
 		response.JSON404 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -4935,6 +4945,13 @@ func ParsePostApiRecipesRecipeIDIngredientsIngredientIDImageResponse(rsp *http.R
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest Error
@@ -5203,6 +5220,13 @@ func ParsePostApiRecipesRecipeIDStepsStepIDImageResponse(rsp *http.Response) (*P
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest Error
@@ -8120,6 +8144,15 @@ func (response PostApiRecipesRecipeIDImage404JSONResponse) VisitPostApiRecipesRe
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PostApiRecipesRecipeIDImage422JSONResponse Error
+
+func (response PostApiRecipesRecipeIDImage422JSONResponse) VisitPostApiRecipesRecipeIDImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type PostApiRecipesRecipeIDImage500JSONResponse Error
 
 func (response PostApiRecipesRecipeIDImage500JSONResponse) VisitPostApiRecipesRecipeIDImageResponse(w http.ResponseWriter) error {
@@ -8336,6 +8369,15 @@ type PostApiRecipesRecipeIDIngredientsIngredientIDImage404JSONResponse Error
 func (response PostApiRecipesRecipeIDIngredientsIngredientIDImage404JSONResponse) VisitPostApiRecipesRecipeIDIngredientsIngredientIDImageResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiRecipesRecipeIDIngredientsIngredientIDImage422JSONResponse Error
+
+func (response PostApiRecipesRecipeIDIngredientsIngredientIDImage422JSONResponse) VisitPostApiRecipesRecipeIDIngredientsIngredientIDImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -8609,6 +8651,15 @@ type PostApiRecipesRecipeIDStepsStepIDImage404JSONResponse Error
 func (response PostApiRecipesRecipeIDStepsStepIDImage404JSONResponse) VisitPostApiRecipesRecipeIDStepsStepIDImageResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostApiRecipesRecipeIDStepsStepIDImage422JSONResponse Error
+
+func (response PostApiRecipesRecipeIDStepsStepIDImage422JSONResponse) VisitPostApiRecipesRecipeIDStepsStepIDImageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
 
 	return json.NewEncoder(w).Encode(response)
 }

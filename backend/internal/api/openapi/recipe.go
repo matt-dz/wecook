@@ -668,7 +668,16 @@ func (Server) PostApiRecipesRecipeIDIngredientsIngredientIDImage(ctx context.Con
 		}, nil
 	}
 	defer func() { _ = imageFile.Close() }()
-	file, err := form.ReadFile(imageFile)
+	file, err := form.ReadImage(imageFile)
+	if errors.Is(err, form.ErrUnsupportedMimeType) {
+		env.Logger.ErrorContext(ctx, "unsupported format", slog.Any("error", err))
+		return PostApiRecipesRecipeIDIngredientsIngredientIDImage422JSONResponse{
+			Status:  apiError.UnsupportedImageFormat.StatusCode(),
+			Code:    apiError.UnsupportedImageFormat.String(),
+			Message: "unsupported image format",
+			ErrorId: requestID,
+		}, nil
+	}
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to read image", slog.Any("error", err))
 		return PostApiRecipesRecipeIDIngredientsIngredientIDImage400JSONResponse{
@@ -1080,7 +1089,16 @@ func (Server) PostApiRecipesRecipeIDStepsStepIDImage(ctx context.Context,
 		}, nil
 	}
 	defer func() { _ = imageFile.Close() }()
-	file, err := form.ReadFile(imageFile)
+	file, err := form.ReadImage(imageFile)
+	if errors.Is(err, form.ErrUnsupportedMimeType) {
+		env.Logger.ErrorContext(ctx, "unsupported format", slog.Any("error", err))
+		return PostApiRecipesRecipeIDStepsStepIDImage422JSONResponse{
+			Status:  apiError.UnsupportedImageFormat.StatusCode(),
+			Code:    apiError.UnsupportedImageFormat.String(),
+			Message: "unsupported image format",
+			ErrorId: requestID,
+		}, nil
+	}
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to read image", slog.Any("error", err))
 		return PostApiRecipesRecipeIDStepsStepIDImage400JSONResponse{
@@ -1846,7 +1864,16 @@ func (Server) PostApiRecipesRecipeIDImage(ctx context.Context,
 		}, nil
 	}
 	defer func() { _ = imageFile.Close() }()
-	file, err := form.ReadFile(imageFile)
+	file, err := form.ReadImage(imageFile)
+	if errors.Is(err, form.ErrUnsupportedMimeType) {
+		env.Logger.ErrorContext(ctx, "unsupported format", slog.Any("error", err))
+		return PostApiRecipesRecipeIDImage422JSONResponse{
+			Status:  apiError.UnsupportedImageFormat.StatusCode(),
+			Code:    apiError.UnsupportedImageFormat.String(),
+			Message: "unsupported image format",
+			ErrorId: requestID,
+		}, nil
+	}
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "failed to read image", slog.Any("error", err))
 		return PostApiRecipesRecipeIDImage400JSONResponse{

@@ -52,7 +52,7 @@ type File struct {
 	MimeType string
 }
 
-func ReadFile(file io.ReadCloser) (*File, error) {
+func ReadImage(file io.ReadCloser) (*File, error) {
 	data, err := io.ReadAll(file)
 	defer func() { _ = file.Close() }()
 	if err != nil {
