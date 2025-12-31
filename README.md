@@ -32,6 +32,7 @@ There already exists many self-hosted recipe managers. However, I thought their 
 
 - **Recipe Management** - Create, edit, and organize recipes with ingredients, steps, and images
 <img width="1470" height="831" alt="Screenshot 2025-12-31 at 12 47 49 PM" src="https://github.com/user-attachments/assets/5fe65fdf-2d83-4520-8848-381db6d4fa1c" />
+
 - **Recipe Publishing** - Share recipes publicly or keep them private
 - **RESTful API** - OpenAPI-documented REST API for all operations
 
@@ -163,14 +164,13 @@ The admin dashboard provides tools for managing users and configuring applicatio
 
 ### User Management
 
-<img width="1470" height="835" alt="Screenshot 2025-12-30 at 5 28 35 PM" src="https://github.com/user-attachments/assets/df913b7f-4179-4fc1-9830-e995f671e0e8" />
+<img width="1470" height="831" alt="Screenshot 2025-12-31 at 12 54 55 PM" src="https://github.com/user-attachments/assets/4cbd91c3-4591-4730-b75d-88b8fc442951" />
 
 As an admin, you have full control over user accounts:
 
 - **View All Users** - See a list of all registered users with their email addresses, names, and roles
 - **Invite Users** - Send invitation emails to new users
   - When SMTP is configured, invitation emails are sent automatically with a signup link
-  - Invitations expire after a configurable period
   - Without SMTP configuration, you can still generate invite codes to share manually
 - **Delete Users** - Remove user accounts from the system
   - Deleting a user removes their account and all associated data
@@ -178,7 +178,7 @@ As an admin, you have full control over user accounts:
 
 ### Application Preferences
 
-<img width="1470" height="835" alt="Screenshot 2025-12-30 at 5 29 11 PM" src="https://github.com/user-attachments/assets/91c123ff-5184-45a9-a159-addc88ded354" />
+<img width="1470" height="831" alt="Screenshot 2025-12-31 at 12 52 25 PM" src="https://github.com/user-attachments/assets/961b8d49-56fc-4556-b4c5-b6a134cbbe81" />
 
 Control how WeCook operates for all users:
 
