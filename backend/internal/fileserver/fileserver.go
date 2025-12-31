@@ -57,7 +57,7 @@ func (f *FileServer) Write(path string, data []byte) (fullpath string, n int, er
 		return "", 0, errors.Join(fmt.Errorf("path %q is a directory", path), ErrInvalidPath)
 	}
 
-	file, err := os.OpenFile(fullpath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, newFilePerms)
+	file, err := os.OpenFile(fullpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, newFilePerms)
 	if err != nil {
 		return "", 0, fmt.Errorf("creating file: %w", err)
 	}
