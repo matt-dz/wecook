@@ -21,7 +21,7 @@ const batchUpdateRecipeIngredientImages = `-- name: BatchUpdateRecipeIngredientI
 UPDATE
   recipe_ingredients
 SET
-  image_url = $2
+  image_key = $2
 WHERE
   id = $1
 `
@@ -34,7 +34,7 @@ type BatchUpdateRecipeIngredientImagesBatchResults struct {
 
 type BatchUpdateRecipeIngredientImagesParams struct {
 	ID       int64
-	ImageUrl pgtype.Text
+	ImageKey pgtype.Text
 }
 
 func (q *Queries) BatchUpdateRecipeIngredientImages(ctx context.Context, arg []BatchUpdateRecipeIngredientImagesParams) *BatchUpdateRecipeIngredientImagesBatchResults {
@@ -42,7 +42,7 @@ func (q *Queries) BatchUpdateRecipeIngredientImages(ctx context.Context, arg []B
 	for _, a := range arg {
 		vals := []interface{}{
 			a.ID,
-			a.ImageUrl,
+			a.ImageKey,
 		}
 		batch.Queue(batchUpdateRecipeIngredientImages, vals...)
 	}
@@ -75,7 +75,7 @@ const batchUpdateRecipeStepImages = `-- name: BatchUpdateRecipeStepImages :batch
 UPDATE
   recipe_steps
 SET
-  image_url = $2
+  image_key = $2
 WHERE
   id = $1
 `
@@ -88,7 +88,7 @@ type BatchUpdateRecipeStepImagesBatchResults struct {
 
 type BatchUpdateRecipeStepImagesParams struct {
 	ID       int64
-	ImageUrl pgtype.Text
+	ImageKey pgtype.Text
 }
 
 func (q *Queries) BatchUpdateRecipeStepImages(ctx context.Context, arg []BatchUpdateRecipeStepImagesParams) *BatchUpdateRecipeStepImagesBatchResults {
@@ -96,7 +96,7 @@ func (q *Queries) BatchUpdateRecipeStepImages(ctx context.Context, arg []BatchUp
 	for _, a := range arg {
 		vals := []interface{}{
 			a.ID,
-			a.ImageUrl,
+			a.ImageKey,
 		}
 		batch.Queue(batchUpdateRecipeStepImages, vals...)
 	}
@@ -130,7 +130,7 @@ UPDATE
   recipe_ingredients
 SET
   description = $2,
-  image_url = $3
+  image_key = $3
 WHERE
   id = $1
 `
@@ -144,7 +144,7 @@ type BulkUpdateRecipeIngredientsBatchResults struct {
 type BulkUpdateRecipeIngredientsParams struct {
 	ID          int64
 	Description pgtype.Text
-	ImageUrl    pgtype.Text
+	ImageKey    pgtype.Text
 }
 
 func (q *Queries) BulkUpdateRecipeIngredients(ctx context.Context, arg []BulkUpdateRecipeIngredientsParams) *BulkUpdateRecipeIngredientsBatchResults {
@@ -153,7 +153,7 @@ func (q *Queries) BulkUpdateRecipeIngredients(ctx context.Context, arg []BulkUpd
 		vals := []interface{}{
 			a.ID,
 			a.Description,
-			a.ImageUrl,
+			a.ImageKey,
 		}
 		batch.Queue(bulkUpdateRecipeIngredients, vals...)
 	}
@@ -187,7 +187,7 @@ UPDATE
   recipe_steps
 SET
   instruction = $2,
-  image_url = $3
+  image_key = $3
 WHERE
   id = $1
 `
@@ -201,7 +201,7 @@ type BulkUpdateRecipeStepsBatchResults struct {
 type BulkUpdateRecipeStepsParams struct {
 	ID          int64
 	Instruction pgtype.Text
-	ImageUrl    pgtype.Text
+	ImageKey    pgtype.Text
 }
 
 func (q *Queries) BulkUpdateRecipeSteps(ctx context.Context, arg []BulkUpdateRecipeStepsParams) *BulkUpdateRecipeStepsBatchResults {
@@ -210,7 +210,7 @@ func (q *Queries) BulkUpdateRecipeSteps(ctx context.Context, arg []BulkUpdateRec
 		vals := []interface{}{
 			a.ID,
 			a.Instruction,
-			a.ImageUrl,
+			a.ImageKey,
 		}
 		batch.Queue(bulkUpdateRecipeSteps, vals...)
 	}

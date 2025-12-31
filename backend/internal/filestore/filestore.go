@@ -2,9 +2,10 @@
 package filestore
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/matt-dz/wecook/internal/fileserver"
@@ -16,106 +17,128 @@ const (
 	coverDir       = "covers"
 )
 
+const keyIDBytes = 22 // allows for 10^18 ids before likelihood of collision
+
 const (
-	DefaultURLPrefix = "/files"
+	KeyPrefix = "/files"
 )
 
 type FileStoreInterface interface {
-	WriteRecipeCoverImage(recipeID int64, suffix string, data []byte) (urlPath string, n int, err error)
-	WriteIngredientImage(recipeID, ingredientID int64, suffix string, data []byte) (urlPath string, n int, err error)
-	WriteStepImage(recipeID, stepID int64, suffix string, data []byte) (urlPath string, n int, err error)
+	WriteRecipeCoverImage(suffix string, data []byte) (key string, n int, err error)
+	WriteIngredientImage(suffix string, data []byte) (key string, n int, err error)
+	WriteStepImage(suffix string, data []byte) (key string, n int, err error)
 
-	DeleteURLPath(urlpath string) error
+	DeleteKey(key string) error
 
-	FileURL(host string) string
+	FileURL(key string) string
 }
 
 type FileStore struct {
-	urlPathPrefix string
-	host          string
-	fs            fileserver.FileServerInterface
+	keyPrefix string
+	host      string
+	fs        fileserver.FileServerInterface
 }
 
 var _ FileStoreInterface = (FileStoreInterface)(FileStore{})
 
-func New(baseDirectory, urlPathPrefix, host string) FileStore {
+func New(baseDirectory, keyPrefix, host string) FileStore {
 	return FileStore{
-		urlPathPrefix: urlPathPrefix,
-		host:          strings.TrimRight(host, "/"),
-		fs:            fileserver.New(baseDirectory),
+		keyPrefix: keyPrefix,
+		host:      strings.TrimRight(host, "/"),
+		fs:        fileserver.New(baseDirectory),
 	}
 }
 
-func (f FileStore) WriteRecipeCoverImage(recipeID int64, suffix string,
-	data []byte,
-) (urlPath string, n int, err error) {
-	path := coverImagePath(recipeID, suffix)
-	fullpath, n, err := f.fs.Write(path, data)
+func (f FileStore) WriteRecipeCoverImage(suffix string, data []byte) (
+	key string, n int, err error,
+) {
+	// Generate key
+	id, err := generateKeyID()
 	if err != nil {
-		return fullpath, n, err
+		return key, 0, fmt.Errorf("generating key id: %w", err)
 	}
-	return absPathToURLPath(fullpath, f.fs.BaseDirectory(), f.urlPathPrefix), n, err
-}
+	key = coverImageKey(id, suffix)
 
-func (f FileStore) WriteIngredientImage(recipeID,
-	ingredientID int64, suffix string, data []byte,
-) (urlPath string, n int, err error) {
-	path := ingredientsImagePath(recipeID, ingredientID, suffix)
-	fullpath, n, err := f.fs.Write(path, data)
+	// write image
+	_, n, err = f.fs.Write(extractKeyPrefix(key, KeyPrefix), data)
 	if err != nil {
-		return fullpath, n, err
+		return "", n, err
 	}
-	return absPathToURLPath(fullpath, f.fs.BaseDirectory(), f.urlPathPrefix), n, err
+	return key, n, err
 }
 
-func (f FileStore) WriteStepImage(recipeID,
-	stepID int64, suffix string, data []byte,
-) (urlPath string, n int, err error) {
-	path := stepsImagePath(recipeID, stepID, suffix)
-	fullpath, n, err := f.fs.Write(path, data)
+func (f FileStore) WriteIngredientImage(suffix string, data []byte) (
+	key string, n int, err error,
+) {
+	// Generate key
+	id, err := generateKeyID()
 	if err != nil {
-		return fullpath, n, err
+		return key, 0, fmt.Errorf("generating key id: %w", err)
 	}
-	return absPathToURLPath(fullpath, f.fs.BaseDirectory(), f.urlPathPrefix), n, err
+	key = ingredientsImageKey(id, suffix)
+
+	// write image
+	_, n, err = f.fs.Write(extractKeyPrefix(key, KeyPrefix), data)
+	if err != nil {
+		return "", n, err
+	}
+
+	return key, n, err
 }
 
-func (f FileStore) FileURL(urlpath string) string {
-	return f.host + "/" + strings.TrimLeft(urlpath, "/")
+func (f FileStore) WriteStepImage(suffix string, data []byte) (key string, n int, err error) {
+	// Generate key
+	id, err := generateKeyID()
+	if err != nil {
+		return key, 0, fmt.Errorf("generating key id: %w", err)
+	}
+	key = ingredientsStepKey(id, suffix)
+
+	// write key
+	_, n, err = f.fs.Write(extractKeyPrefix(key, KeyPrefix), data)
+	if err != nil {
+		return "", n, err
+	}
+
+	return key, n, err
 }
 
-func (f FileStore) DeleteURLPath(urlpath string) error {
-	return f.fs.Delete(trimURLPathPrefix(urlpath, f.urlPathPrefix))
+func (f FileStore) FileURL(key string) string {
+	return f.host + "/" + strings.TrimLeft(key, "/")
 }
 
-func stepsImagePath(recipeID, stepID int64, suffix string) string {
-	return filepath.Join(stepsDir,
-		strconv.FormatInt(recipeID, 10), fmt.Sprintf("%d%s", stepID, suffix))
+func (f FileStore) DeleteKey(key string) error {
+	return f.fs.Delete(extractKeyPrefix(key, f.keyPrefix))
 }
 
-func coverImagePath(recipeID int64, suffix string) string {
-	return filepath.Join(coverDir, fmt.Sprintf("%d%s", recipeID, suffix))
+func coverImageKey(id, suffix string) string {
+	return filepath.Join(KeyPrefix, coverDir, fmt.Sprintf("%s%s", id, suffix))
 }
 
-func ingredientsImagePath(recipeID, ingredientID int64, suffix string) string {
-	return filepath.Join(ingredientsDir,
-		strconv.FormatInt(recipeID, 10), fmt.Sprintf("%d%s", ingredientID, suffix))
+func ingredientsImageKey(id, suffix string) string {
+	return filepath.Join(KeyPrefix, ingredientsDir, fmt.Sprintf("%s%s", id, suffix))
 }
 
-func absPathToURLPath(fullpath string, baseDir string, prefix string) (urlpath string) {
+func ingredientsStepKey(id, suffix string) string {
+	return filepath.Join(KeyPrefix, stepsDir, fmt.Sprintf("%s%s", id, suffix))
+}
+
+// extractKeyPrefix removes a leading prefix from a slash-delimited key and
+// returns the remaining path with normalized slashes.
+//
+// Leading and trailing slashes on both key and prefix are ignored when matching.
+// i.e. key="files/covers/1.png", prefix="files/" => "covers/1.png".
+func extractKeyPrefix(key string, prefix string) string {
+	path := strings.Trim(key, "/")
 	pathPrefix := strings.Trim(prefix, "/")
-	relPath := strings.TrimLeft(trimBaseDir(fullpath, baseDir), "/")
-	return pathPrefix + "/" + relPath
+	path = strings.TrimPrefix(path, pathPrefix)
+	return strings.TrimLeft(path, "/")
 }
 
-func trimBaseDir(path string, baseDir string) string {
-	path = filepath.Clean(path)
-	baseDir = filepath.Clean(baseDir)
-	return strings.TrimPrefix(path, baseDir)
-}
-
-func trimURLPathPrefix(path string, prefix string) string {
-	urlpath := strings.Trim(path, "/")
-	pathPrefix := strings.Trim(prefix, "/")
-	urlpath = strings.TrimPrefix(urlpath, pathPrefix)
-	return strings.TrimLeft(urlpath, "/")
+func generateKeyID() (id string, err error) {
+	bytes := make([]byte, keyIDBytes)
+	if _, err := rand.Read(bytes); err != nil {
+		return id, err
+	}
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }

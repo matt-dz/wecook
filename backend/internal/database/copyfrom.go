@@ -31,7 +31,7 @@ func (r iteratorForBulkInsertRecipeIngredients) Values() ([]interface{}, error) 
 	return []interface{}{
 		r.rows[0].RecipeID,
 		r.rows[0].Description,
-		r.rows[0].ImageUrl,
+		r.rows[0].ImageKey,
 	}, nil
 }
 
@@ -40,7 +40,7 @@ func (r iteratorForBulkInsertRecipeIngredients) Err() error {
 }
 
 func (q *Queries) BulkInsertRecipeIngredients(ctx context.Context, arg []BulkInsertRecipeIngredientsParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"recipe_ingredients"}, []string{"recipe_id", "description", "image_url"}, &iteratorForBulkInsertRecipeIngredients{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"recipe_ingredients"}, []string{"recipe_id", "description", "image_key"}, &iteratorForBulkInsertRecipeIngredients{rows: arg})
 }
 
 // iteratorForBulkInsertRecipeSteps implements pgx.CopyFromSource.
@@ -65,7 +65,7 @@ func (r iteratorForBulkInsertRecipeSteps) Values() ([]interface{}, error) {
 	return []interface{}{
 		r.rows[0].RecipeID,
 		r.rows[0].Instruction,
-		r.rows[0].ImageUrl,
+		r.rows[0].ImageKey,
 		r.rows[0].StepNumber,
 	}, nil
 }
@@ -75,5 +75,5 @@ func (r iteratorForBulkInsertRecipeSteps) Err() error {
 }
 
 func (q *Queries) BulkInsertRecipeSteps(ctx context.Context, arg []BulkInsertRecipeStepsParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"recipe_steps"}, []string{"recipe_id", "instruction", "image_url", "step_number"}, &iteratorForBulkInsertRecipeSteps{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"recipe_steps"}, []string{"recipe_id", "instruction", "image_key", "step_number"}, &iteratorForBulkInsertRecipeSteps{rows: arg})
 }

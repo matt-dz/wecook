@@ -31,10 +31,10 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
 	DeleteRecipe(ctx context.Context, id int64) error
 	DeleteRecipeIngredient(ctx context.Context, id int64) error
-	DeleteRecipeIngredientImageURL(ctx context.Context, id int64) error
+	DeleteRecipeIngredientImageKey(ctx context.Context, id int64) error
 	DeleteRecipeIngredientsByIDs(ctx context.Context, arg DeleteRecipeIngredientsByIDsParams) error
 	DeleteRecipeStep(ctx context.Context, id int64) error
-	DeleteRecipeStepImageURL(ctx context.Context, id int64) error
+	DeleteRecipeStepImageKey(ctx context.Context, id int64) error
 	DeleteRecipeStepsByIDs(ctx context.Context, arg DeleteRecipeStepsByIDsParams) error
 	DeleteUser(ctx context.Context, id int64) (int64, error)
 	GetAdminCount(ctx context.Context) (int64, error)
@@ -44,15 +44,15 @@ type Querier interface {
 	GetPublicRecipes(ctx context.Context) ([]GetPublicRecipesRow, error)
 	GetPublishedRecipeAndOwner(ctx context.Context, id int64) (GetPublishedRecipeAndOwnerRow, error)
 	GetRecipeAndOwner(ctx context.Context, id int64) (GetRecipeAndOwnerRow, error)
-	GetRecipeImageURL(ctx context.Context, id int64) (pgtype.Text, error)
+	GetRecipeImageKey(ctx context.Context, id int64) (pgtype.Text, error)
 	GetRecipeIngredientExistence(ctx context.Context, id int64) (bool, error)
 	GetRecipeIngredientIDs(ctx context.Context, recipeID int64) ([]int64, error)
-	GetRecipeIngredientImageURL(ctx context.Context, id int64) (pgtype.Text, error)
+	GetRecipeIngredientImageKey(ctx context.Context, id int64) (pgtype.Text, error)
 	GetRecipeIngredients(ctx context.Context, recipeID int64) ([]RecipeIngredient, error)
 	GetRecipeOwner(ctx context.Context, id int64) (pgtype.Int8, error)
 	GetRecipeStepExistence(ctx context.Context, id int64) (bool, error)
 	GetRecipeStepIDs(ctx context.Context, recipeID int64) ([]int64, error)
-	GetRecipeStepImageURL(ctx context.Context, id int64) (pgtype.Text, error)
+	GetRecipeStepImageKey(ctx context.Context, id int64) (pgtype.Text, error)
 	GetRecipeSteps(ctx context.Context, recipeID int64) ([]RecipeStep, error)
 	GetRecipesByOwner(ctx context.Context, id int64) ([]GetRecipesByOwnerRow, error)
 	GetUser(ctx context.Context, lower string) (GetUserRow, error)

@@ -334,18 +334,18 @@ func (mr *MockQuerierMockRecorder) DeleteRecipeIngredient(ctx, id any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRecipeIngredient", reflect.TypeOf((*MockQuerier)(nil).DeleteRecipeIngredient), ctx, id)
 }
 
-// DeleteRecipeIngredientImageURL mocks base method.
-func (m *MockQuerier) DeleteRecipeIngredientImageURL(ctx context.Context, id int64) error {
+// DeleteRecipeIngredientImageKey mocks base method.
+func (m *MockQuerier) DeleteRecipeIngredientImageKey(ctx context.Context, id int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteRecipeIngredientImageURL", ctx, id)
+	ret := m.ctrl.Call(m, "DeleteRecipeIngredientImageKey", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteRecipeIngredientImageURL indicates an expected call of DeleteRecipeIngredientImageURL.
-func (mr *MockQuerierMockRecorder) DeleteRecipeIngredientImageURL(ctx, id any) *gomock.Call {
+// DeleteRecipeIngredientImageKey indicates an expected call of DeleteRecipeIngredientImageKey.
+func (mr *MockQuerierMockRecorder) DeleteRecipeIngredientImageKey(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRecipeIngredientImageURL", reflect.TypeOf((*MockQuerier)(nil).DeleteRecipeIngredientImageURL), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRecipeIngredientImageKey", reflect.TypeOf((*MockQuerier)(nil).DeleteRecipeIngredientImageKey), ctx, id)
 }
 
 // DeleteRecipeIngredientsByIDs mocks base method.
@@ -376,18 +376,18 @@ func (mr *MockQuerierMockRecorder) DeleteRecipeStep(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRecipeStep", reflect.TypeOf((*MockQuerier)(nil).DeleteRecipeStep), ctx, id)
 }
 
-// DeleteRecipeStepImageURL mocks base method.
-func (m *MockQuerier) DeleteRecipeStepImageURL(ctx context.Context, id int64) error {
+// DeleteRecipeStepImageKey mocks base method.
+func (m *MockQuerier) DeleteRecipeStepImageKey(ctx context.Context, id int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteRecipeStepImageURL", ctx, id)
+	ret := m.ctrl.Call(m, "DeleteRecipeStepImageKey", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteRecipeStepImageURL indicates an expected call of DeleteRecipeStepImageURL.
-func (mr *MockQuerierMockRecorder) DeleteRecipeStepImageURL(ctx, id any) *gomock.Call {
+// DeleteRecipeStepImageKey indicates an expected call of DeleteRecipeStepImageKey.
+func (mr *MockQuerierMockRecorder) DeleteRecipeStepImageKey(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRecipeStepImageURL", reflect.TypeOf((*MockQuerier)(nil).DeleteRecipeStepImageURL), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRecipeStepImageKey", reflect.TypeOf((*MockQuerier)(nil).DeleteRecipeStepImageKey), ctx, id)
 }
 
 // DeleteRecipeStepsByIDs mocks base method.
@@ -524,19 +524,19 @@ func (mr *MockQuerierMockRecorder) GetRecipeAndOwner(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeAndOwner", reflect.TypeOf((*MockQuerier)(nil).GetRecipeAndOwner), ctx, id)
 }
 
-// GetRecipeImageURL mocks base method.
-func (m *MockQuerier) GetRecipeImageURL(ctx context.Context, id int64) (pgtype.Text, error) {
+// GetRecipeImageKey mocks base method.
+func (m *MockQuerier) GetRecipeImageKey(ctx context.Context, id int64) (pgtype.Text, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRecipeImageURL", ctx, id)
+	ret := m.ctrl.Call(m, "GetRecipeImageKey", ctx, id)
 	ret0, _ := ret[0].(pgtype.Text)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRecipeImageURL indicates an expected call of GetRecipeImageURL.
-func (mr *MockQuerierMockRecorder) GetRecipeImageURL(ctx, id any) *gomock.Call {
+// GetRecipeImageKey indicates an expected call of GetRecipeImageKey.
+func (mr *MockQuerierMockRecorder) GetRecipeImageKey(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeImageURL", reflect.TypeOf((*MockQuerier)(nil).GetRecipeImageURL), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeImageKey", reflect.TypeOf((*MockQuerier)(nil).GetRecipeImageKey), ctx, id)
 }
 
 // GetRecipeIngredientExistence mocks base method.
@@ -569,19 +569,19 @@ func (mr *MockQuerierMockRecorder) GetRecipeIngredientIDs(ctx, recipeID any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeIngredientIDs", reflect.TypeOf((*MockQuerier)(nil).GetRecipeIngredientIDs), ctx, recipeID)
 }
 
-// GetRecipeIngredientImageURL mocks base method.
-func (m *MockQuerier) GetRecipeIngredientImageURL(ctx context.Context, id int64) (pgtype.Text, error) {
+// GetRecipeIngredientImageKey mocks base method.
+func (m *MockQuerier) GetRecipeIngredientImageKey(ctx context.Context, id int64) (pgtype.Text, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRecipeIngredientImageURL", ctx, id)
+	ret := m.ctrl.Call(m, "GetRecipeIngredientImageKey", ctx, id)
 	ret0, _ := ret[0].(pgtype.Text)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRecipeIngredientImageURL indicates an expected call of GetRecipeIngredientImageURL.
-func (mr *MockQuerierMockRecorder) GetRecipeIngredientImageURL(ctx, id any) *gomock.Call {
+// GetRecipeIngredientImageKey indicates an expected call of GetRecipeIngredientImageKey.
+func (mr *MockQuerierMockRecorder) GetRecipeIngredientImageKey(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeIngredientImageURL", reflect.TypeOf((*MockQuerier)(nil).GetRecipeIngredientImageURL), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeIngredientImageKey", reflect.TypeOf((*MockQuerier)(nil).GetRecipeIngredientImageKey), ctx, id)
 }
 
 // GetRecipeIngredients mocks base method.
@@ -644,19 +644,19 @@ func (mr *MockQuerierMockRecorder) GetRecipeStepIDs(ctx, recipeID any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeStepIDs", reflect.TypeOf((*MockQuerier)(nil).GetRecipeStepIDs), ctx, recipeID)
 }
 
-// GetRecipeStepImageURL mocks base method.
-func (m *MockQuerier) GetRecipeStepImageURL(ctx context.Context, id int64) (pgtype.Text, error) {
+// GetRecipeStepImageKey mocks base method.
+func (m *MockQuerier) GetRecipeStepImageKey(ctx context.Context, id int64) (pgtype.Text, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRecipeStepImageURL", ctx, id)
+	ret := m.ctrl.Call(m, "GetRecipeStepImageKey", ctx, id)
 	ret0, _ := ret[0].(pgtype.Text)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRecipeStepImageURL indicates an expected call of GetRecipeStepImageURL.
-func (mr *MockQuerierMockRecorder) GetRecipeStepImageURL(ctx, id any) *gomock.Call {
+// GetRecipeStepImageKey indicates an expected call of GetRecipeStepImageKey.
+func (mr *MockQuerierMockRecorder) GetRecipeStepImageKey(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeStepImageURL", reflect.TypeOf((*MockQuerier)(nil).GetRecipeStepImageURL), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecipeStepImageKey", reflect.TypeOf((*MockQuerier)(nil).GetRecipeStepImageKey), ctx, id)
 }
 
 // GetRecipeSteps mocks base method.

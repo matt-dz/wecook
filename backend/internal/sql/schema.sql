@@ -57,7 +57,7 @@ WHERE
 CREATE TABLE recipes (
   id bigserial PRIMARY KEY,
   user_id bigserial REFERENCES users (id) ON DELETE CASCADE,
-  image_url text,
+  image_key text,
   title text NOT NULL,
   description text,
   created_at timestamptz NOT NULL DEFAULT NOW(),
@@ -74,7 +74,7 @@ CREATE TABLE recipe_ingredients (
   id bigserial PRIMARY KEY,
   recipe_id bigint NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
   description text,
-  image_url text,
+  image_key text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -84,7 +84,7 @@ CREATE TABLE recipe_steps (
   recipe_id bigint NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
   step_number int NOT NULL,
   instruction text,
-  image_url text,
+  image_key text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (recipe_id, step_number) DEFERRABLE INITIALLY DEFERRED
