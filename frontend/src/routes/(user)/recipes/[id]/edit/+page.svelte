@@ -40,7 +40,7 @@
 	import { HTTPError } from 'ky';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { parseError } from '$lib/errors/api';
+	import { ApiErrorCodes, parseError } from '$lib/errors/api';
 
 	let { data }: PageProps = $props();
 
@@ -158,13 +158,19 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
+				if (e.response.status === 413) {
+					toast.error('Image too large. Maximum size is 20 MB.');
+				}
 				const err = await parseError(e.response);
 				if (err.success) {
 					console.error('failed to upload image', err.data);
+					if (err.data.code === ApiErrorCodes.UnsupportedImageFormat) {
+						toast.error('Unsupported image format.');
+						return;
+					}
 				}
-			} else {
-				console.error('failed to upload image', e);
 			}
+			console.error('failed to upload image', e);
 			toast.error('Failed to upload image.');
 		}
 	};
@@ -187,9 +193,8 @@
 				if (err.success) {
 					console.error('failed to delete ingredient image', err.data);
 				}
-			} else {
-				console.error('failed to delete ingredient image', e);
 			}
+			console.error('failed to delete ingredient image', e);
 			toast.error('Failed to delete ingredient image.');
 		}
 	};
@@ -207,13 +212,19 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
+				if (e.response.status === 413) {
+					toast.error('Image too large. Maximum size is 20 MB.');
+				}
 				const err = await parseError(e.response);
 				if (err.success) {
 					console.error('failed to update step', err.data);
+					if (err.data.code === ApiErrorCodes.UnsupportedImageFormat) {
+						toast.error('Unsupported image format.');
+						return;
+					}
 				}
-			} else {
-				console.error('failed to update', e);
 			}
+			console.error('failed to update', e);
 			toast.error('Failed to update step.');
 		}
 	};
@@ -234,9 +245,8 @@
 				if (err.success) {
 					console.error('failed to delete step image', err.data);
 				}
-			} else {
-				console.error('failed to delete step image', e);
 			}
+			console.error('failed to delete step image', e);
 			toast.error('Failed to delete step image.');
 		}
 	};
@@ -253,13 +263,19 @@
 		} catch (e) {
 			saveState = 'failed';
 			if (e instanceof HTTPError) {
+				if (e.response.status === 413) {
+					toast.error('Image too large. Maximum size is 20 MB.');
+				}
 				const err = await parseError(e.response);
 				if (err.success) {
 					console.error('failed to upload recipe image', err.data);
+					if (err.data.code === ApiErrorCodes.UnsupportedImageFormat) {
+						toast.error('Unsupported image format.');
+						return;
+					}
 				}
-			} else {
-				console.error('failed to upload recipe image', e);
 			}
+			console.error('failed to upload recipe image', e);
 			toast.error('Failed to upload recipe image.');
 		}
 	};
@@ -279,9 +295,8 @@
 				if (err.success) {
 					console.error('failed to delete recipe image', err.data);
 				}
-			} else {
-				console.error('failed to delete recipe image', e);
 			}
+			console.error('failed to delete recipe image', e);
 			toast.error('Failed to delete recipe image.');
 		}
 	};
@@ -315,9 +330,8 @@
 				if (err.success) {
 					console.error('failed to toggle publish', err.data);
 				}
-			} else {
-				console.error('failed to toggle publish', e);
 			}
+			console.error('failed to toggle publish', e);
 			toast.error(`Failed to ${published ? '' : 'un'}publish recipe.`);
 		}
 	};
@@ -335,9 +349,8 @@
 				if (err.success) {
 					console.error('failed to create ingredient', err.data);
 				}
-			} else {
-				console.error('failed to create ingredient', e);
 			}
+			console.error('failed to create ingredient', e);
 			toast.error('Failed to create ingredient.');
 		}
 	};
@@ -355,9 +368,8 @@
 				if (err.success) {
 					console.error('failed to create step', err.data);
 				}
-			} else {
-				console.error('failed to create step', e);
 			}
+			console.error('failed to create step', e);
 			toast.error('Failed to create step.');
 		}
 	};
@@ -378,9 +390,8 @@
 				if (err.success) {
 					console.error('failed to delete ingredient', err.data);
 				}
-			} else {
-				console.error('failed to delete ingredient', e);
 			}
+			console.error('failed to delete ingredient', e);
 			toast.error('Failed to delete ingredient.');
 		}
 	};
@@ -407,9 +418,8 @@
 				if (err.success) {
 					console.error('failed to delete step', err.data);
 				}
-			} else {
-				console.error('failed to delete step', e);
 			}
+			console.error('failed to delete step', e);
 			toast.error('Failed to delete step.');
 		}
 	};
@@ -425,9 +435,8 @@
 				if (err.success) {
 					console.error('failed to delete recipe', err.data);
 				}
-			} else {
-				console.error('failed to delete recipe', e);
 			}
+			console.error('failed to delete recipe', e);
 			toast.error('Failed to delete recipe.');
 		}
 	};

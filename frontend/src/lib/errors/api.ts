@@ -24,7 +24,12 @@ enum ApiErrorCodes {
 	RecipeNotOwned = 'recipe_not_owned',
 	IngredientNotFound = 'ingredient_not_found',
 	StepNotFound = 'step_not_found',
-	InvalidCredentials = 'invalid_credentials'
+	InvalidCredentials = 'invalid_credentials',
+	ImageNotFound = 'image_not_found',
+	UserNotFound = 'user_not_found',
+	InvalidInviteCode = 'invalid_invite_code',
+	InvalidPassword = 'invalid_password',
+	UnsupportedImageFormat = 'unsupported_image_format'
 }
 
 export class RefreshTokenExpiredError extends Error {
