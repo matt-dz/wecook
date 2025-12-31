@@ -24,11 +24,6 @@ const (
 )
 
 func Start(env *env.Env) error {
-	serverPort := env.Get("SERVER_PORT")
-	if serverPort == "" {
-		serverPort = defaultPort
-	}
-
 	server := api.NewServer()
 	router := chi.NewMux()
 	spec, err := docs.Docs.ReadFile("api.yaml")
@@ -72,12 +67,12 @@ func Start(env *env.Env) error {
 		router)
 	s := &http.Server{
 		Handler: router,
-		Addr:    "0.0.0.0:" + serverPort,
+		Addr:    "0.0.0.0:" + defaultPort,
 	}
 
-	env.Logger.Info(fmt.Sprintf("Listening at localhost:%s", serverPort))
+	env.Logger.Info(fmt.Sprintf("Listening at localhost:%s", defaultPort))
 	if !env.IsProd() {
-		env.Logger.Info(fmt.Sprintf("Swagger UI available at http://localhost:%s/docs/", serverPort))
+		env.Logger.Info(fmt.Sprintf("Swagger UI available at http://localhost:%s/docs/", defaultPort))
 	}
 	return s.ListenAndServe()
 }

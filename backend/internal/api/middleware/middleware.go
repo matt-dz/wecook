@@ -68,7 +68,7 @@ func AddCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e := env.EnvFromCtx(r.Context())
 		origin := r.Header.Get("Origin")
-		hostOrigin := e.Get("HOST_ORIGIN")
+		hostOrigin := e.Config.HostOrigin
 
 		// Determine allowed origin based on the incoming Origin header
 		var allowedOrigin string
