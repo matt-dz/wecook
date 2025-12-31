@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
+
+	"github.com/gabriel-vasile/mimetype"
 )
 
 const (
-	magicNumberSeek   = 512
 	MaximumUploadSize = 20 << 20 // ~ 20 MB
 )
 
@@ -20,6 +20,11 @@ var allowedImageTypes = map[string]bool{
 	"image/svg+xml": true,
 	"image/webp":    true,
 	"image/gif":     true,
+	"image/avif":    true,
+	"image/heic":    true, // iPhone default format
+	"image/heif":    true, // HEIF variant
+	"image/bmp":     true,
+	"image/tiff":    true,
 }
 
 var mimeTypeSuffix = map[string]string{
@@ -28,6 +33,11 @@ var mimeTypeSuffix = map[string]string{
 	"image/svg+xml": ".svg",
 	"image/webp":    ".webp",
 	"image/gif":     ".gif",
+	"image/avif":    ".avif",
+	"image/heic":    ".heic",
+	"image/heif":    ".heif",
+	"image/bmp":     ".bmp",
+	"image/tiff":    ".tiff",
 }
 
 var (
@@ -49,7 +59,10 @@ func ReadFile(file io.ReadCloser) (*File, error) {
 		return nil, fmt.Errorf("reading file: %w", err)
 	}
 
-	contentType := http.DetectContentType(data[:min(len(data), magicNumberSeek)])
+	// Use mimetype package for better detection (supports AVIF and other modern formats)
+	mtype := mimetype.Detect(data)
+	contentType := mtype.String()
+
 	if !allowedImageTypes[contentType] {
 		return nil, fmt.Errorf("mime type %q: %w", contentType, ErrUnsupportedMimeType)
 	}
